@@ -13,7 +13,7 @@ import (
 // frame_request.go something
 
 const (
-	RequestTypCode = 1
+	RequestTypCode = 0
 )
 
 type Request struct {

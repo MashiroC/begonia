@@ -7,6 +7,7 @@ package logic
 import (
 	"begonia2/dispatch"
 	"begonia2/dispatch/frame"
+	"fmt"
 )
 
 // service.go something
@@ -32,29 +33,43 @@ type service struct {
 	baseLogic
 }
 
-func (c *service) RecvMsg() (msg *Call, wf WriteFunc) {
+func (c *service) RecvMsg() (call *Call, wf WriteFunc) {
+
+	for {
+
 	_, f := c.dp.Recv()
-	req, ok := f.(*frame.Request)
-	if !ok {
-		panic("request type error")
-	}
 
-	msg = &Call{
-		Service: req.Service,
-		Fun:     req.Fun,
-		Param:   req.Params,
-	}
+	switch msg :=f.(type) {
+	case *frame.Request:
 
-	wf = func(result *CallResult, toConnID ...string) {
-		resp := frame.NewResponse(req.ReqId, result.Result, result.Err)
-		if toConnID != nil {
-			for _, connID := range toConnID {
-				c.dp.SendTo(connID, resp)
+		call = &Call{
+			Service: msg.Service,
+			Fun:     msg.Fun,
+			Param:   msg.Params,
+		}
+
+		wf = func(result *CallResult, toConnID ...string) {
+			resp := frame.NewResponse(msg.ReqId, result.Result, result.Err)
+			if toConnID != nil {
+				for _, connID := range toConnID {
+					c.dp.SendTo(connID, resp)
+				}
+			} else {
+				c.dp.Send(resp)
 			}
-		} else {
-			c.dp.Send(resp)
+		}
+		return
+	case *frame.Response:
+		err := c.waitChan.Callback(msg.ReqId, &CallResult{
+			Result: msg.Result,
+			Err:    msg.Err,
+		})
+		fmt.Println("asd")
+		if err!=nil{
+			panic(err)
 		}
 	}
+	}
 
-	return
+
 }

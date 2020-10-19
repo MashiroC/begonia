@@ -7,13 +7,19 @@ package service
 import (
 	"begonia2/dispatch"
 	"begonia2/logic"
+	"context"
 )
 
 // starter.go something
 
 // bootStartByManager 根据manager cluster模式启动
 func bootStartByManager(optionMap map[string]interface{}) Service {
+
+	ctx,cancel := context.WithCancel(context.Background())
+
 	s := &rService{}
+	s.ctx=ctx
+	s.cancel=cancel
 
 	s.coders = newCoderSet()
 	var addr string

@@ -10,6 +10,7 @@ import (
 	"begonia2/opcode/coding"
 	"begonia2/tool/reflects"
 	"context"
+	"fmt"
 	"log"
 	"reflect"
 )
@@ -26,6 +27,8 @@ type Service interface {
 type rService struct {
 	lg     logic.Service
 	ctx    context.Context
+	cancel context.CancelFunc
+
 	coders *coderSet
 }
 
@@ -40,6 +43,7 @@ func (r *rService) Sign(name string, service interface{}) {
 	if res.Err != "" {
 		panic(res.Err)
 	}
+	fmt.Println(res)
 }
 
 func (r *rService) Wait() {

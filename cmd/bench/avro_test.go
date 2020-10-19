@@ -5,6 +5,7 @@
 package bench
 
 import (
+	"begonia2/dispatch/frame"
 	"fmt"
 	"github.com/hamba/avro"
 	"testing"
@@ -215,4 +216,14 @@ func TestSelect(t *testing.T) {
 		fmt.Println("ch2",res,ok)
 	}
 	fmt.Println("exit")
+}
+
+func TestResp(t *testing.T) {
+	typCode := 1
+	dispatchCode := frame.CtrlDefaultCode // 0 ~ 7
+
+	version := frame.ProtocolVersion // 0 ~ 15
+
+	res:= ((typCode<<3)|dispatchCode)<<4 | version
+	fmt.Println(res)
 }

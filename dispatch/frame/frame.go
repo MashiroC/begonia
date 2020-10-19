@@ -2,12 +2,13 @@ package frame
 
 import (
 	"errors"
+	"fmt"
 )
 
 const (
 	breakByte       = 0x00
 	CtrlDefaultCode = 0
-	ProtocolVersion = 1
+	ProtocolVersion = 0
 )
 
 var (
@@ -40,6 +41,7 @@ func makeOpcode(typCode int) int {
 
 	version := ProtocolVersion // 0 ~ 15
 
+	fmt.Printf("typ:%d,makeOpcode:%b\n",typCode,((typCode<<3)|dispatchCode)<<4 | version)
 	return ((typCode<<3)|dispatchCode)<<4 | version
 }
 
@@ -47,8 +49,10 @@ func UnMarshal(typCode int, data []byte) (f Frame, err error) {
 	switch typCode {
 	case RequestTypCode:
 		f, err = unMarshalRequest(data)
-	case ResponseOpCode:
+	case ResponseTypCode:
 		f, err = unMarshalResponse(data)
+	default:
+		panic(typCode)
 	}
 	return
 }

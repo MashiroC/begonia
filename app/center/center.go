@@ -25,6 +25,12 @@ func (c *rCenter) Run() {
 	for {
 		call,wf:=c.lg.RecvMsg()
 
-		fmt.Println(call)
+		fmt.Println("call:",call)
+
+		wf(&logic.CallResult{
+			Result: []byte{1,2,3},
+			Err:    "",
+		})
+		fmt.Println("zxc")
 	}
 }

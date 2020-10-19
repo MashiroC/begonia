@@ -30,8 +30,9 @@ func bootstart(optionMap map[string]interface{}) Center {
 
 	var dp dispatch.Dispatcher
 	dp = dispatch.NewByCenterCluster()
-	dp.Listen(addr)
+	go dp.Listen(addr)
 
+	fmt.Println("asdasdasd")
 	c.lg = logic.NewMix(dp)
 
 	fmt.Println(c)
@@ -67,6 +68,7 @@ func New(mode string, optionFunc ...option.OptionFunc) (cli Center) {
 
 	switch mode {
 	case "center":
+		fmt.Println("bootstart")
 		cli = bootstart(optionMap)
 		// TODO:其他的模式和模式出问题的判断
 	}

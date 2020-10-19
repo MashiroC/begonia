@@ -9,6 +9,7 @@ import (
 	"begonia2/dispatch"
 	"begonia2/dispatch/frame"
 	"errors"
+	"fmt"
 )
 
 // mix.go something
@@ -23,6 +24,7 @@ func NewMix(dp dispatch.Dispatcher) MixNode {
 		reqCh: make(chan *frame.Request),
 	}
 	// TODO: add ctx
+	fmt.Println("go handler")
 	go c.Handle()
 	return c
 }
@@ -41,17 +43,13 @@ type mix struct {
 
 }
 
-func (m *mix) work() {
-
-}
-
-
-
 // Handle 处理响应与请求，响应在这里被直接转发，请求则塞到管道里
 func (m *mix) Handle() {
 //TODO:回收过期的key
 	for {
+		fmt.Println("mixRecv")
 		connID, msg := m.dp.Recv()
+		fmt.Println("recv:",connID,msg)
 		switch f := msg.(type) {
 		case *frame.Request:
 
@@ -90,7 +88,7 @@ func (m *mix) RecvMsg() (msg *Call, wf WriteFunc) {
 		panic("request chan close")
 	}
 
-	msg = &Call{
+	msg = &Call {
 		Service: req.Service,
 		Fun:     req.Fun,
 		Param:   req.Params,
@@ -103,7 +101,17 @@ func (m *mix) RecvMsg() (msg *Call, wf WriteFunc) {
 				m.dp.SendTo(connID, resp)
 			}
 		} else {
-			m.dp.Send(resp)
+			toID,ok:=m.rs.Get(req.ReqId)
+			if !ok {
+				panic("toID err")
+			}
+			m.rs.Remove(req.ReqId)
+
+			fmt.Println("resp:",resp)
+			err := m.dp.SendTo(toID,resp)
+			if err!=nil{
+				panic(err)
+			}
 		}
 	}
 
