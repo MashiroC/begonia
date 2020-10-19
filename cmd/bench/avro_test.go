@@ -202,3 +202,17 @@ func (*Service) AddAge(p People) People {
 	p.Age += 1
 	return p
 }
+
+func TestSelect(t *testing.T) {
+	ch1 := make(chan int)
+	ch2 := make(chan int)
+	close(ch1)
+	close(ch2)
+	select {
+	case res,ok:=<-ch1:
+		fmt.Println("ch1",res,ok)
+	case res,ok:=<-ch2:
+		fmt.Println("ch2",res,ok)
+	}
+	fmt.Println("exit")
+}
