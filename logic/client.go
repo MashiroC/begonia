@@ -12,7 +12,6 @@ import (
 // baseLogic.go something
 
 
-
 type Client interface {
 	caller
 	Handle()

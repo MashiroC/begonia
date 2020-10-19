@@ -5,8 +5,10 @@
 package logic
 
 import (
+	"begonia2/config"
 	"begonia2/dispatch"
 	"begonia2/dispatch/frame"
+	"errors"
 )
 
 // mix.go something
@@ -17,6 +19,8 @@ func NewMix(dp dispatch.Dispatcher) MixNode {
 			dp:       dp,
 			waitChan: NewWaitChans(),
 		},
+		rs:newReqSet(config.C.Logic.RequestTimeOut),
+		reqCh: make(chan *frame.Request),
 	}
 	// TODO: add ctx
 	go c.Handle()
@@ -27,34 +31,50 @@ type MixNode interface {
 	caller
 	Handle()
 	Close()
-
+	RecvMsg() (msg *Call, wf WriteFunc)
 }
 
 type mix struct {
 	baseLogic
 	reqCh  chan *frame.Request
-	respCh chan *frame.Response
+	rs *reqSet
+
 }
 
 func (m *mix) work() {
 
 }
 
+
+
+// Handle 处理响应与请求，响应在这里被直接转发，请求则塞到管道里
 func (m *mix) Handle() {
+//TODO:回收过期的key
 	for {
-		msg,ok:=<-m.respCh
-		if !ok {
-			panic("response chan error")
-		}
+		connID, msg := m.dp.Recv()
+		switch f := msg.(type) {
+		case *frame.Request:
 
-		reqId := msg.ReqId
-		err := m.waitChan.Callback(reqId, &CallResult{
-			Result: msg.Result,
-			Err:    msg.Err,
-		})
+			// 如果是请求包，记录、发送给上层处理
+			m.rs.Add(f.ReqId, connID)
+			m.reqCh <- f
 
-		if err != nil {
-			panic(err)
+		case *frame.Response:
+
+			// 如果是响应包，直接转发
+			toID, ok := m.rs.Get(f.ReqId)
+			if !ok {
+				err := errors.New("connID not found")
+				panic(err)
+			}
+
+			err := m.dp.SendTo(toID, f)
+			if err != nil {
+				panic(err)
+			}
+
+			m.rs.Remove(f.ReqId)
+
 		}
 	}
 

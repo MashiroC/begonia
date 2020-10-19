@@ -21,8 +21,10 @@ type rCenter struct {
 }
 
 func (c *rCenter) Run() {
+	go c.lg.Handle()
 	for {
-		call,_:=c.lg.RecvMsg()
+		call,wf:=c.lg.RecvMsg()
+
 		fmt.Println(call)
 	}
 }
