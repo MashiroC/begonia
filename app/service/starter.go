@@ -7,7 +7,6 @@ package service
 import (
 	"begonia2/dispatch"
 	"begonia2/logic"
-	"fmt"
 )
 
 // starter.go something
@@ -16,29 +15,32 @@ import (
 func bootStartByManager(optionMap map[string]interface{}) Service {
 	s := &rService{}
 
-	s.coders=newCoderSet()
-	//var addr string
-	//if addrIn, ok := optionMap["managerAddr"]; ok {
-	//	addr = addrIn.(string)
-	//}
+	s.coders = newCoderSet()
+	var addr string
+	if addrIn, ok := optionMap["managerAddr"]; ok {
+		addr = addrIn.(string)
+	}
 
 	var dp dispatch.Dispatcher
+	dp = dispatch.NewByCenterCluster()
+	dp.Link(addr)
+
 	s.lg = logic.NewService(dp)
 
 	go s.work()
 	//TODO: 发一个包，拉取配置
 
 	// 假设这个getConfig是sub service的一个远程函数
-	var getConfig = func(...interface{}) (interface{}, error) {
-		return map[string]interface{}{}, nil
-	}
-
-	// 假设m就是拿到的远程配置
-	m, err := getConfig()
-
-	// TODO:根据拿到的远程配置来修改配置
-	// do some thing
-	fmt.Println(m, err)
+	//var getConfig = func(...interface{}) (interface{}, error) {
+	//	return map[string]interface{}{}, nil
+	//}
+	//
+	//// 假设m就是拿到的远程配置
+	//m, err := getConfig()
+	//
+	//// TODO:根据拿到的远程配置来修改配置
+	//// do some thing
+	//fmt.Println(m, err)
 	// 修改配置之前的一系列调用全部都是按默认配置来的
 
 	return s

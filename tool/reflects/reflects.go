@@ -9,9 +9,10 @@ import "reflect"
 // reflects.go something
 
 func ToValue(m map[string]interface{}) []reflect.Value {
-
+	panic("error")
 }
 
 func FromValue(v []reflect.Value) map[string]interface{} {
+	panic("error")
 
 }

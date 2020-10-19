@@ -10,7 +10,6 @@ import (
 	"begonia2/opcode/coding"
 	"begonia2/tool/reflects"
 	"context"
-	"errors"
 	"log"
 	"reflect"
 )
@@ -38,7 +37,7 @@ func (r *rService) Sign(name string, service interface{}) {
 
 	res := r.lg.CallSync(app.Core.Sign(name, fs))
 	// TODO:handler error
-	if res.Err != nil {
+	if res.Err != "" {
 		panic(res.Err)
 	}
 }
@@ -62,7 +61,7 @@ func (r *rService) handleMsg(msg *logic.Call, wf logic.WriteFunc) {
 	if err != nil {
 		log.Println("decode err")
 		wf(&logic.CallResult{
-			Err: errors.New("decode error"),
+			Err:"decode error",
 		})
 		return
 	}

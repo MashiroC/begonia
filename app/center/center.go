@@ -4,19 +4,25 @@
 // center
 package center
 
-import "begonia2/logic"
+import (
+	"begonia2/logic"
+	"fmt"
+)
 
 // center.go something
 
 // Center 服务中心的接口，对外统一用接口
 type Center interface {
-	Run(addr string)
+	Run()
 }
 
 type rCenter struct {
 	lg logic.MixNode
 }
 
-func (c *rCenter) Run(addr string) {
-	c.lg.
+func (c *rCenter) Run() {
+	for {
+		call,_:=c.lg.RecvMsg()
+		fmt.Println(call)
+	}
 }

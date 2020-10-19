@@ -21,8 +21,8 @@ type Response struct {
 	Err    string
 	Result []byte
 
-	m Datas
-	v []byte
+	opcode int
+	v      []byte
 }
 
 func (r *Response) Marshal() []byte {
@@ -53,7 +53,11 @@ func (r *Response) Marshal() []byte {
 }
 
 func (r *Response) Opcode() int {
-	return ResponseOpCode
+	if r.opcode == -1 {
+		r.opcode = makeOpcode(RequestTypCode)
+	}
+
+	return r.opcode
 }
 
 func NewResponse(reqId string, result []byte, err string) Frame {
@@ -93,6 +97,9 @@ func unMarshalResponse(data []byte) (resp *Response, err error) {
 	resp.Err = qconv.Qb2s(respErrByte[:len(respErrByte)-1])
 
 	resp.Result = buf.Bytes()
+
+	resp.v = data
+	resp.opcode = -1
 
 	return
 }

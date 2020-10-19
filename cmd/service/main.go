@@ -1,14 +1,18 @@
 package main
 
-import "begonia2/app/service"
+import (
+	"begonia2/app/service"
+	"fmt"
+)
 
 const (
-	mode = "cluster"
+	mode = "center"
 )
 
 func main() {
 	s:=service.New(mode,service.ManagerAddr(":12306"))
 
+	fmt.Println(s)
 	helloService := &HelloService{}
 
 	s.Sign("Hello",helloService)

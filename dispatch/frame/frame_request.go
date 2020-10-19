@@ -102,5 +102,8 @@ func unMarshalRequest(data []byte) (req *Request, err error) {
 
 	req.Params = buf.Bytes()
 
+	req.v=data
+	req.opcode=-1
+
 	return
 }

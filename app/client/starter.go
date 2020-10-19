@@ -30,7 +30,7 @@ func bootstartByCenter(optionMap map[string]interface{}) Client {
 	}
 
 	var dp dispatch.Dispatcher
-	dp = dispatch.NewCenterCluster()
+	dp = dispatch.NewByCenterCluster()
 	dp.Link(addr)
 
 	c.lg = logic.NewClient(dp)

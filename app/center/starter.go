@@ -4,16 +4,21 @@
 // center
 package center
 
-import context "context"
+import (
+	"begonia2/app/option"
+	"begonia2/dispatch"
+	"begonia2/logic"
+	"fmt"
+)
 
 // starter.go something
 // bootStartByCenter 根据center cluster模式启动
 func bootstart(optionMap map[string]interface{}) Center {
 
-	ctx, cancel := context.WithCancel(context.Background())
-	c := &rClient{
-		ctx:    ctx,
-		cancel: cancel,
+	//ctx, cancel := context.WithCancel(context.Background())
+	c := &rCenter{
+		//ctx:    ctx,
+		//cancel: cancel,
 	}
 
 	// TODO:给dispatch初始化
@@ -24,11 +29,12 @@ func bootstart(optionMap map[string]interface{}) Center {
 	}
 
 	var dp dispatch.Dispatcher
-	dp = dispatch.NewCenterCluster()
-	dp.Link(addr)
+	dp = dispatch.NewByCenterCluster()
+	dp.Listen(addr)
 
-	c.lg = logic.NewClient(dp)
+	c.lg = logic.NewMix(dp)
 
+	fmt.Println(c)
 	//TODO: 发一个包，拉取配置
 
 	/*
@@ -52,7 +58,7 @@ func bootstart(optionMap map[string]interface{}) Center {
 }
 
 // New 初始化，获得一个service对象，传入一个mode参数，以及一个option的不定参数
-func New(mode string, optionFunc ...option.OptionFunc) (cli Client) {
+func New(mode string, optionFunc ...option.OptionFunc) (cli Center) {
 	optionMap := defaultClientConfig()
 
 	for _, f := range optionFunc {
@@ -61,7 +67,7 @@ func New(mode string, optionFunc ...option.OptionFunc) (cli Client) {
 
 	switch mode {
 	case "center":
-		cli = bootstartByCenter(optionMap)
+		cli = bootstart(optionMap)
 		// TODO:其他的模式和模式出问题的判断
 	}
 

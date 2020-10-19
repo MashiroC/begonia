@@ -44,7 +44,11 @@ func (c *coreService) Sign(serviceName string, funs []coding.FunInfo) *logic.Cal
 	//var fs []rFun
 	//b, err := signCoder.Encode(fs)
 	// TODO: 核心服务还没实现
-	return &logic.Call{}
+	return &logic.Call{
+		Service: "CORE",
+		Fun:     "Sign",
+		Param:   []byte{1,2,3},
+	}
 }
 
 type SignInfoReq struct {
