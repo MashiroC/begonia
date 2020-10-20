@@ -41,7 +41,7 @@ type mix struct {
 
 }
 
-// Handle 处理响应与请求，响应在这里被直接转发，请求则塞到管道里
+// Handle 处理响应与请求，请求和响应在这里被直接转发，CoreService的请求被传到上层
 func (m *mix) Handle() {
 //TODO:回收过期的key
 	for {
@@ -51,7 +51,12 @@ func (m *mix) Handle() {
 
 			// 如果是请求包，记录、发送给上层处理
 			m.rs.Add(f.ReqId, connID)
-			m.reqCh <- f
+
+			if f.Service=="CORE"{
+				m.reqCh <- f
+			}else{
+				//转发
+			}
 
 		case *frame.Response:
 

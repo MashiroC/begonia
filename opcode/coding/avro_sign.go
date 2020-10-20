@@ -16,7 +16,7 @@ func sign(schemaMap map[uint8]*goavro.Codec) {
 {
 	"namespace": "begonia.entry",
 	"type": "record",
-	"name": "Sign",
+	"name": "SignCall",
 	"fields": [{
 			"name": "service",
 			"type": "string"

@@ -7,6 +7,7 @@ package app
 // coreservice_schema.go something
 
 const (
+
 	signInfoRawSchema = `{
     "namespace":"begonia.entry",
     "type":"record",
@@ -18,44 +19,41 @@ const (
         }
     ]
 }`
-	signInfoResultRawSchema = `[{
-		"type": "record",
-		"namespace": "begonia.entry",
-		"name": "FunInfo",
-		"fields": [{
-				"name": "fun",
-				"type": "string"
-			},
-			{
-				"name": "mode",
-				"type": "string"
-			},
-			{
-				"name": "inSchema",
-				"type": "string"
-			},
-			{
-				"name": "outSchema",
-				"type": "string"
-			}
-		]
-	},
-	{
-		"namespace": "begonia.entry",
-		"type": "record",
-		"name": "SignInfoResp",
-		"fields": [{
-				"name": "service",
-				"type": "string"
-			},
-			{
-				"name": "address",
-				"type": {
-					"type": "array",
-					"items": "begonia.entry.FunInfo"
+	serviceInfoRawSchema = `{
+	"namespace": "begonia.entry",
+	"type": "record",
+	"name": "ServiceInfo",
+	"fields": [{
+			"name": "service",
+			"type": "string"
+		},
+		{
+			"name": "funs",
+			"type": {
+				"type": "array",
+				"items": {
+					"type": "record",
+					"name": "FunInfo",
+					"fields": [{
+							"name": "name",
+							"type": "string"
+						},
+						{
+							"name": "mode",
+							"type": "string"
+						},
+						{
+							"name": "inSchema",
+							"type": "string"
+						},
+						{
+							"name": "outSchema",
+							"type": "string"
+						}
+					]
 				}
 			}
-		]
-	}
-]`
+		}
+	]
+}`
 )

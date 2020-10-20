@@ -28,6 +28,6 @@ func (h *HelloService) SayHello(name string) string {
 	return "Hello " + name
 }
 
-func (h *HelloService) SayHello2() (string,error){
+func (h *HelloService) SayHello2(name string) (string,error){
 	return "",errors.New("hello")
 }

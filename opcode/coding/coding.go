@@ -5,7 +5,6 @@
 package coding
 
 import (
-	"fmt"
 	"reflect"
 )
 
@@ -18,24 +17,35 @@ type Coder interface {
 }
 
 type FunInfo struct {
-	Name      string
-	Mode      string
-	InSchema  string
-	OutSchema string
+	Name      string `avro:"name"`
+	Mode      string `avro:"mode"`
+	InSchema  string `avro:"inSchema"`
+	OutSchema string `avro:"outSchema"`
 }
 
-func Parse(mode string, in interface{}) (c Coder,fi []FunInfo) {
+func Parse(mode string, in interface{}) (fi []FunInfo) {
+	//TODO:先简单写一下 后面再支持更多类型
 	if mode != "avro" {
 		panic("parse mode error")
 	}
 
-	t:=reflect.TypeOf(in)
-	v:=reflect.ValueOf(in)
+	t := reflect.TypeOf(in)
 
-	fi=make([]FunInfo,t.NumMethod())
-	for i:=0;i<t.NumMethod();i++{
-		fmt.Println(t.Method(i))
+	fi = make([]FunInfo, t.NumMethod())
+	for i := 0; i < t.NumMethod(); i++ {
+
+		m := t.Method(i)
+
+		inS := InSchema(m)
+		outS := OutSchema(m)
+
+		fi[i] = FunInfo{
+			Name:      m.Name,
+			Mode:      mode,
+			InSchema:  inS,
+			OutSchema: outS,
+		}
 	}
-	fmt.Println(t,v)
+
 	return
 }

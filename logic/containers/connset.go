@@ -57,7 +57,7 @@ package containers
 //	s.connMap[c.Uuid()] = c
 //}
 //
-//func (s *ConnSet) Sign(uuid, serviceName string) (err error) {
+//func (s *ConnSet) SignCall(uuid, serviceName string) (err error) {
 //	s.connLock.RLock()
 //
 //	_, exist := s.connMap[uuid]

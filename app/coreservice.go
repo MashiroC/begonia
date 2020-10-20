@@ -16,10 +16,11 @@ var (
 )
 
 var (
-	Core                = &coreService{}
-	signInfoCoder       coding.Coder
-	signInfoResultCoder coding.Coder
-	signCoder           coding.Coder
+	Core             = &coreService{}
+	signInfoCoder    coding.Coder
+	serviceInfoCoder coding.Coder
+
+	successCoder coding.Coder
 )
 
 func init() {
@@ -30,24 +31,32 @@ func init() {
 		panic(err)
 	}
 
-	signInfoResultCoder, err = coding.NewAvro(signInfoResultRawSchema)
+	serviceInfoCoder, err = coding.NewAvro(serviceInfoRawSchema)
 	if err != nil {
 		panic(err)
 	}
+
+	successCoder = &coding.SuccessCoder{}
 
 }
 
 type coreService struct {
 }
 
-func (c *coreService) Sign(serviceName string, funs []coding.FunInfo) *logic.Call {
-	//var fs []rFun
-	//b, err := signCoder.Encode(fs)
-	// TODO: 核心服务还没实现
+func (c *coreService) SignCall(serviceName string, funs []coding.FunInfo) *logic.Call {
+
+	b, err := serviceInfoCoder.Encode(SignInfo{
+		Service: serviceName,
+		Funs:    funs,
+	})
+	if err != nil {
+		panic(err)
+	}
+
 	return &logic.Call{
 		Service: "CORE",
-		Fun:     "Sign",
-		Param:   []byte{1,2,3},
+		Fun:     "SignCall",
+		Param:   b,
 	}
 }
 
@@ -71,7 +80,7 @@ func (c *coreService) SignInfoResult(b []byte) (f []FunInfo) {
 
 	// TODO: 解码这个类型 构造coder
 
-	//signInfoResultCoder.DecodeIn(b, &f)
+	//serviceInfoCoder.DecodeIn(b, &f)
 
 	return
 }

@@ -6,7 +6,6 @@ package center
 
 import (
 	"begonia2/logic"
-	"log"
 )
 
 // center.go something
@@ -16,20 +15,32 @@ type Center interface {
 	Run()
 }
 
+type serviceSet interface {
+	Get(service string) (connID string)
+	Add(service string)
+}
+
 type rCenter struct {
-	lg logic.MixNode
+	lg       logic.MixNode
+	services serviceSet
+	Core     CoreService
 }
 
 func (c *rCenter) Run() {
 	go c.lg.Handle()
 	for {
-		call,wf:=c.lg.RecvMsg()
+		call, wf := c.lg.RecvMsg()
 
-		log.Println("call:",call)
+		// 核心服务
+		res, err := c.Core.Invoke(call.Fun, call.Param)
+		if err != nil {
+			panic(err)
+		}
 
 		wf(&logic.CallResult{
-			Result: []byte{1,2,3},
-			Err:    "",
+			Result: res,
+			Err:    err,
 		})
+
 	}
 }

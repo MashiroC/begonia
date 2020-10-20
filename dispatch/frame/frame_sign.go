@@ -58,5 +58,5 @@ package frame
 //}
 //
 //func (f *signFrame) Opcode() uint8 {
-//	return opcode.Sign
+//	return opcode.SignCall
 //}

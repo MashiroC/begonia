@@ -210,10 +210,10 @@ func TestSelect(t *testing.T) {
 	close(ch1)
 	close(ch2)
 	select {
-	case res,ok:=<-ch1:
-		fmt.Println("ch1",res,ok)
-	case res,ok:=<-ch2:
-		fmt.Println("ch2",res,ok)
+	case res, ok := <-ch1:
+		fmt.Println("ch1", res, ok)
+	case res, ok := <-ch2:
+		fmt.Println("ch2", res, ok)
 	}
 	fmt.Println("exit")
 }
@@ -224,6 +224,106 @@ func TestResp(t *testing.T) {
 
 	version := frame.ProtocolVersion // 0 ~ 15
 
-	res:= ((typCode<<3)|dispatchCode)<<4 | version
+	res := ((typCode<<3)|dispatchCode)<<4 | version
 	fmt.Println(res)
+}
+
+type FunInfo struct {
+	Fun       string `avro:"fun"`
+	Mode      string `avro:"mode"`
+	InSchema  string `avro:"inSchema"`
+	OutSchema string `avro:"outSchema"`
+}
+
+type ServiceInfo struct {
+	Service string  `avro:"service"`
+	Funs    []FunInfo `avro:"funs"`
+}
+
+func TestAvroStruct(t *testing.T) {
+	rawSchema := `[{
+		"type": "record",
+		
+		"name": "FunInfo",
+		"fields": [{
+				"name": "fun",
+				"type": "string"
+			},
+			{
+				"name": "mode",
+				"type": "string"
+			},
+			{
+				"name": "inSchema",
+				"type": "string"
+			},
+			{
+				"name": "outSchema",
+				"type": "string"
+			}
+		]
+	},
+	{
+		"namespace": "begonia.entry",
+		"type": "record",
+		"name": "ServiceInfo",
+		"fields": [{
+				"name": "service",
+				"type": "string"
+			},
+			{
+				"name": "funs",
+				"type": {
+					"type": "array",
+					"items": "string"
+				}
+			}
+		]
+	}
+]`
+
+	schema := avro.MustParse(rawSchema)
+
+
+
+	obj := ServiceInfo{
+		Service: "test",
+		//Funs:    []F{"asd","zxc"},
+	}
+
+	//obj := map[string]interface{}{
+	//	"service":"test",
+	//	"funs":[]map[string]interface{}{{
+	//		"fun":"test1",
+	//		"mode":"avro",
+	//		"inSchema":"asdasd",
+	//		"outSchema":"asdasd",
+	//	}},
+	//}
+
+	b,err:=avro.Marshal(schema,&obj)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(b)
+}
+
+func TestAvroSt(t *testing.T) {
+	//rawSchema:=
+//s:=avro.MustParse(rawSchema)
+//fmt.Println(s)
+
+	//b, err := avro.Marshal(s, ServiceInfo{
+	//	Service: "test",
+	//	Funs: []FunInfo{{
+	//		Fun:       "asd",
+	//		Mode:      "zxc",
+	//		InSchema:  "zxcv",
+	//		OutSchema: "zxcv",
+	//	}},
+	//})
+	//if err != nil {
+	//	panic(err)
+	//}
+	//fmt.Println(b)
 }

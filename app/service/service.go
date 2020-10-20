@@ -34,14 +34,15 @@ type rService struct {
 func (r *rService) Sign(name string, service interface{}) {
 	//coder := coding.AvroCoder
 
-	// TODO:parse mode
-	_, fs := coding.Parse("avro", service)
+	// TODO:注册后 把函数注册到本地
+	fs := coding.Parse("avro", service)
 
-	res := r.lg.CallSync(app.Core.Sign(name, fs))
+	res := r.lg.CallSync(app.Core.SignCall(name, fs))
 	// TODO:handler error
 	if res.Err != "" {
 		panic(res.Err)
 	}
+
 	log.Println("sign result:",res)
 }
 

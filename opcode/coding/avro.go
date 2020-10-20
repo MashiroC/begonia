@@ -6,7 +6,6 @@ package coding
 
 import (
 	"begonia2/opcode"
-	"fmt"
 	"github.com/hamba/avro"
 	"github.com/linkedin/goavro/v2"
 )
@@ -19,27 +18,28 @@ func NewAvro(rawSchema string) (c Coder, err error) {
 		return
 	}
 
-	c = &AvroCoder{schema: schema}
+
+	c = &AvroCoder{Schema: schema}
 
 	return
 }
 
 type AvroCoder struct {
-	schema avro.Schema
+	Schema avro.Schema
 }
 
 func (c *AvroCoder) Encode(data interface{}) ([]byte, error) {
-	return avro.Marshal(c.schema, data)
+	return avro.Marshal(c.Schema, data)
 }
 
 func (c *AvroCoder) Decode(bytes []byte) (data interface{}, err error) {
 	data = make(map[string]interface{})
-	err = avro.Unmarshal(c.schema, bytes, &data)
+	err = avro.Unmarshal(c.Schema, bytes, &data)
 	return
 }
 
 func (c *AvroCoder) DecodeIn(bytes []byte, i interface{}) (err error) {
-	err = avro.Unmarshal(c.schema, bytes, &i)
+	err = avro.Unmarshal(c.Schema, bytes, &i)
 	return
 }
 
@@ -106,33 +106,4 @@ func init() {
 	//AvroCoder = &rAvroCoder{
 	//	schemaMap: schemaMap,
 	//}
-}
-
-type rAvroCoder struct {
-	schemaMap map[uint8]*goavro.Codec
-}
-
-func (c *rAvroCoder) Decode(opcode uint8, data []byte) (m map[string]interface{}, err error) {
-	codec, ok := c.schemaMap[opcode]
-	if !ok {
-		err = fmt.Errorf("opcode [%d] not in avro schema map", opcode)
-		return
-	}
-	res, _, err := codec.NativeFromBinary(data)
-	if err != nil {
-		return
-	}
-	m = res.(map[string]interface{})
-	return
-}
-
-func (c *rAvroCoder) Encode(opcode uint8, data map[string]interface{}) (b []byte, err error) {
-	codec, ok := c.schemaMap[opcode]
-	if !ok {
-		err = fmt.Errorf("opcode [%d] not in avro schema map", opcode)
-		return
-	}
-
-	b, err = codec.BinaryFromNative(nil, data)
-	return
 }
