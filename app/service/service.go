@@ -10,7 +10,6 @@ import (
 	"begonia2/opcode/coding"
 	"begonia2/tool/reflects"
 	"context"
-	"fmt"
 	"log"
 	"reflect"
 )
@@ -43,7 +42,7 @@ func (r *rService) Sign(name string, service interface{}) {
 	if res.Err != "" {
 		panic(res.Err)
 	}
-	fmt.Println(res)
+	log.Println("sign result:",res)
 }
 
 func (r *rService) Wait() {

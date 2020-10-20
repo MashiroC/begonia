@@ -8,7 +8,6 @@ import (
 	"begonia2/dispatch/conn"
 	"begonia2/dispatch/frame"
 	"begonia2/tool/ids"
-	"fmt"
 	"log"
 	"sync"
 )
@@ -114,9 +113,7 @@ func (d *defaultDispatch) SendTo(connID string, f frame.Frame) (err error) {
 }
 
 func (d *defaultDispatch) Recv() (connID string, f frame.Frame) {
-	fmt.Println("dgRecv")
 	msg := <-d.msgCh
-	fmt.Println("dpMsg:",msg)
 	connID = msg.connID
 	f = msg.f
 	return
@@ -169,19 +166,16 @@ func (d *defaultDispatch) work(c conn.Conn) {
 		}
 		log.Println("recv:", opcode, string(data))
 		typ, ctrl := frame.ParseOpcode(int(opcode))
-		fmt.Println(typ,ctrl)
 		if ctrl == frame.CtrlDefaultCode {
 			var err error
 			f, err := frame.UnMarshal(typ, data)
 			if err != nil {
 				panic(err)
 			}
-			fmt.Println("msgChWrite")
 			d.msgCh <- recvMsg{
 				connID: id,
 				f:      f,
 			}
-			fmt.Println("msgChWriteOver")
 
 		} else {
 			// TODO:现在没有除了普通请求之外的ctrl code 支持

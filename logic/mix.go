@@ -9,7 +9,6 @@ import (
 	"begonia2/dispatch"
 	"begonia2/dispatch/frame"
 	"errors"
-	"fmt"
 )
 
 // mix.go something
@@ -24,7 +23,6 @@ func NewMix(dp dispatch.Dispatcher) MixNode {
 		reqCh: make(chan *frame.Request),
 	}
 	// TODO: add ctx
-	fmt.Println("go handler")
 	go c.Handle()
 	return c
 }
@@ -47,9 +45,7 @@ type mix struct {
 func (m *mix) Handle() {
 //TODO:回收过期的key
 	for {
-		fmt.Println("mixRecv")
 		connID, msg := m.dp.Recv()
-		fmt.Println("recv:",connID,msg)
 		switch f := msg.(type) {
 		case *frame.Request:
 
@@ -107,7 +103,6 @@ func (m *mix) RecvMsg() (msg *Call, wf WriteFunc) {
 			}
 			m.rs.Remove(req.ReqId)
 
-			fmt.Println("resp:",resp)
 			err := m.dp.SendTo(toID,resp)
 			if err!=nil{
 				panic(err)

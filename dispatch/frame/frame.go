@@ -2,7 +2,6 @@ package frame
 
 import (
 	"errors"
-	"fmt"
 )
 
 const (
@@ -30,7 +29,6 @@ func ParseOpcode(opcode int) (typCode, ctrlCode int) {
 
 	ctrlCode = opcode >> 4 & 0b0111
 
-
 	typCode = opcode >> 7
 
 	return
@@ -41,7 +39,6 @@ func makeOpcode(typCode int) int {
 
 	version := ProtocolVersion // 0 ~ 15
 
-	fmt.Printf("typ:%d,makeOpcode:%b\n",typCode,((typCode<<3)|dispatchCode)<<4 | version)
 	return ((typCode<<3)|dispatchCode)<<4 | version
 }
 

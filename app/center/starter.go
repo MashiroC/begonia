@@ -8,7 +8,7 @@ import (
 	"begonia2/app/option"
 	"begonia2/dispatch"
 	"begonia2/logic"
-	"fmt"
+	"log"
 )
 
 // starter.go something
@@ -32,10 +32,9 @@ func bootstart(optionMap map[string]interface{}) Center {
 	dp = dispatch.NewByCenterCluster()
 	go dp.Listen(addr)
 
-	fmt.Println("asdasdasd")
 	c.lg = logic.NewMix(dp)
 
-	fmt.Println(c)
+	log.Println("begonia center started")
 	//TODO: 发一个包，拉取配置
 
 	/*
@@ -68,7 +67,6 @@ func New(mode string, optionFunc ...option.OptionFunc) (cli Center) {
 
 	switch mode {
 	case "center":
-		fmt.Println("bootstart")
 		cli = bootstart(optionMap)
 		// TODO:其他的模式和模式出问题的判断
 	}

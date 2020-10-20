@@ -7,7 +7,6 @@ package logic
 import (
 	"begonia2/dispatch"
 	"begonia2/dispatch/frame"
-	"fmt"
 )
 
 // service.go something
@@ -64,7 +63,6 @@ func (c *service) RecvMsg() (call *Call, wf WriteFunc) {
 			Result: msg.Result,
 			Err:    msg.Err,
 		})
-		fmt.Println("asd")
 		if err!=nil{
 			panic(err)
 		}

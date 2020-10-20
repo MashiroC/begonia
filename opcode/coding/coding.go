@@ -4,6 +4,11 @@
 // coding
 package coding
 
+import (
+	"fmt"
+	"reflect"
+)
+
 // coding.go something
 
 type Coder interface {
@@ -20,6 +25,17 @@ type FunInfo struct {
 }
 
 func Parse(mode string, in interface{}) (c Coder,fi []FunInfo) {
+	if mode != "avro" {
+		panic("parse mode error")
+	}
 
+	t:=reflect.TypeOf(in)
+	v:=reflect.ValueOf(in)
+
+	fi=make([]FunInfo,t.NumMethod())
+	for i:=0;i<t.NumMethod();i++{
+		fmt.Println(t.Method(i))
+	}
+	fmt.Println(t,v)
 	return
 }

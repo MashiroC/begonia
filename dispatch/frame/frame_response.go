@@ -8,7 +8,6 @@ import (
 	"begonia2/tool/qconv"
 	"bytes"
 	"errors"
-	"fmt"
 )
 
 // frame_response.go something
@@ -37,7 +36,7 @@ func (r *Response) Marshal() []byte {
 	{opcode}{length}{extendLength}{reqId}{error}{data}
 	*/
 	if r.v == nil {
-		buf := make([]byte, 0,128)
+		buf := make([]byte, 0, 128)
 
 		buf = append(buf, qconv.Qs2b(r.ReqId)...)
 		buf = append(buf, breakByte)
@@ -57,8 +56,6 @@ func (r *Response) Opcode() int {
 	if r.opcode == -1 {
 		r.opcode = makeOpcode(ResponseTypCode)
 	}
-
-	fmt.Printf("opcode:%b\n",r.opcode)
 
 	return r.opcode
 }
