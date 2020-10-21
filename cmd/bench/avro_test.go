@@ -266,7 +266,7 @@ func TestAvroStruct(t *testing.T) {
 	{
 		"namespace": "begonia.entry",
 		"type": "record",
-		"name": "ServiceInfo",
+		"name": "ServiceInfoCall",
 		"fields": [{
 				"name": "service",
 				"type": "string"
@@ -313,7 +313,7 @@ func TestAvroSt(t *testing.T) {
 //s:=avro.MustParse(rawSchema)
 //fmt.Println(s)
 
-	//b, err := avro.Marshal(s, ServiceInfo{
+	//b, err := avro.Marshal(s, ServiceInfoCall{
 	//	Service: "test",
 	//	Funs: []FunInfo{{
 	//		Fun:       "asd",

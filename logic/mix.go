@@ -14,13 +14,17 @@ import (
 // mix.go something
 
 func NewMix(dp dispatch.Dispatcher) MixNode {
+	rs := NewReqSet(config.C.Logic.RequestTimeOut)
+	return NewMixWithReqSet(dp, rs)
+}
+
+func NewMixWithReqSet(dp dispatch.Dispatcher, rs *ReqSet) MixNode {
 	c := &mix{
 		baseLogic: baseLogic{
 			dp:       dp,
 			waitChan: NewWaitChans(),
 		},
-		rs:newReqSet(config.C.Logic.RequestTimeOut),
-		reqCh: make(chan *frame.Request),
+		rs: rs,
 	}
 	// TODO: add ctx
 	go c.Handle()
@@ -29,53 +33,17 @@ func NewMix(dp dispatch.Dispatcher) MixNode {
 
 type MixNode interface {
 	caller
-	Handle()
 	Close()
 	RecvMsg() (msg *Call, wf WriteFunc)
 }
 
 type mix struct {
 	baseLogic
-	reqCh  chan *frame.Request
-	rs *reqSet
-
+	rs *ReqSet
 }
 
 // Handle 处理响应与请求，请求和响应在这里被直接转发，CoreService的请求被传到上层
 func (m *mix) Handle() {
-//TODO:回收过期的key
-	for {
-		connID, msg := m.dp.Recv()
-		switch f := msg.(type) {
-		case *frame.Request:
-
-			// 如果是请求包，记录、发送给上层处理
-			m.rs.Add(f.ReqId, connID)
-
-			if f.Service=="CORE"{
-				m.reqCh <- f
-			}else{
-				//转发
-			}
-
-		case *frame.Response:
-
-			// 如果是响应包，直接转发
-			toID, ok := m.rs.Get(f.ReqId)
-			if !ok {
-				err := errors.New("connID not found")
-				panic(err)
-			}
-
-			err := m.dp.SendTo(toID, f)
-			if err != nil {
-				panic(err)
-			}
-
-			m.rs.Remove(f.ReqId)
-
-		}
-	}
 
 }
 
@@ -83,37 +51,88 @@ func (m *mix) Close() {
 	panic("implement me")
 }
 
-func (m *mix) RecvMsg() (msg *Call, wf WriteFunc) {
-	req, ok := <-m.reqCh
-	if !ok {
-		panic("request chan close")
-	}
+func (m *mix) RecvMsg() (call *Call, wf WriteFunc) {
+	//TODO:回收过期的key
 
-	msg = &Call {
-		Service: req.Service,
-		Fun:     req.Fun,
-		Param:   req.Params,
-	}
+	for {
+		/*
+			对于mix节点：
+			请求：
+			1.外界发来给自己处理的
+			2.需要被转发的
+			(需要到上层进行处理，理论上发送给自己的都是需要自己处理的)
+			（logic：记录请求，等待响应，响应可以是自己发的，也可以是其他连接给的）
+			（api：看需要转发还是需要直接返回，转发需要得知对方的connID）
 
-	wf = func(result *CallResult, toConnID ...string) {
-		resp := frame.NewResponse(req.ReqId, result.Result, result.Err)
-		if toConnID != nil {
-			for _, connID := range toConnID {
-				m.dp.SendTo(connID, resp)
-			}
-		} else {
-			toID,ok:=m.rs.Get(req.ReqId)
-			if !ok {
-				panic("toID err")
-			}
-			m.rs.Remove(req.ReqId)
+			响应：
+			1.需要被转发的
+			（直接使用回调去转发到chan或者另一条连接，logic处理）
+		*/
 
-			err := m.dp.SendTo(toID,resp)
-			if err!=nil{
-				panic(err)
+		connID, msg := m.dp.Recv()
+		switch f := msg.(type) {
+		case *frame.Request:
+
+			m.rs.Add(f.ReqId, connID)
+
+			call = &Call{
+				Service: f.Service,
+				Fun:     f.Fun,
+				Param:   f.Params,
 			}
+
+			wf = func(result *CallResult, toConnID ...string) {
+
+				var res frame.Frame
+				if result == Redirect {
+					res = f
+				} else {
+					res = frame.NewResponse(f.ReqId, result.Result, result.Err)
+				}
+
+				if toConnID != nil {
+					for _, connID := range toConnID {
+						m.dp.SendTo(connID, res)
+					}
+				} else {
+					toID, ok := m.rs.Get(f.ReqId)
+					if !ok {
+						panic("toID err")
+					}
+					m.rs.Remove(f.ReqId)
+
+					err := m.dp.SendTo(toID, res)
+					if err != nil {
+						panic(err)
+					}
+				}
+
+			}
+
+			return
+
+		case *frame.Response:
+
+			go func() {
+				// 如果是响应包，直接转发
+				toID, ok := m.rs.Get(f.ReqId)
+				if !ok {
+					err := errors.New("connID not found")
+					panic(err)
+				}
+
+				err := m.dp.SendTo(toID, f)
+				if err != nil {
+					panic(err)
+				}
+
+				m.rs.Remove(f.ReqId)
+			}()
+
+			continue
+
 		}
+
 	}
 
-	return
 }

@@ -7,7 +7,7 @@ package logic
 // entity.go something
 
 const (
-	CoreServiceInfo = "ServiceInfo"
+	CoreServiceInfo = "ServiceInfoCall"
 )
 
 type Call struct {
@@ -19,4 +19,9 @@ type Call struct {
 type CallResult struct {
 	Result []byte
 	Err    string
+}
+
+var Redirect = &CallResult{
+	Result: nil,
+	Err:    "",
 }

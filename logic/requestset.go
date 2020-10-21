@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-type reqSet struct {
+type ReqSet struct {
 	m map[string]*reqSetEntry
 	l sync.Mutex
 
@@ -17,31 +17,31 @@ type reqSetEntry struct {
 	t      time.Time
 }
 
-func newReqSet(overtime int) *reqSet {
-	return &reqSet{
+func NewReqSet(overtime int) *ReqSet {
+	return &ReqSet{
 		m:        make(map[string]*reqSetEntry),
 		l:        sync.Mutex{},
 		overtime: time.Duration(overtime),
 	}
 }
 
-func (s *reqSet) Add(reqID, connID string) {
+func (s *ReqSet) Add(reqID, connID string) {
 	s.l.Lock()
 	defer s.l.Unlock()
 
 	s.m[reqID] = &reqSetEntry{
 		connID: connID,
-		t:      time.Now().Add(s.overtime),
+		t:      time.Now().Add(s.overtime * time.Second),
 	}
 
 }
-func (s *reqSet) Get(reqID string) (connID string, ok bool) {
+func (s *ReqSet) Get(reqID string) (connID string, ok bool) {
 
 	s.l.Lock()
 	defer s.l.Unlock()
 
-	v,ok:=s.m[reqID]
-	if !ok{
+	v, ok := s.m[reqID]
+	if !ok {
 		return
 	}
 
@@ -50,24 +50,24 @@ func (s *reqSet) Get(reqID string) (connID string, ok bool) {
 		return
 	}
 
-	connID=v.connID
-	ok=true
+	connID = v.connID
+	ok = true
 
 	return
 }
 
-func (s *reqSet) Remove(reqID string) {
+func (s *ReqSet) Remove(reqID string) {
 
 }
 
-func (s *reqSet) CleanUp(){
+func (s *ReqSet) CleanUp() {
 	s.l.Lock()
 	defer s.l.Unlock()
 
 	now := time.Now()
-	for k,v:=range s.m{
-		if now.After(v.t){
-			delete(s.m,k)
+	for k, v := range s.m {
+		if now.After(v.t) {
+			delete(s.m, k)
 		}
 	}
 }

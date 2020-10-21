@@ -5,6 +5,7 @@
 package center
 
 import (
+	"begonia2/app/core"
 	"begonia2/logic"
 )
 
@@ -15,22 +16,26 @@ type Center interface {
 	Run()
 }
 
-type serviceSet interface {
-	Get(service string) (connID string)
-	Add(service string)
-}
+
 
 type rCenter struct {
 	lg       logic.MixNode
-	services serviceSet
-	Core     CoreService
+	services *serviceSet
+	Core     core.SubService
+	rs       *logic.ReqSet
 }
 
 func (c *rCenter) Run() {
-	go c.lg.Handle()
 	for {
 		call, wf := c.lg.RecvMsg()
 
+		go c.work(call, wf)
+	}
+}
+
+func (c *rCenter) work(call *logic.Call, wf logic.WriteFunc) {
+
+	if call.Service == core.ServiceName {
 		// 核心服务
 		res, err := c.Core.Invoke(call.Fun, call.Param)
 		if err != nil {
@@ -39,8 +44,17 @@ func (c *rCenter) Run() {
 
 		wf(&logic.CallResult{
 			Result: res,
-			Err:    err,
 		})
-
+		return
 	}
+
+	toID, ok := c.services.Get(call.Service)
+	if !ok {
+		wf(&logic.CallResult{
+			Err: "service not found",
+		})
+		return
+	}
+
+	wf(logic.Redirect, toID)
 }

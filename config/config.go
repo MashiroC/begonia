@@ -8,14 +8,8 @@ package config
 // config.go something
 
 import (
-	"begonia2/dispatch/frame"
 	"github.com/spf13/viper"
 )
-
-var Std = setupConfig()
-var Default = defaultConfig()
-
-var 	respCh chan *frame.Response
 
 var C = defaultConfig()
 
@@ -23,7 +17,7 @@ var C = defaultConfig()
 type envConfig struct {
 	Dispatch DispatchConfig
 	Conn     ConnConfig
-	Logic LogicConfig
+	Logic    LogicConfig
 }
 
 type DispatchConfig struct {
@@ -52,5 +46,11 @@ func setupConfig() envConfig {
 }
 
 func defaultConfig() envConfig {
-	return envConfig{Conn:ConnConfig{ReadTimeout: 10}}
+	return envConfig{
+		Conn: ConnConfig{
+			ReadTimeout: 10,
+		},
+		Logic: LogicConfig{
+			RequestTimeOut: 10,
+		}}
 }

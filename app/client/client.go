@@ -6,6 +6,7 @@ package client
 
 import (
 	"begonia2/app"
+	"begonia2/app/core"
 	"begonia2/logic"
 	"context"
 	"errors"
@@ -33,14 +34,14 @@ type rClient struct {
 // Service 获取一个服务
 func (r *rClient) Service(serviceName string) (s Service, err error) {
 
-	res := r.lg.CallSync(app.Core.SignInfo(serviceName))
+	res := r.lg.CallSync(core.Call.ServiceInfo(serviceName))
 
 	if res.Err != "" {
 		err = errors.New(res.Err)
 		return
 	}
 
-	fs := app.Core.SignInfoResult(res.Result)
+	fs := core.Result.ServiceInfo(res.Result)
 
 	s = r.newService(serviceName, fs)
 	return

@@ -1,17 +1,11 @@
-// Time : 2020/10/6 17:59
-// Author : Kieran
-
-// app
-package app
-
-// coreservice_schema.go something
+package core
 
 const (
 
-	signInfoRawSchema = `{
+	serviceInfoCallRawSchema = `{
     "namespace":"begonia.entry",
     "type":"record",
-    "name":"SignInfoReq",
+    "name":"ServiceInfoCall",
     "fields":[
         {
             "name":"service",
@@ -22,7 +16,7 @@ const (
 	serviceInfoRawSchema = `{
 	"namespace": "begonia.entry",
 	"type": "record",
-	"name": "ServiceInfo",
+	"name": "ServiceInfoCall",
 	"fields": [{
 			"name": "service",
 			"type": "string"

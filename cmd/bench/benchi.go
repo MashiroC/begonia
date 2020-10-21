@@ -30,14 +30,14 @@ var (
 	req = map[string]interface{}{
 		"reqId":   "test",
 		"service": "CoreService",
-		"fun":     "SignInfo",
+		"fun":     "ServiceInfoCall",
 		"params":  []byte{1, 2, 3},
 	}
 
 	reqNative = TestReq{
 		ReqId:   "test",
 		Service: "logService",
-		Fun:     "SignInfo",
+		Fun:     "ServiceInfoCall",
 		Params:  []byte{1, 2, 3},
 	}
 

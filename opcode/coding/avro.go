@@ -5,9 +5,7 @@
 package coding
 
 import (
-	"begonia2/opcode"
 	"github.com/hamba/avro"
-	"github.com/linkedin/goavro/v2"
 )
 
 // avro.go something
@@ -45,63 +43,63 @@ func (c *AvroCoder) DecodeIn(bytes []byte, i interface{}) (err error) {
 
 func init() {
 
-	schemaMap := make(map[uint8]*goavro.Codec)
-
-	sign(schemaMap)
-
-	signInfo(schemaMap)
-
-	reqCodec, err := goavro.NewCodec(`
-{
-	"namespace": "begonia.entry",
-	"type": "record",
-	"name": "Request",
-	"fields": [{
-			"name": "reqId",
-			"type": "string"
-		},
-		{
-			"name": "service",
-			"type": "string"
-		},
-		{
-			"name": "fun",
-			"type": "string"
-		},
-		{
-			"name": "params",
-			"type": "bytes"
-		}
-	]
-}`)
-	if err != nil {
-		panic("codec error!")
-	}
-	schemaMap[opcode.Request] = reqCodec
-
-	respCodec, err := goavro.NewCodec(`
-{
-	"namespace": "begonia.entry",
-	"type": "record",
-	"name": "Response",
-	"fields": [{
-			"name": "reqId",
-			"type": "string"
-		},
-		{
-			"name": "respErr",
-			"type": ["string","null"]
-		},
-		{
-			"name": "result",
-			"type": "bytes"
-		}
-	]
-}`)
-	if err != nil {
-		panic("codec error!")
-	}
-	schemaMap[opcode.Response] = respCodec
+//	schemaMap := make(map[uint8]*goavro.Codec)
+//
+//	sign(schemaMap)
+//
+//	signInfo(schemaMap)
+//
+//	reqCodec, err := goavro.NewCodec(`
+//{
+//	"namespace": "begonia.entry",
+//	"type": "record",
+//	"name": "Request",
+//	"fields": [{
+//			"name": "reqId",
+//			"type": "string"
+//		},
+//		{
+//			"name": "service",
+//			"type": "string"
+//		},
+//		{
+//			"name": "fun",
+//			"type": "string"
+//		},
+//		{
+//			"name": "params",
+//			"type": "bytes"
+//		}
+//	]
+//}`)
+//	if err != nil {
+//		panic("codec error!")
+//	}
+//	schemaMap[opcode.Request] = reqCodec
+//
+//	respCodec, err := goavro.NewCodec(`
+//{
+//	"namespace": "begonia.entry",
+//	"type": "record",
+//	"name": "Response",
+//	"fields": [{
+//			"name": "reqId",
+//			"type": "string"
+//		},
+//		{
+//			"name": "respErr",
+//			"type": ["string","null"]
+//		},
+//		{
+//			"name": "result",
+//			"type": "bytes"
+//		}
+//	]
+//}`)
+//	if err != nil {
+//		panic("codec error!")
+//	}
+//	schemaMap[opcode.Response] = respCodec
 
 	//AvroCoder = &rAvroCoder{
 	//	schemaMap: schemaMap,

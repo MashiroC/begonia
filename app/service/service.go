@@ -5,7 +5,7 @@
 package service
 
 import (
-	"begonia2/app"
+	"begonia2/app/core"
 	"begonia2/logic"
 	"begonia2/opcode/coding"
 	"begonia2/tool/reflects"
@@ -14,11 +14,13 @@ import (
 	"reflect"
 )
 
+var success coding.SuccessCoder
+
 // service.go something
 
 // Service 服务端的接口
 type Service interface {
-	Sign(name string, service interface{})
+	Register(name string, service interface{})
 	Wait()
 }
 
@@ -31,19 +33,24 @@ type rService struct {
 	coders *coderSet
 }
 
-func (r *rService) Sign(name string, service interface{}) {
+func (r *rService) Register(name string, service interface{}) {
 	//coder := coding.AvroCoder
 
 	// TODO:注册后 把函数注册到本地
 	fs := coding.Parse("avro", service)
 
-	res := r.lg.CallSync(app.Core.SignCall(name, fs))
+	res := r.lg.CallSync(core.Call.Register(name, fs))
 	// TODO:handler error
 	if res.Err != "" {
 		panic(res.Err)
 	}
 
-	log.Println("sign result:",res)
+	var ok bool
+	success.DecodeIn(res.Result, &ok)
+
+	if ok {
+		return
+	}
 }
 
 func (r *rService) Wait() {
@@ -65,7 +72,7 @@ func (r *rService) handleMsg(msg *logic.Call, wf logic.WriteFunc) {
 	if err != nil {
 		log.Println("decode err")
 		wf(&logic.CallResult{
-			Err:"decode error",
+			Err: "decode error",
 		})
 		return
 	}
