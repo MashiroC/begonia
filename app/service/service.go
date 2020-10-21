@@ -37,7 +37,24 @@ func (r *rService) Register(name string, service interface{}) {
 	//coder := coding.AvroCoder
 
 	// TODO:注册后 把函数注册到本地
-	fs := coding.Parse("avro", service)
+	fs, ms := coding.Parse("avro", service)
+
+	for i, f := range fs {
+		inCoder, err := coding.NewAvro(f.InSchema)
+		if err != nil {
+			panic(err)
+		}
+		outCoder, err := coding.NewAvro(f.OutSchema)
+		if err != nil {
+			panic(err)
+		}
+		r.coders.store(name, f.Name, reflectFun{
+			in:     inCoder,
+			out:    outCoder,
+			obj:    service,
+			method: ms[i],
+		})
+	}
 
 	res := r.lg.CallSync(core.Call.Register(name, fs))
 	// TODO:handler error
@@ -67,7 +84,14 @@ func (r *rService) work() {
 }
 
 func (r *rService) handleMsg(msg *logic.Call, wf logic.WriteFunc) {
-	fun := r.coders.get(msg.Service, msg.Fun)
+	fun,err := r.coders.get(msg.Service, msg.Fun)
+	if err != nil {
+		log.Println("get fun err")
+		wf(&logic.CallResult{
+			Err: "get fun err",
+		})
+		return
+	}
 	data, err := fun.in.Decode(msg.Param)
 	if err != nil {
 		log.Println("decode err")

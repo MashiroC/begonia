@@ -23,7 +23,7 @@ type FunInfo struct {
 	OutSchema string `avro:"outSchema"`
 }
 
-func Parse(mode string, in interface{}) (fi []FunInfo) {
+func Parse(mode string, in interface{}) (fi []FunInfo, methods []reflect.Method) {
 	//TODO:先简单写一下 后面再支持更多类型
 	if mode != "avro" {
 		panic("parse mode error")
@@ -32,9 +32,12 @@ func Parse(mode string, in interface{}) (fi []FunInfo) {
 	t := reflect.TypeOf(in)
 
 	fi = make([]FunInfo, t.NumMethod())
+	methods = make([]reflect.Method, t.NumMethod())
+
 	for i := 0; i < t.NumMethod(); i++ {
 
 		m := t.Method(i)
+		methods[i] = m
 
 		inS := InSchema(m)
 		outS := OutSchema(m)
