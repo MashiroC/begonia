@@ -16,7 +16,7 @@ package coding
 //{
 //	"namespace": "begonia.entry",
 //	"type": "record",
-//	"name": "Register",
+//	"name": "register",
 //	"fields": [{
 //			"name": "service",
 //			"type": "string"
@@ -51,5 +51,5 @@ package coding
 //	if err != nil {
 //		panic("codec error!")
 //	}
-//	schemaMap[opcode.Register] = signCodec
+//	schemaMap[opcode.register] = signCodec
 //}

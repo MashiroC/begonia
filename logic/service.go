@@ -10,11 +10,15 @@ import (
 )
 
 // service.go something
-type WriteFunc = func(result *CallResult, toConnID ...string)
+type ResultFunc struct {
+	Result func(result *CallResult, toConnID ...string)
+	ConnID string
+	ReqID  string
+}
 
 type Service interface {
 	caller
-	RecvMsg() (msg *Call, wf WriteFunc)
+	RecvMsg() (msg *Call, wf ResultFunc)
 }
 
 func NewService(dp dispatch.Dispatcher) Service {
@@ -32,42 +36,45 @@ type service struct {
 	baseLogic
 }
 
-func (c *service) RecvMsg() (call *Call, wf WriteFunc) {
+func (c *service) RecvMsg() (call *Call, wf ResultFunc) {
 
 	for {
 
-	_, f := c.dp.Recv()
+		connID, f := c.dp.Recv()
 
-	switch msg :=f.(type) {
-	case *frame.Request:
+		switch msg := f.(type) {
+		case *frame.Request:
 
-		call = &Call{
-			Service: msg.Service,
-			Fun:     msg.Fun,
-			Param:   msg.Params,
-		}
+			call = &Call{
+				Service: msg.Service,
+				Fun:     msg.Fun,
+				Param:   msg.Params,
+			}
 
-		wf = func(result *CallResult, toConnID ...string) {
-			resp := frame.NewResponse(msg.ReqId, result.Result, result.Err)
-			if toConnID != nil {
-				for _, connID := range toConnID {
-					c.dp.SendTo(connID, resp)
-				}
-			} else {
-				c.dp.Send(resp)
+			wf = ResultFunc{
+				Result: func(result *CallResult, toConnID ...string) {
+					resp := frame.NewResponse(msg.ReqId, result.Result, result.Err)
+					if toConnID != nil {
+						for _, connID := range toConnID {
+							c.dp.SendTo(connID, resp)
+						}
+					} else {
+						c.dp.Send(resp)
+					}
+				},
+				ConnID: connID,
+				ReqID:  msg.ReqId,
+			}
+			return
+		case *frame.Response:
+			err := c.waitChan.Callback(msg.ReqId, &CallResult{
+				Result: msg.Result,
+				Err:    msg.Err,
+			})
+			if err != nil {
+				panic(err)
 			}
 		}
-		return
-	case *frame.Response:
-		err := c.waitChan.Callback(msg.ReqId, &CallResult{
-			Result: msg.Result,
-			Err:    msg.Err,
-		})
-		if err!=nil{
-			panic(err)
-		}
 	}
-	}
-
 
 }

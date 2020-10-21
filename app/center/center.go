@@ -16,12 +16,9 @@ type Center interface {
 	Run()
 }
 
-
-
 type rCenter struct {
 	lg       logic.MixNode
-	services *serviceSet
-	Core     core.SubService
+	Core     *core.SubService
 	rs       *logic.ReqSet
 }
 
@@ -33,28 +30,30 @@ func (c *rCenter) Run() {
 	}
 }
 
-func (c *rCenter) work(call *logic.Call, wf logic.WriteFunc) {
+func (c *rCenter) work(call *logic.Call, wf logic.ResultFunc) {
 
 	if call.Service == core.ServiceName {
 		// 核心服务
-		res, err := c.Core.Invoke(call.Fun, call.Param)
+		res, err := c.Core.Invoke(wf.ConnID,wf.ReqID,call.Fun, call.Param)
 		if err != nil {
-			panic(err)
+			wf.Result(&logic.CallResult{
+				Err:    err.Error(),
+			})
 		}
 
-		wf(&logic.CallResult{
+		wf.Result(&logic.CallResult{
 			Result: res,
 		})
 		return
 	}
 
-	toID, ok := c.services.Get(call.Service)
+	toID,ok:=c.Core.GetToID(call.Service)
 	if !ok {
-		wf(&logic.CallResult{
+		wf.Result(&logic.CallResult{
 			Err: "service not found",
 		})
 		return
 	}
 
-	wf(logic.Redirect, toID)
+	wf.Result(logic.Redirect, toID)
 }

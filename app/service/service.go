@@ -83,11 +83,11 @@ func (r *rService) work() {
 	}
 }
 
-func (r *rService) handleMsg(msg *logic.Call, wf logic.WriteFunc) {
+func (r *rService) handleMsg(msg *logic.Call, wf logic.ResultFunc) {
 	fun,err := r.coders.get(msg.Service, msg.Fun)
 	if err != nil {
 		log.Println("get fun err")
-		wf(&logic.CallResult{
+		wf.Result(&logic.CallResult{
 			Err: "get fun err",
 		})
 		return
@@ -95,7 +95,7 @@ func (r *rService) handleMsg(msg *logic.Call, wf logic.WriteFunc) {
 	data, err := fun.in.Decode(msg.Param)
 	if err != nil {
 		log.Println("decode err")
-		wf(&logic.CallResult{
+		wf.Result(&logic.CallResult{
 			Err: "decode error",
 		})
 		return
@@ -115,7 +115,7 @@ func (r *rService) handleMsg(msg *logic.Call, wf logic.WriteFunc) {
 		panic(err)
 	}
 
-	wf(&logic.CallResult{Result: b})
+	wf.Result(&logic.CallResult{Result: b})
 }
 
 // astService ast树代码生成的ast service api

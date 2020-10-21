@@ -34,7 +34,7 @@ func NewMixWithReqSet(dp dispatch.Dispatcher, rs *ReqSet) MixNode {
 type MixNode interface {
 	caller
 	Close()
-	RecvMsg() (msg *Call, wf WriteFunc)
+	RecvMsg() (msg *Call, wf ResultFunc)
 }
 
 type mix struct {
@@ -51,7 +51,7 @@ func (m *mix) Close() {
 	panic("implement me")
 }
 
-func (m *mix) RecvMsg() (call *Call, wf WriteFunc) {
+func (m *mix) RecvMsg() (call *Call, wf ResultFunc) {
 	//TODO:回收过期的key
 
 	for {
@@ -81,32 +81,36 @@ func (m *mix) RecvMsg() (call *Call, wf WriteFunc) {
 				Param:   f.Params,
 			}
 
-			wf = func(result *CallResult, toConnID ...string) {
+			wf = ResultFunc{
+				Result: func(result *CallResult, toConnID ...string) {
 
-				var res frame.Frame
-				if result == Redirect {
-					res = f
-				} else {
-					res = frame.NewResponse(f.ReqId, result.Result, result.Err)
-				}
-
-				if toConnID != nil {
-					for _, connID := range toConnID {
-						m.dp.SendTo(connID, res)
+					var res frame.Frame
+					if result == Redirect {
+						res = f
+					} else {
+						res = frame.NewResponse(f.ReqId, result.Result, result.Err)
 					}
-				} else {
-					toID, ok := m.rs.Get(f.ReqId)
-					if !ok {
-						panic("toID err")
-					}
-					m.rs.Remove(f.ReqId)
 
-					err := m.dp.SendTo(toID, res)
-					if err != nil {
-						panic(err)
-					}
-				}
+					if toConnID != nil {
+						for _, connID := range toConnID {
+							m.dp.SendTo(connID, res)
+						}
+					} else {
+						toID, ok := m.rs.Get(f.ReqId)
+						if !ok {
+							panic("toID err")
+						}
+						m.rs.Remove(f.ReqId)
 
+						err := m.dp.SendTo(toID, res)
+						if err != nil {
+							panic(err)
+						}
+					}
+
+				},
+				ConnID: connID,
+				ReqID:  f.ReqId,
 			}
 
 			return

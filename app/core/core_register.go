@@ -2,14 +2,8 @@ package core
 
 import "fmt"
 
-type RegisterParam struct {
-}
-
-type RegisterResult struct {
-}
-
-func (s *SubService) Register(param ServiceInfo) (err error) {
-	fmt.Println("call Register!")
-
-	return nil
+func (s *SubService) register(connID string, param ServiceInfo) (err error) {
+	err = s.services.Add(connID, param.Service, param.Funs)
+	fmt.Println(s.services.m)
+	return err
 }

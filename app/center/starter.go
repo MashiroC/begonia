@@ -5,6 +5,7 @@
 package center
 
 import (
+	"begonia2/app/core"
 	"begonia2/app/option"
 	"begonia2/config"
 	"begonia2/dispatch"
@@ -20,10 +21,7 @@ func bootstart(optionMap map[string]interface{}) Center {
 	c := &rCenter{
 		//ctx:    ctx,
 		//cancel: cancel,
-		services: newServiceSet(),
 	}
-
-	// TODO:给dispatch初始化
 
 	var addr string
 	if addrIn, ok := optionMap["managerAddr"]; ok {
@@ -37,9 +35,9 @@ func bootstart(optionMap map[string]interface{}) Center {
 	var rs *logic.ReqSet
 	rs = logic.NewReqSet(config.C.Logic.RequestTimeOut)
 
-	c.rs = rs
-
 	c.lg = logic.NewMixWithReqSet(dp, rs)
+
+	c.Core = core.NewSubService()
 
 	log.Println("begonia center started")
 	//TODO: 发一个包，拉取配置
