@@ -14,7 +14,7 @@ func NewSubService() *SubService {
 
 func (s *SubService) Invoke(connID, reqID string, fun string, param []byte) (result []byte, err error) {
 	switch fun {
-	case "register":
+	case "Register":
 		var si ServiceInfo
 		err = serviceInfoCoder.DecodeIn(param, &si)
 		if err != nil {
@@ -26,10 +26,26 @@ func (s *SubService) Invoke(connID, reqID string, fun string, param []byte) (res
 			return
 		}
 		result, err = successCoder.Encode(true)
-		return
+	case "ServiceInfo":
+		var call serviceInfoCall
+		var si ServiceInfo
+		err = serviceInfoCallCoder.DecodeIn(param,&call)
+		if err!=nil{
+			return
+		}
+
+		si,err = s.serviceInfo(call.Service)
+		if err!=nil{
+			return
+		}
+		result, err = serviceInfoCoder.Encode(si)
+		if err!=nil{
+			return
+		}
+	default:
+		panic("err")
 	}
 
-	result = []byte{1, 2, 3}
 	return
 }
 

@@ -10,6 +10,7 @@ import (
 	"begonia2/opcode/coding"
 	"begonia2/tool/reflects"
 	"context"
+	"fmt"
 	"log"
 	"reflect"
 )
@@ -108,7 +109,7 @@ func (r *rService) handleMsg(msg *logic.Call, wf logic.ResultFunc) {
 	outVal := fun.method.Func.Call(inVal)
 
 	m := reflects.FromValue(outVal)
-
+	fmt.Println(m)
 	b, err := fun.out.Encode(m)
 	if err != nil {
 		// 这个error不应该有的

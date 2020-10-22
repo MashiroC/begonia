@@ -26,6 +26,22 @@ func main() {
 		panic(err)
 	}
 	fmt.Println(s)
+
+	sayHello,err := s.FuncSync("SayHello")
+	if err!=nil{
+		panic(err)
+	}
+
+	sayHello2,err := s.FuncSync("SayHello2")
+	if err!=nil{
+		panic(err)
+	}
+
+	res,err:=sayHello("shiina")
+
+	fmt.Println(res)
+
+	res,err=sayHello2("asd")
 	c.Wait()
 
 	//s, err := c.Service("Hello")

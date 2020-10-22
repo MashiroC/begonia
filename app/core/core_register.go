@@ -7,3 +7,15 @@ func (s *SubService) register(connID string, param ServiceInfo) (err error) {
 	fmt.Println(s.services.m)
 	return err
 }
+
+func (s *SubService) serviceInfo(serviceName string) (si ServiceInfo, err error) {
+	service, ok := s.services.Get(serviceName)
+	if !ok {
+		err = fmt.Errorf("service [%s] not found", serviceName)
+		return
+	}
+
+	si.Funs = service.funs
+	si.Service = serviceName
+	return
+}

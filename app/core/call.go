@@ -22,7 +22,7 @@ func (call) Register(serviceName string, funs []coding.FunInfo) *logic.Call {
 
 	return &logic.Call{
 		Service: ServiceName,
-		Fun:     "register",
+		Fun:     "Register",
 		Param:   b,
 	}
 }
@@ -40,7 +40,7 @@ func (call) ServiceInfo(serviceName string) *logic.Call {
 	}
 	return &logic.Call{
 		Service: ServiceName,
-		Fun:     "ServiceInfoCall",
+		Fun:     "ServiceInfo",
 		Param:   b,
 	}
 }

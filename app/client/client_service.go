@@ -7,6 +7,8 @@ package client
 import (
 	"begonia2/app"
 	"begonia2/logic"
+	"begonia2/opcode/coding"
+	"begonia2/tool/reflects"
 	"errors"
 	"fmt"
 )
@@ -41,7 +43,7 @@ func (r *rService) FuncSync(name string) (rf RemoteFunSync, err error) {
 	rf = func(params ...interface{}) (result interface{}, err error) {
 		ch := make(chan *logic.CallResult)
 
-		b, err := f.InCoder.Encode(result)
+		b, err := f.InCoder.Encode(coding.ToAvroObj(params))
 		if err != nil {
 			//TODO: 当传入参数和要求类型不符时的错误返回
 			panic(err)
@@ -61,7 +63,11 @@ func (r *rService) FuncSync(name string) (rf RemoteFunSync, err error) {
 			return
 		}
 
-		return f.OutCoder.Decode(tmp.Result)
+		// 对出参解码
+		out, err := f.OutCoder.Decode(tmp.Result)
+
+		result = reflects.ToInterfaces(out.(map[string]interface{}))
+		return
 	}
 	return
 }
@@ -93,8 +99,12 @@ func (r *rService) FuncAsync(name string) (rf RemoteFunAsync, err error) {
 				return
 			}
 			// 对出参解码
-			in, err := f.OutCoder.Decode(result.Result)
-			callback(in, err)
+			out, err := f.OutCoder.Decode(result.Result)
+
+			res := reflects.ToInterfaces(out.(map[string]interface{}))
+
+			fmt.Println(res)
+			callback(res, err)
 		})
 	}
 

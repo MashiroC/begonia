@@ -5,6 +5,7 @@
 package coding
 
 import (
+	"fmt"
 	"github.com/hamba/avro"
 )
 
@@ -39,6 +40,24 @@ func (c *AvroCoder) Decode(bytes []byte) (data interface{}, err error) {
 func (c *AvroCoder) DecodeIn(bytes []byte, i interface{}) (err error) {
 	err = avro.Unmarshal(c.Schema, bytes, &i)
 	return
+}
+
+func ToAvroObj(params []interface{}) interface{} {
+	out:=make(map[string]interface{})
+	for i:=0;i<len(params);i++ {
+		//t:=reflect.TypeOf(params[i])
+		//if t.Kind()==reflect.Struct{
+		//	var m map[string]interface{}
+		//	err := mapstructure.Decode(params[i], &m)
+		//	if err!=nil{
+		//		panic(err)
+		//	}
+		//	out["in"+fmt.Sprintf("%d",i)]=m
+		//}else{
+		out["in"+fmt.Sprintf("%d",i+1)]=params[i]
+		//}
+	}
+	return out
 }
 
 func init() {

@@ -8,7 +8,9 @@ import (
 	"begonia2/dispatch/frame"
 	"fmt"
 	"github.com/hamba/avro"
+	"strconv"
 	"testing"
+	"time"
 )
 
 // avro_test.go something
@@ -326,4 +328,22 @@ func TestAvroSt(t *testing.T) {
 	//	panic(err)
 	//}
 	//fmt.Println(b)
+}
+
+func TestForMap(t *testing.T) {
+	m:=make(map[string]*People)
+
+	m["in1"]=&People{
+		Name: "shiina",
+		Age:  18,
+	}
+
+	var i int64 = 1
+	ok := true
+	for ok{
+		v,ok:=m["in"+strconv.FormatInt(i,10)]
+		fmt.Println(v,ok)
+		i++
+		time.Sleep(5*time.Second)
+	}
 }

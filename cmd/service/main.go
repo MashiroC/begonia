@@ -14,7 +14,7 @@ func main() {
 
 	helloService := &HelloService{}
 
-	s.Register("Hello",helloService)
+	s.Register("Echo",helloService)
 
 	s.Wait()
 }
