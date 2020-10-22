@@ -5,8 +5,11 @@
 package logic
 
 import (
+	"begonia2/config"
 	"begonia2/dispatch"
 	"begonia2/dispatch/frame"
+	"log"
+	"time"
 )
 
 // service.go something
@@ -28,6 +31,32 @@ func NewService(dp dispatch.Dispatcher) Service {
 			waitChan: NewWaitChans(),
 		},
 	}
+
+	if config.C.Logic.AutoReConnection {
+		c.dp.Hook("close", func(connID string, err error) {
+			ok := false
+			if config.C.Logic.ReConnectionRetryCount <= 0 {
+				for !ok {
+					log.Println("connot link to server,retry...")
+					time.Sleep(time.Duration(config.C.Logic.ReConnectionIntervalSecond) * time.Second)
+					ok = dp.ReLink()
+				}
+				return
+			} else {
+				for i := 0; i < config.C.Logic.ReConnectionRetryCount && !ok; i++ {
+					log.Println("connot link to server,retry",i,"limit",config.C.Logic.ReConnectionRetryCount)
+					time.Sleep(time.Duration(config.C.Logic.ReConnectionIntervalSecond) * time.Second)
+					ok = dp.ReLink()
+				}
+				if ok {
+					return
+				} else {
+					panic("connect closed")
+				}
+			}
+		})
+	}
+
 	// TODO: add ctx
 	return c
 }

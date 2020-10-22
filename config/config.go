@@ -24,7 +24,11 @@ type DispatchConfig struct {
 }
 
 type LogicConfig struct {
-	RequestTimeOut int
+	RequestTimeOut   int
+
+	AutoReConnection bool
+	ReConnectionIntervalSecond int
+	ReConnectionRetryCount int
 }
 
 type ConnConfig struct {
@@ -51,6 +55,9 @@ func defaultConfig() envConfig {
 			ReadTimeout: 10,
 		},
 		Logic: LogicConfig{
-			RequestTimeOut: 10,
+			RequestTimeOut:             10,
+			AutoReConnection:           true,
+			ReConnectionIntervalSecond: 2,
+			ReConnectionRetryCount:     5,
 		}}
 }

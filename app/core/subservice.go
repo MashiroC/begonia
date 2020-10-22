@@ -1,6 +1,6 @@
 package core
 
-import "fmt"
+import "log"
 
 const (
 	ServiceName = "CORE"
@@ -64,7 +64,6 @@ func (s *SubService) GetToID(serviceName string) (connID string, ok bool) {
 }
 
 func (s *SubService) HandleConnClose(connID string, err error) {
-	fmt.Println("should remove service")
-
+	log.Printf("conn [%s] closed, unlink service\n",connID)
 	s.services.Unlink(connID)
 }

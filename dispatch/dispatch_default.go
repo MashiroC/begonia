@@ -34,6 +34,7 @@ func NewByCenterCluster() Dispatcher {
 type defaultDispatch struct {
 	mode dispatchMode
 
+	linkAddr   string
 	linkedConn conn.Conn
 	linkID     string
 
@@ -64,12 +65,13 @@ type recvMsg struct {
 }
 
 // Link 建立连接，center cluster模式下，会开一条和center的tcp连接
-func (d *defaultDispatch) Link(addr string) {
+func (d *defaultDispatch) Link(addr string) (err error) {
+
+	d.linkAddr = addr
 
 	c, err := conn.Dial(addr)
 	if err != nil {
-		// TODO:handle err
-		panic(err)
+		return
 	}
 
 	if d.mode != 0 {
@@ -82,6 +84,17 @@ func (d *defaultDispatch) Link(addr string) {
 	log.Println("link", addr, "success")
 
 	go d.work(c)
+
+	return
+}
+
+func (d *defaultDispatch) ReLink() bool {
+	err := d.Link(d.linkAddr)
+	if err!=nil{
+		return false
+	} else {
+		return true
+	}
 }
 
 // Send 发送一个包，在center cluster模式下直接发送到中心，中心进行调度

@@ -16,8 +16,11 @@ import (
 */
 type Dispatcher interface {
 
-	// Link 连接到某个服务或中心
-	Link(addr string)
+	// LinkTo 连接到某个服务或中心
+	Link(addr string) error
+
+	// ReLink 重新连接 需要先调用
+	ReLink() bool
 
 	// Send 发送请求
 	Send(frame frame.Frame) error
