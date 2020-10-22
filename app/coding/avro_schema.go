@@ -63,8 +63,6 @@ func OutSchema(m reflect.Method) string {
 			]
 		}`
 
-
-
 	return rawSchema
 }
 

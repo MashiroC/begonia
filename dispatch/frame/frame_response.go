@@ -1,7 +1,3 @@
-// Time : 2020/8/6 12:31
-// Author : MashiroC
-
-// frame
 package frame
 
 import (
@@ -13,82 +9,46 @@ import (
 // frame_response.go something
 
 const (
-	ResponseTypCode = 1
+	// response的typCode
+	responseTypCode = 1
 )
 
+// Response response的frame实现
+//
+//     4      4         8       0 || 16   [     length      ]
+//	{opcode}{version}{length}{extendLength}{error}0x49{param}
+//
 type Response struct {
-	ReqId  string
-	Err    string
-	Result []byte
+	ReqID  string // 请求id
+	Err    string // 调用中的错误
+	Result []byte // 调用结果
 
-	opcode int
-	v      []byte
+	v      []byte // 原始payload
+	opcode int    // opcode的缓存
 }
 
-func (r *Response) Marshal() []byte {
-	/* opcode4 length8 extendLength16
-	req:service fun reqId param
-	    4      4         8       0 || 16   [              length                  ]
-	{opcode}{version}{length}{extendLength}{reqId}0x49{service}0x49{fun}0x49{param}
-
-	resp:reqId,error,data
-
-	{opcode}{length}{extendLength}{reqId}{error}{data}
-	*/
-	if r.v == nil {
-		buf := make([]byte, 0, 128)
-
-		buf = append(buf, qconv.Qs2b(r.ReqId)...)
-		buf = append(buf, breakByte)
-
-		buf = append(buf, qconv.Qs2b(r.Err)...)
-		buf = append(buf, breakByte)
-
-		buf = append(buf, r.Result...)
-
-		r.v = buf
-	}
-
-	return r.v
-}
-
-func (r *Response) Opcode() int {
-	if r.opcode == -1 {
-		r.opcode = makeOpcode(ResponseTypCode)
-	}
-
-	return r.opcode
-}
-
-func NewResponse(reqId string, result []byte, err string) Frame {
+// NewResponse 创建一个response
+func NewResponse(reqID string, result []byte, err string) Frame {
 	return &Response{
-		ReqId:  reqId,
+		ReqID:  reqID,
 		Err:    err,
 		Result: result,
 		opcode: -1,
 	}
 }
 
+// unMarshalResponse 从payload反序列化到response
 func unMarshalResponse(data []byte) (resp *Response, err error) {
-	/* opcode4 length8 extendLength16
-	req:service fun reqId param
-	    4      4         8       0 || 16   [              length                  ]
-	{opcode}{version}{length}{extendLength}{reqId}0x49{service}0x49{fun}0x49{param}
-
-	resp:reqId,error,data
-
-	{opcode}{length}{extendLength}{reqId}{error}{data}
-	*/
 	resp = &Response{}
 
 	buf := bytes.NewBuffer(data)
 
-	reqIdByte, err := buf.ReadBytes(breakByte)
-	if err != nil || len(reqIdByte) <= 1 {
+	reqIDBytes, err := buf.ReadBytes(breakByte)
+	if err != nil || len(reqIDBytes) <= 1 {
 		err = errors.New("unmarshal response reqId failed")
 		return
 	}
-	resp.ReqId = qconv.Qb2s(reqIdByte[:len(reqIdByte)-1])
+	resp.ReqID = qconv.Qb2s(reqIDBytes[:len(reqIDBytes)-1])
 
 	respErrByte, err := buf.ReadBytes(breakByte)
 	if err != nil {
@@ -103,4 +63,32 @@ func unMarshalResponse(data []byte) (resp *Response, err error) {
 	resp.opcode = -1
 
 	return
+}
+
+// Marshal 序列化
+func (r *Response) Marshal() []byte {
+	if r.v == nil {
+		buf := make([]byte, 0, 128)
+
+		buf = append(buf, qconv.Qs2b(r.ReqID)...)
+		buf = append(buf, breakByte)
+
+		buf = append(buf, qconv.Qs2b(r.Err)...)
+		buf = append(buf, breakByte)
+
+		buf = append(buf, r.Result...)
+
+		r.v = buf
+	}
+
+	return r.v
+}
+
+// Opcode 组装opcode
+func (r *Response) Opcode() int {
+	if r.opcode == -1 {
+		r.opcode = makeOpcode(responseTypCode)
+	}
+
+	return r.opcode
 }

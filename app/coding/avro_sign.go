@@ -3,6 +3,7 @@
 //
 //// opcode
 package coding
+
 //
 //import (
 //	"begonia2/opcode"

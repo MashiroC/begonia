@@ -67,8 +67,8 @@ package coding
 //    ]
 //}`)
 
-	//if err != nil {
-	//	panic("codec error!")
-	//}
-	//schemaMap[opcode.SignInfoResp] = signInfoRespCodec
+//if err != nil {
+//	panic("codec error!")
+//}
+//schemaMap[opcode.SignInfoResp] = signInfoRespCodec
 //}

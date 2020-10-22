@@ -1,7 +1,3 @@
-// Time : 2020/8/6 11:59
-// Author : MashiroC
-
-// frame
 package frame
 
 import (
@@ -13,48 +9,31 @@ import (
 // frame_request.go something
 
 const (
-	RequestTypCode = 0
+	// request的typCode
+	requestTypCode = 0
 )
 
+// Request Request的frame实现
+//
+// opcode4 length8 extendLength16
+// req:service fun reqId param
+//     4      4         8       0 || 16   [              length                  ]
+// {opcode}{version}{length}{extendLength}{reqId}0x49{service}0x49{fun}0x49{param}
+//
 type Request struct {
-	ReqId   string
-	Service string
-	Fun     string
-	Params  []byte
+	ReqID   string // 请求id
+	Service string // 要调用的服务
+	Fun     string // 要调用的函数
+	Params  []byte // 入参
 
-	v      []byte
-	opcode int
+	v      []byte // 序列化后的payload，这里是一个缓存
+	opcode int    // 序列化后的opcode，初始化为-1
 }
 
-func (r *Request) Marshal() []byte {
-	/* opcode4 length8 extendLength16
-	req:service fun reqId param
-	    4      4         8       0 || 16   [              length                  ]
-	{opcode}{version}{length}{extendLength}{reqId}0x49{service}0x49{fun}0x49{param}
-	*/
-	if r.v == nil {
-		buf := make([]byte, 0, 128)
-
-		buf = append(buf, qconv.Qs2b(r.ReqId)...)
-		buf = append(buf, breakByte)
-
-		buf = append(buf, qconv.Qs2b(r.Service)...)
-		buf = append(buf, breakByte)
-
-		buf = append(buf, qconv.Qs2b(r.Fun)...)
-		buf = append(buf, breakByte)
-
-		buf = append(buf, r.Params...)
-
-		r.v = buf
-	}
-
-	return r.v
-}
-
-func NewRequest(reqId, service, fun string, params []byte) Frame {
+// NewRequest 创建一个新的Request
+func NewRequest(reqID, service, fun string, params []byte) Frame {
 	return &Request{
-		ReqId:   reqId,
+		ReqID:   reqID,
 		Service: service,
 		Fun:     fun,
 		Params:  params,
@@ -62,29 +41,19 @@ func NewRequest(reqId, service, fun string, params []byte) Frame {
 	}
 }
 
-func (r *Request) Opcode() int {
-	if r.opcode == -1 {
-		r.opcode=makeOpcode(RequestTypCode)
-	}
-
-	return r.opcode
-}
-
+// unMarshalRequest 根据payload去反序列化出一个request
 func unMarshalRequest(data []byte) (req *Request, err error) {
-	/* opcode4 length8 extendLength16
-	req:service fun reqId param
-	    4      4         8       0 || 16   [              length                  ]
-	{opcode}{version}{length}{extendLength}{reqId}0x49{service}0x49{fun}0x49{param}
-	*/
+
 	req = &Request{}
 
 	buf := bytes.NewBuffer(data)
-	reqIdByte, err := buf.ReadBytes(breakByte)
-	if err != nil || len(reqIdByte) <= 1 {
+
+	reqIDBytes, err := buf.ReadBytes(breakByte)
+	if err != nil || len(reqIDBytes) <= 1 {
 		err = errors.New("unmarshal request reqId failed")
 		return
 	}
-	req.ReqId = qconv.Qb2s(reqIdByte[:len(reqIdByte)-1])
+	req.ReqID = qconv.Qb2s(reqIDBytes[:len(reqIDBytes)-1])
 
 	serviceByte, err := buf.ReadBytes(breakByte)
 	if err != nil || len(serviceByte) <= 1 {
@@ -102,8 +71,44 @@ func unMarshalRequest(data []byte) (req *Request, err error) {
 
 	req.Params = buf.Bytes()
 
-	req.v=data
-	req.opcode=-1
+	req.v = data
+	req.opcode = -1
 
 	return
+}
+
+// Marshal 序列化payload
+//
+//      4      4         8       0 || 16   [              length                  ]
+//	{opcode}{version}{length}{extendLength}{reqId}0x49{service}0x49{fun}0x49{param}
+//
+func (r *Request) Marshal() []byte {
+
+	if r.v == nil {
+		buf := make([]byte, 0, 128)
+
+		buf = append(buf, qconv.Qs2b(r.ReqID)...)
+		buf = append(buf, breakByte)
+
+		buf = append(buf, qconv.Qs2b(r.Service)...)
+		buf = append(buf, breakByte)
+
+		buf = append(buf, qconv.Qs2b(r.Fun)...)
+		buf = append(buf, breakByte)
+
+		buf = append(buf, r.Params...)
+
+		r.v = buf
+	}
+
+	return r.v
+}
+
+// Opcode 组装出一个opcode
+func (r *Request) Opcode() int {
+	if r.opcode == -1 {
+		r.opcode = makeOpcode(requestTypCode)
+	}
+
+	return r.opcode
 }
