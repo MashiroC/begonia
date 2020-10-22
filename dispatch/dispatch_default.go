@@ -9,6 +9,7 @@ import (
 	"begonia2/dispatch/frame"
 	"begonia2/tool/ids"
 	"log"
+	"reflect"
 	"sync"
 )
 
@@ -24,16 +25,37 @@ const (
 func NewByCenterCluster() Dispatcher {
 	d := &defaultDispatch{}
 	d.msgCh = make(chan recvMsg, 10)
+	d.closeHookFunc = func(connID string, err error) {
+		log.Printf("connID [%s] has some error: [%s]\n", connID, err)
+	}
 	return d
 }
 
 type defaultDispatch struct {
+	mode dispatchMode
+
 	linkedConn conn.Conn
 	linkID     string
-	connSet    map[string]conn.Conn
-	msgCh      chan recvMsg
-	mode       dispatchMode
-	connLock   sync.Mutex
+
+	connSet  map[string]conn.Conn
+	connLock sync.Mutex
+
+	msgCh chan recvMsg
+
+	closeHookFunc func(connID string, err error)
+}
+
+func (d *defaultDispatch) Hook(typ string, hookFunc interface{}) {
+	switch typ {
+	case "close":
+		if f, ok := hookFunc.(func(connID string, err error)); ok {
+			d.closeHookFunc = f
+			return
+		}
+		panic("hook close func error type " + reflect.TypeOf(hookFunc).String())
+	default:
+		panic("hook typ error: " + typ)
+	}
 }
 
 type recvMsg struct {
@@ -107,7 +129,7 @@ func (d *defaultDispatch) SendTo(connID string, f frame.Frame) (err error) {
 		panic("mode error")
 	}
 
-	log.Println("send to", connID, "opcode:", f.Opcode(), "data:", string(f.Marshal()))
+	log.Println("send to", connID, "opcode:", f.Opcode())
 	err = c.Write(byte(f.Opcode()), f.Marshal())
 	return
 }
@@ -161,7 +183,7 @@ func (d *defaultDispatch) work(c conn.Conn) {
 		opcode, data, err := c.Recv()
 		if err != nil {
 			//TODO:handler error
-			log.Println(err)
+			d.closeHookFunc(id, err)
 			break
 		}
 		log.Println("recv:", opcode, string(data))

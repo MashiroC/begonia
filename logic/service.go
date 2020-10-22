@@ -17,7 +17,7 @@ type ResultFunc struct {
 }
 
 type Service interface {
-	caller
+	logic
 	RecvMsg() (msg *Call, wf ResultFunc)
 }
 

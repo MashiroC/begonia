@@ -32,7 +32,7 @@ func NewMixWithReqSet(dp dispatch.Dispatcher, rs *ReqSet) MixNode {
 }
 
 type MixNode interface {
-	caller
+	logic
 	Close()
 	RecvMsg() (msg *Call, wf ResultFunc)
 }

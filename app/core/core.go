@@ -4,6 +4,8 @@ const (
 	ServiceName = "CORE"
 )
 
+var C *SubService
+
 type SubService struct {
 	services *serviceSet
 }

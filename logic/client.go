@@ -13,7 +13,7 @@ import (
 
 
 type Client interface {
-	caller
+	logic
 	Handle()
 	Close()
 }

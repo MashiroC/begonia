@@ -37,7 +37,7 @@ func bootstart(optionMap map[string]interface{}) Center {
 
 	c.lg = logic.NewMixWithReqSet(dp, rs)
 
-	c.Core = core.NewSubService()
+	core.C=core.NewSubService()
 
 	log.Println("begonia center started")
 	//TODO: 发一个包，拉取配置

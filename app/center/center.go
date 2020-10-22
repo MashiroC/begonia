@@ -18,7 +18,6 @@ type Center interface {
 
 type rCenter struct {
 	lg       logic.MixNode
-	Core     *core.SubService
 	rs       *logic.ReqSet
 }
 
@@ -34,7 +33,7 @@ func (c *rCenter) work(call *logic.Call, wf logic.ResultFunc) {
 
 	if call.Service == core.ServiceName {
 		// 核心服务
-		res, err := c.Core.Invoke(wf.ConnID,wf.ReqID,call.Fun, call.Param)
+		res, err := core.C.Invoke(wf.ConnID,wf.ReqID,call.Fun, call.Param)
 		if err != nil {
 			wf.Result(&logic.CallResult{
 				Err:    err.Error(),
@@ -47,7 +46,7 @@ func (c *rCenter) work(call *logic.Call, wf logic.ResultFunc) {
 		return
 	}
 
-	toID,ok:=c.Core.GetToID(call.Service)
+	toID,ok:=core.C.GetToID(call.Service)
 	if !ok {
 		wf.Result(&logic.CallResult{
 			Err: "service not found",

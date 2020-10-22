@@ -10,16 +10,16 @@ import (
 	"begonia2/logic/containers"
 	"begonia2/tool/ids"
 	"context"
+	"strings"
 )
 
 // logic.go something
 
-
-type caller interface {
+type logic interface {
 	CallSync(call *Call) *CallResult
 	CallAsync(call *Call, callback Callback)
+	Hook(typ string, hookFunc interface{})
 }
-
 
 type baseLogic struct {
 	dp       dispatch.Dispatcher
@@ -54,5 +54,20 @@ func (c *baseLogic) CallAsync(call *Call, callback Callback) {
 		panic(err)
 		// TODO:handler error
 	}
+
+}
+
+func (c *baseLogic) Hook(typ string, hookFunc interface{}) {
+	types := strings.Split(typ, ".")
+	if len(types) == 2 {
+		switch types[0] {
+		case "dispatch":
+			c.dp.Hook(types[1], hookFunc)
+			return
+		}
+	} else if len(types) == 1 {
+		// 现在logic还没有需要hook的
+	}
+	panic("hook error!")
 
 }

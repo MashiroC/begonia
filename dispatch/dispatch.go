@@ -30,4 +30,6 @@ type Dispatcher interface {
 	Listen(addr string)
 
 	Close()
+
+	Hook(typ string,hookFunc interface{})
 }
