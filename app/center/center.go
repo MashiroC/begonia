@@ -22,6 +22,9 @@ type rCenter struct {
 }
 
 func (c *rCenter) Run() {
+
+	c.lg.Hook("dispatch.close", core.C.HandleConnClose)
+
 	for {
 		call, wf := c.lg.RecvMsg()
 
