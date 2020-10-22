@@ -8,9 +8,9 @@ import (
 	"begonia2/app/core"
 	"begonia2/logic"
 	"begonia2/opcode/coding"
+	"begonia2/tool/qconv"
 	"begonia2/tool/reflects"
 	"context"
-	"fmt"
 	"log"
 	"reflect"
 )
@@ -85,7 +85,7 @@ func (r *rService) work() {
 }
 
 func (r *rService) handleMsg(msg *logic.Call, wf logic.ResultFunc) {
-	fun,err := r.coders.get(msg.Service, msg.Fun)
+	fun, err := r.coders.get(msg.Service, msg.Fun)
 	if err != nil {
 		log.Println("get fun err")
 		wf.Result(&logic.CallResult{
@@ -109,7 +109,15 @@ func (r *rService) handleMsg(msg *logic.Call, wf logic.ResultFunc) {
 	outVal := fun.method.Func.Call(inVal)
 
 	m := reflects.FromValue(outVal)
-	fmt.Println(m)
+	lastKey := "out" + qconv.I2S(len(outVal))
+	v := m[lastKey]
+	if vErr, ok := v.(error); ok {
+		delete(m, lastKey)
+		m["err"] = vErr.Error()
+	} else {
+		m["err"] = nil
+	}
+
 	b, err := fun.out.Encode(m)
 	if err != nil {
 		// 这个error不应该有的

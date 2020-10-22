@@ -4,7 +4,10 @@
 // qconv
 package qconv
 
-import "unsafe"
+import (
+	"strconv"
+	"unsafe"
+)
 
 // qconv.go something
 
@@ -14,4 +17,8 @@ func Qs2b(str string) []byte {
 
 func Qb2s(b []byte) string {
 	return *((*string)(unsafe.Pointer(&b)))
+}
+
+func I2S(i int) string{
+	return strconv.FormatInt(int64(i),10)
 }

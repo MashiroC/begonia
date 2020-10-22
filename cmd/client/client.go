@@ -42,6 +42,7 @@ func main() {
 	fmt.Println(res)
 
 	res,err=sayHello2("asd")
+	fmt.Println(res,err)
 	c.Wait()
 
 	//s, err := c.Service("Hello")
