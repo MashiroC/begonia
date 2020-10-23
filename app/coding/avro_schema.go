@@ -1,7 +1,3 @@
-// Time : 2020/10/20 16:04
-// Author : Kieran
-
-// coding
 package coding
 
 import (
@@ -39,6 +35,7 @@ func InSchema(m reflect.Method) string {
 	return rawSchema
 }
 
+// OutSchema 根据反射 获得出参schema
 func OutSchema(m reflect.Method) string {
 	t := m.Type
 

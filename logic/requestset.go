@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-type ReqSet struct {
+type reqSet struct {
 	m map[string]*reqSetEntry
 	l sync.Mutex
 
@@ -17,15 +17,15 @@ type reqSetEntry struct {
 	t      time.Time
 }
 
-func NewReqSet(overtime int) *ReqSet {
-	return &ReqSet{
+func newReqSet(overtime int) *reqSet {
+	return &reqSet{
 		m:        make(map[string]*reqSetEntry),
 		l:        sync.Mutex{},
 		overtime: time.Duration(overtime),
 	}
 }
 
-func (s *ReqSet) Add(reqID, connID string) {
+func (s *reqSet) Add(reqID, connID string) {
 	s.l.Lock()
 	defer s.l.Unlock()
 
@@ -35,7 +35,7 @@ func (s *ReqSet) Add(reqID, connID string) {
 	}
 
 }
-func (s *ReqSet) Get(reqID string) (connID string, ok bool) {
+func (s *reqSet) Get(reqID string) (connID string, ok bool) {
 
 	s.l.Lock()
 	defer s.l.Unlock()
@@ -56,11 +56,11 @@ func (s *ReqSet) Get(reqID string) (connID string, ok bool) {
 	return
 }
 
-func (s *ReqSet) Remove(reqID string) {
+func (s *reqSet) Remove(reqID string) {
 
 }
 
-func (s *ReqSet) CleanUp() {
+func (s *reqSet) CleanUp() {
 	s.l.Lock()
 	defer s.l.Unlock()
 

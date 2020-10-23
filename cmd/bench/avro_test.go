@@ -238,7 +238,7 @@ type FunInfo struct {
 }
 
 type ServiceInfo struct {
-	Service string  `avro:"service"`
+	Service string    `avro:"service"`
 	Funs    []FunInfo `avro:"funs"`
 }
 
@@ -286,8 +286,6 @@ func TestAvroStruct(t *testing.T) {
 
 	schema := avro.MustParse(rawSchema)
 
-
-
 	obj := ServiceInfo{
 		Service: "test",
 		//Funs:    []F{"asd","zxc"},
@@ -303,7 +301,7 @@ func TestAvroStruct(t *testing.T) {
 	//	}},
 	//}
 
-	b,err:=avro.Marshal(schema,&obj)
+	b, err := avro.Marshal(schema, &obj)
 	if err != nil {
 		panic(err)
 	}
@@ -312,8 +310,8 @@ func TestAvroStruct(t *testing.T) {
 
 func TestAvroSt(t *testing.T) {
 	//rawSchema:=
-//s:=avro.MustParse(rawSchema)
-//fmt.Println(s)
+	//s:=avro.MustParse(rawSchema)
+	//fmt.Println(s)
 
 	//b, err := avro.Marshal(s, ServiceInfoCall{
 	//	Service: "test",
@@ -331,19 +329,19 @@ func TestAvroSt(t *testing.T) {
 }
 
 func TestForMap(t *testing.T) {
-	m:=make(map[string]*People)
+	m := make(map[string]*People)
 
-	m["in1"]=&People{
+	m["in1"] = &People{
 		Name: "shiina",
 		Age:  18,
 	}
 
 	var i int64 = 1
 	ok := true
-	for ok{
-		v,ok:=m["in"+strconv.FormatInt(i,10)]
-		fmt.Println(v,ok)
+	for ok {
+		v, ok := m["in"+strconv.FormatInt(i, 10)]
+		fmt.Println(v, ok)
 		i++
-		time.Sleep(5*time.Second)
+		time.Sleep(5 * time.Second)
 	}
 }

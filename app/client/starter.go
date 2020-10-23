@@ -1,7 +1,3 @@
-// Time : 2020/9/26 21:16
-// Author : Kieran
-
-// appservice
 package client
 
 import (
@@ -30,7 +26,7 @@ func bootstartByCenter(optionMap map[string]interface{}) Client {
 	}
 
 	var dp dispatch.Dispatcher
-	dp = dispatch.NewByCenterCluster()
+	dp = dispatch.NewByDefaultCluster()
 	dp.Link(addr)
 
 	c.lg = logic.NewClient(dp)
@@ -58,7 +54,7 @@ func bootstartByCenter(optionMap map[string]interface{}) Client {
 }
 
 // New 初始化，获得一个service对象，传入一个mode参数，以及一个option的不定参数
-func New(mode string, optionFunc ...option.OptionFunc) (cli Client) {
+func New(mode string, optionFunc ...option.WriteFunc) (cli Client) {
 	optionMap := defaultClientConfig()
 
 	for _, f := range optionFunc {

@@ -1,16 +1,11 @@
-// Time : 2020/9/26 21:48
-// Author : Kieran
-
-// app
+// Package app api层
 package app
 
-import "begonia2/opcode/coding"
+import "begonia2/app/coding"
 
-// app.go something
-
-
+// FunInfo 远程函数的一个封装
 type FunInfo struct {
-	Name      string
-	InCoder  coding.Coder
-	OutCoder coding.Coder
+	Name     string       // 远程函数名
+	InCoder  coding.Coder // 远程函数入参的编码器
+	OutCoder coding.Coder // 远程函数出参的编码器
 }

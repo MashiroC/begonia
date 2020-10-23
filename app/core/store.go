@@ -1,12 +1,12 @@
 package core
 
 import (
-	"begonia2/opcode/coding"
+	"begonia2/app/coding"
 	"fmt"
 	"sync"
 )
 
-type serviceSet struct {
+type registerServiceStore struct {
 	l sync.RWMutex
 	m map[string]*registerService
 
@@ -20,14 +20,14 @@ type registerService struct {
 	funs   []coding.FunInfo
 }
 
-func newServiceSet() *serviceSet {
-	return &serviceSet{
+func newStore() *registerServiceStore {
+	return &registerServiceStore{
 		m:           make(map[string]*registerService),
 		connIndexes: make(map[string][]string),
 	}
 }
 
-func (s *serviceSet) Get(service string) (rs *registerService, ok bool) {
+func (s *registerServiceStore) Get(service string) (rs *registerService, ok bool) {
 	s.l.RLock()
 	defer s.l.RUnlock()
 
@@ -35,7 +35,7 @@ func (s *serviceSet) Get(service string) (rs *registerService, ok bool) {
 	return
 }
 
-func (s *serviceSet) Add(connID, serviceName string, funs []coding.FunInfo) (err error) {
+func (s *registerServiceStore) Add(connID, serviceName string, funs []coding.FunInfo) (err error) {
 	s.l.Lock()
 	s.connLock.Lock()
 	defer s.l.Unlock()
@@ -61,19 +61,19 @@ func (s *serviceSet) Add(connID, serviceName string, funs []coding.FunInfo) (err
 	return
 }
 
-func (s *serviceSet) Unlink(connID string) {
+func (s *registerServiceStore) Unlink(connID string) {
 	s.l.Lock()
 	s.connLock.Lock()
 	defer s.l.Unlock()
 	defer s.connLock.Unlock()
 
-	services,ok := s.connIndexes[connID]
-	if !ok{
+	services, ok := s.connIndexes[connID]
+	if !ok {
 		return
 	}
 
-	for _,service :=range services{
-		delete(s.m,service)
+	for _, service := range services {
+		delete(s.m, service)
 	}
 
 }

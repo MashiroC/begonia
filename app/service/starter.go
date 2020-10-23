@@ -1,10 +1,7 @@
-// Time : 2020/9/26 17:20
-// Author : Kieran
-
-// appservice
 package service
 
 import (
+	"begonia2/app/option"
 	"begonia2/dispatch"
 	"begonia2/logic"
 	"context"
@@ -15,25 +12,23 @@ import (
 // bootStartByManager 根据manager cluster模式启动
 func bootStartByManager(optionMap map[string]interface{}) Service {
 
-	ctx,cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(context.Background())
 
-	s := &rService{}
-	s.ctx=ctx
-	s.cancel=cancel
-
-	s.coders = newCoderSet()
+	// 读配置
 	var addr string
 	if addrIn, ok := optionMap["managerAddr"]; ok {
 		addr = addrIn.(string)
 	}
 
+	// 创建 dispatch
 	var dp dispatch.Dispatcher
-	dp = dispatch.NewByCenterCluster()
+	dp = dispatch.NewByDefaultCluster()
 	dp.Link(addr)
 
-	s.lg = logic.NewService(dp)
+	// 创建 logic
+	var lg logic.Service
+	lg = logic.NewService(dp)
 
-	go s.work()
 	//TODO: 发一个包，拉取配置
 
 	// 假设这个getConfig是sub service的一个远程函数
@@ -49,11 +44,23 @@ func bootStartByManager(optionMap map[string]interface{}) Service {
 	//fmt.Println(m, err)
 	// 修改配置之前的一系列调用全部都是按默认配置来的
 
+	// 创建实例
+	s := &rService{}
+	s.ctx = ctx
+	s.cancel = cancel
+
+	s.lg = lg
+
+	// 创建服务存储的数据结构
+	s.store = newServiceStore()
+
+	go s.work()
+
 	return s
 }
 
 // New 初始化，获得一个service对象，传入一个mode参数，以及一个option的不定参数
-func New(mode string, optionFunc ...OptionFunc) (s Service) {
+func New(mode string, optionFunc ...option.WriteFunc) (s Service) {
 	optionMap := defaultServiceConfig()
 
 	for _, f := range optionFunc {
@@ -77,10 +84,4 @@ func defaultServiceConfig() map[string]interface{} {
 	return m
 }
 
-type OptionFunc func(optionMap map[string]interface{})
 
-func ManagerAddr(addr string) OptionFunc {
-	return OptionFunc(func(optionMap map[string]interface{}) {
-		optionMap["managerAddr"] = addr
-	})
-}

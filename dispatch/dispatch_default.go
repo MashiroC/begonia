@@ -1,7 +1,3 @@
-// Time : 2020/9/30 11:41
-// Author : Kieran
-
-// dispatch
 package dispatch
 
 import (
@@ -15,35 +11,47 @@ import (
 
 // dispatch_default.go something
 
+// dispatchMode 该dispatch的模式，是单连接还是多连接
 type dispatchMode int
 
 const (
-	linked dispatchMode = iota + 1
-	set
+	linked dispatchMode = iota + 1 // 单连接
+	set                            // 多链接
 )
 
-func NewByCenterCluster() Dispatcher {
+// NewByDefaultCluster 在default cluster模式下创建一个dispatch
+func NewByDefaultCluster() Dispatcher {
+
 	d := &defaultDispatch{}
+
 	d.msgCh = make(chan recvMsg, 10)
+
+	// 默认连接被关闭时只打印log
 	d.closeHookFunc = func(connID string, err error) {
 		log.Printf("connID [%s] has some error: [%s]\n", connID, err)
 	}
+
 	return d
 }
 
 type defaultDispatch struct {
+
+	// mode 该dispatch的模式
 	mode dispatchMode
 
-	linkAddr   string
-	linkedConn conn.Conn
-	linkID     string
+	// link模式相关变量
+	linkAddr   string    // 单连接的地址
+	linkedConn conn.Conn // 连接
+	linkID     string    // 连接的id
 
-	connSet  map[string]conn.Conn
-	connLock sync.Mutex
+	// set模式相关变量
+	connSet  map[string]conn.Conn // 保存连接的map
+	connLock sync.Mutex           // 锁，保证connSet线程安全
 
-	msgCh chan recvMsg
+	msgCh chan recvMsg // 接收消息用的管道
 
-	closeHookFunc func(connID string, err error)
+	// hook func
+	closeHookFunc func(connID string, err error) // 关闭连接的hook
 }
 
 func (d *defaultDispatch) Hook(typ string, hookFunc interface{}) {
@@ -90,32 +98,20 @@ func (d *defaultDispatch) Link(addr string) (err error) {
 
 func (d *defaultDispatch) ReLink() bool {
 	err := d.Link(d.linkAddr)
-	if err!=nil{
-		return false
-	} else {
-		return true
-	}
+	return err == nil
 }
 
 // Send 发送一个包，在center cluster模式下直接发送到中心，中心进行调度
 func (d *defaultDispatch) Send(f frame.Frame) (err error) {
-	/* opcode4 length8 extendLength16
-	req:service fun reqId param
-	    4      4         8       0 || 16   [              length                  ]
-	{opcode}{version}{length}{extendLength}{reqId}0x49{service}0x49{fun}0x49{param}
 
-	resp:reqId,error,data
-
-	{opcode}{length}{extendLength}{reqId}{error}{data}
-	*/
 	// TODO:请求实现幂等 断连时排序等待连接重连 这里暂时先直接传过去
-
 	if d.mode == linked {
 		log.Println("send to linkConn:", string(f.Marshal()))
-		d.linkedConn.Write(byte(f.Opcode()), f.Marshal())
+		err = d.linkedConn.Write(byte(f.Opcode()), f.Marshal())
 	} else {
 		panic("mode err!")
 	}
+
 	return
 }
 
@@ -178,9 +174,11 @@ out:
 
 }
 
+// work 获得一个新的连接之后持续监听连接，然后把消息发送到msgCh里
 func (d *defaultDispatch) work(c conn.Conn) {
 
 	id := ids.New()
+
 	switch d.mode {
 	case linked:
 		d.linkID = id
@@ -193,20 +191,26 @@ func (d *defaultDispatch) work(c conn.Conn) {
 	}
 
 	for {
+
 		opcode, data, err := c.Recv()
 		if err != nil {
-			//TODO:handler error
 			d.closeHookFunc(id, err)
+			d.connLock.Lock()
+			delete(d.connSet, id)
+			d.connLock.Unlock()
 			break
 		}
-		log.Println("recv:", opcode, string(data))
+
+		// 解析opcode
 		typ, ctrl := frame.ParseOpcode(int(opcode))
+
 		if ctrl == frame.CtrlDefaultCode {
-			var err error
+
 			f, err := frame.UnMarshal(typ, data)
 			if err != nil {
 				panic(err)
 			}
+
 			d.msgCh <- recvMsg{
 				connID: id,
 				f:      f,

@@ -12,7 +12,7 @@ const (
 )
 
 func main() {
-	c := client.New(mode, option.ManagerAddr(addr))
+	c := client.New(mode, option.CenterAddr(addr))
 
 	fmt.Println(c)
 
@@ -21,28 +21,28 @@ func main() {
 		//c.Close()
 	}()
 
-	s,err:=c.Service("Echo")
+	s, err := c.Service("Echo")
 	if err != nil {
 		panic(err)
 	}
 	fmt.Println(s)
 
-	sayHello,err := s.FuncSync("SayHello")
-	if err!=nil{
+	sayHello, err := s.FuncSync("SayHello")
+	if err != nil {
 		panic(err)
 	}
 
-	sayHello2,err := s.FuncSync("SayHello2")
-	if err!=nil{
+	sayHello2, err := s.FuncSync("SayHello2")
+	if err != nil {
 		panic(err)
 	}
 
-	res,err:=sayHello("shiina")
+	res, err := sayHello("shiina")
 
 	fmt.Println(res)
 
-	res,err=sayHello2("asd")
-	fmt.Println(res,err)
+	res, err = sayHello2("asd")
+	fmt.Println(res, err)
 
 	//s, err := c.Service("Hello")
 	//if err != nil {

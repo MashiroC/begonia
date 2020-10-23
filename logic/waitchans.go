@@ -1,25 +1,25 @@
-// Time : 2020/9/29 20:24
-// Author : Kieran
-
-// logic
 package logic
 
 import (
+	"begonia2/config"
 	"context"
 	"fmt"
 	"sync"
 	"time"
 )
 
-// waitchans.go something
+// waitchans.go 等待管道
 
+// waitCallback 等待的回调函数
 type waitCallback = func(*CallResult)
 
+// WaitChans 等待管道，拥有注册回调、回调的方法
 type WaitChans struct {
-	chLock sync.RWMutex
-	ch     map[string]chan *CallResult
+	chLock sync.RWMutex                // 锁
+	ch     map[string]chan *CallResult // 存储的map
 }
 
+// NewWaitChans 创建一个实例
 func NewWaitChans() *WaitChans {
 	return &WaitChans{
 		chLock: sync.RWMutex{},
@@ -27,12 +27,14 @@ func NewWaitChans() *WaitChans {
 	}
 }
 
-func (w *WaitChans) Callback(reqId string, cr *CallResult) (err error) {
+// Callback 注册后调后，根据reqID来调用回调
+func (w *WaitChans) Callback(reqID string, cr *CallResult) (err error) {
 	w.chLock.RLock()
-	ch, exist := w.ch[reqId]
+	ch, exist := w.ch[reqID]
 	w.chLock.RUnlock()
+
 	if !exist {
-		err = fmt.Errorf("reqId [%s] not found!", reqId)
+		err = fmt.Errorf("reqID [%s] not found", reqID)
 		return
 	}
 
@@ -40,22 +42,26 @@ func (w *WaitChans) Callback(reqId string, cr *CallResult) (err error) {
 	return
 }
 
-func (w *WaitChans) AddCallback(ctx context.Context, reqId string, callback waitCallback) {
-	timeout, _ := context.WithTimeout(ctx, 9*time.Second) //TODO:抽成配置的
+// AddCallback 添加一个回调
+func (w *WaitChans) AddCallback(ctx context.Context, reqID string, callback waitCallback) {
+	timeout, _ := context.WithTimeout(ctx, time.Duration(config.C.Logic.RequestTimeOut)*time.Second)
 
 	ch := make(chan *CallResult)
 
 	w.chLock.Lock()
-	w.ch[reqId] = ch
+	w.ch[reqID] = ch
 	w.chLock.Unlock()
 
-	go w.goWait(reqId, timeout.Done(), ctx.Done(), callback, ch)
+	go w.goWait(reqID, timeout.Done(), ctx.Done(), callback, ch)
 
 }
 
-func (w *WaitChans) goWait(reqId string, timeout, parent <-chan struct{}, cb waitCallback, ch chan *CallResult) {
+// goWait 这个需要开一个新协程 来等待结果或者超时
+func (w *WaitChans) goWait(reqID string, timeout, parent <-chan struct{}, cb waitCallback, ch chan *CallResult) {
+
 	var f *CallResult
 	var errStr string
+
 	select {
 	case <-timeout:
 		// 超时
@@ -68,7 +74,7 @@ func (w *WaitChans) goWait(reqId string, timeout, parent <-chan struct{}, cb wai
 	}
 
 	w.chLock.Lock()
-	delete(w.ch, reqId)
+	delete(w.ch, reqID)
 	w.chLock.Unlock()
 
 	if errStr != "" {
@@ -77,5 +83,7 @@ func (w *WaitChans) goWait(reqId string, timeout, parent <-chan struct{}, cb wai
 			Err:    errStr,
 		}
 	}
+
 	cb(f)
+
 }

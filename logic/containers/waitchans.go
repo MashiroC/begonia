@@ -52,11 +52,11 @@ func (w *WaitChans) AddCallback(ctx context.Context, reqId string, callback wait
 	w.ch[reqId] = ch
 	w.chLock.Unlock()
 
-	go w.goWait(reqId, timeout.Done(), ctx.Done(), callback,ch)
+	go w.goWait(reqId, timeout.Done(), ctx.Done(), callback, ch)
 
 }
 
-func (w *WaitChans) goWait(reqId string, timeout, parent <-chan struct{}, cb waitCallback,ch chan frame.Frame) {
+func (w *WaitChans) goWait(reqId string, timeout, parent <-chan struct{}, cb waitCallback, ch chan frame.Frame) {
 	var f frame.Frame
 	var err error
 	select {

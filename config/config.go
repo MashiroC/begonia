@@ -1,38 +1,36 @@
-// Time : 2020/9/19 15:04
-// Author : Kieran
-
-// config 配置，读取配置文件
-// starter和一些业务会读配置，最好让starter统一去读
+// Package config 配置，所有配置会同步到这里
 package config
-
-// config.go something
 
 import (
 	"github.com/spf13/viper"
 )
 
+// C 配置的单例
 var C = defaultConfig()
 
-// envConfig.go
+// envConfig 配置结构体
 type envConfig struct {
 	Dispatch DispatchConfig
 	Conn     ConnConfig
 	Logic    LogicConfig
 }
 
+// DispatchConfig dispatch的配置
 type DispatchConfig struct {
 }
 
+// LogicConfig logic层的配置
 type LogicConfig struct {
-	RequestTimeOut   int
+	RequestTimeOut int // 逻辑层中一个请求发来，等待响应时的超时时间
 
-	AutoReConnection bool
-	ReConnectionIntervalSecond int
-	ReConnectionRetryCount int
+	AutoReConnection           bool // 断开连接时是否自动重新连接
+	ReConnectionIntervalSecond int  // 断连时重新连接的间隔时间
+	ReConnectionRetryCount     int  // 重试次数
 }
 
+// ConnConfig 连接的config
 type ConnConfig struct {
-	ReadTimeout int
+	ReadTimeout int // 读一个数据包时的超时时间，用在一个数据包未读完时
 }
 
 func init() {
@@ -54,6 +52,7 @@ func defaultConfig() envConfig {
 		Conn: ConnConfig{
 			ReadTimeout: 10,
 		},
+		Dispatch: DispatchConfig{},
 		Logic: LogicConfig{
 			RequestTimeOut:             10,
 			AutoReConnection:           true,

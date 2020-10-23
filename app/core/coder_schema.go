@@ -1,7 +1,10 @@
 package core
 
+// coder_schema.go 硬编码的函数的原始avro schema
+
 const (
 
+	// 获取服务的调用
 	serviceInfoCallRawSchema = `{
     "namespace":"begonia.entry",
     "type":"record",
@@ -13,6 +16,8 @@ const (
         }
     ]
 }`
+
+	// 获取服务的结果
 	serviceInfoRawSchema = `{
 	"namespace": "begonia.entry",
 	"type": "record",
@@ -50,4 +55,5 @@ const (
 		}
 	]
 }`
+
 )

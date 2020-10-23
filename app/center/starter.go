@@ -1,13 +1,8 @@
-// Time : 2020/10/10 21:32
-// Author : Kieran
-
-// center
 package center
 
 import (
 	"begonia2/app/core"
 	"begonia2/app/option"
-	"begonia2/config"
 	"begonia2/dispatch"
 	"begonia2/logic"
 	"log"
@@ -29,15 +24,12 @@ func bootstart(optionMap map[string]interface{}) Center {
 	}
 
 	var dp dispatch.Dispatcher
-	dp = dispatch.NewByCenterCluster()
+	dp = dispatch.NewByDefaultCluster()
 	go dp.Listen(addr)
 
-	var rs *logic.ReqSet
-	rs = logic.NewReqSet(config.C.Logic.RequestTimeOut)
+	c.lg = logic.NewMix(dp)
 
-	c.lg = logic.NewMixWithReqSet(dp, rs)
-
-	core.C=core.NewSubService()
+	core.C = core.NewSubService()
 
 	log.Println("begonia center started")
 	//TODO: 发一个包，拉取配置
@@ -63,7 +55,7 @@ func bootstart(optionMap map[string]interface{}) Center {
 }
 
 // New 初始化，获得一个service对象，传入一个mode参数，以及一个option的不定参数
-func New(mode string, optionFunc ...option.OptionFunc) (cli Center) {
+func New(mode string, optionFunc ...option.WriteFunc) (cli Center) {
 	optionMap := defaultClientConfig()
 
 	for _, f := range optionFunc {

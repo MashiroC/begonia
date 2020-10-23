@@ -1,19 +1,17 @@
-// Time : 2020/9/19 16:03
-// Author : Kieran
-
-// client
 package client
 
 import (
 	"begonia2/app"
+	"begonia2/app/coding"
 	"begonia2/logic"
-	"begonia2/opcode/coding"
 	"begonia2/tool/reflects"
 	"errors"
 	"fmt"
 )
 
 // client_service.go something
+
+// Service 客户端获取的远程服务的抽象
 type Service interface {
 	// 同步
 	FuncSync(name string) (RemoteFunSync, error)
@@ -21,10 +19,13 @@ type Service interface {
 	FuncAsync(name string) (RemoteFunAsync, error)
 }
 
+// RemoteFunSync 同步远程函数
 type RemoteFunSync func(params ...interface{}) (result interface{}, err error)
 
+// RemoteFunAsync 异步远程函数
 type RemoteFunAsync func(callback AsyncCallback, params ...interface{})
 
+// AsyncCallback 异步回调
 type AsyncCallback = func(interface{}, error)
 
 type rService struct {
@@ -36,7 +37,7 @@ type rService struct {
 func (r *rService) FuncSync(name string) (rf RemoteFunSync, err error) {
 	f, exist := r.funs[name]
 	if !exist {
-		err = fmt.Errorf("remote func [%s] not exist!", name)
+		err = fmt.Errorf("remote func [%s] not exist", name)
 		return
 	}
 
@@ -76,7 +77,7 @@ func (r *rService) FuncAsync(name string) (rf RemoteFunAsync, err error) {
 
 	f, exist := r.funs[name]
 	if !exist {
-		err = fmt.Errorf("remote func [%s] not exist!", name)
+		err = fmt.Errorf("remote func [%s] not exist", name)
 		return
 	}
 

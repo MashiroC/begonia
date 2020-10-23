@@ -1,7 +1,3 @@
-// Time : 2020/10/6 17:16
-// Author : Kieran
-
-// conn
 package conn
 
 import (
@@ -11,18 +7,22 @@ import (
 	"encoding/binary"
 	"errors"
 	"net"
-	"os"
 	"strconv"
 	"sync"
 	"time"
 )
 
-const (
-
+var (
+	chPool sync.Pool
 )
 
-// conn_default.go something
+func init() {
+	chPool = sync.Pool{New: func() interface{} {
+		return make(chan int)
+	}}
+}
 
+// defaultConn 默认的conn实现，单条tcp连接
 type defaultConn struct {
 	nc  net.Conn
 	buf *bufio.ReadWriter
@@ -33,8 +33,12 @@ func (d *defaultConn) Write(opcode byte, data []byte) (err error) {
 	d.l.Lock()
 	defer d.l.Unlock()
 
+	// 计算 payload length 与 extend payload length
 	var size []byte
-	if len(data) >= baseLenMax {
+	if len(data) >= extendLengthMax {
+		err = errors.New("payload len " + strconv.FormatInt(int64(len(data)), 10) + " oversize")
+		return
+	} else if len(data) >= baseLenMax {
 		tmp := make([]byte, 2)
 		binary.BigEndian.PutUint16(tmp, uint16(len(data)))
 		size = []byte{255}
@@ -42,15 +46,14 @@ func (d *defaultConn) Write(opcode byte, data []byte) (err error) {
 	} else {
 		size = append(size, byte(len(data)))
 	}
-	if len(data) >= extendLengthMax {
-		err = errors.New("payload len " + strconv.FormatInt(int64(len(data)), 10) + " oversize")
-		return
-	}
+
+	// 组装opcode length data
 	tmp := make([]byte, 0, len(size)+1+len(data))
 	tmp = append(tmp, opcode)
 	tmp = append(tmp, size...)
 	tmp = append(tmp, data...)
 
+	// 写数据
 	_, err = d.buf.Write(tmp)
 	if err != nil {
 		return
@@ -70,24 +73,24 @@ func (d *defaultConn) Recv() (opcode byte, data []byte, err error) {
 		}
 	}()
 
-	// 读第一个长度 是包的头 不需要等超时 直接等第一个包来就行
-	// 除了第一个包 剩下的都要等超时 TODO:这个应该不需要超时
+	// 读opcode 不需要等超时 直接等第一个包来就行
+	// 除了包头的opcode 剩下的都要等超时
+
+	/*
+		    4      4         8       0 || 16
+		{opcode}{version}{length}{extendLength}
+	*/
 
 	// 拿opcode
-	/* opcode4 length8 extendLength16
-	req:service fun reqId param
-	    4      4         8       0 || 16   [              length                  ]
-	{opcode}{version}{length}{extendLength}{reqId}0x49{service}0x49{fun}0x49{param}
-	*/
 	opcode, err = d.readByte()
 	handlerErr(err)
 
+	// 拿payload length
 	baseLen, err := d.buf.ReadByte()
 	handlerErr(err)
-	// 拿payload长度
 	payloadLen := uint(baseLen)
 
-	// baseLen如果是255 则去看扩展len
+	// baseLen如果是255 读extend length
 	if baseLen == baseLenMaxByte {
 		// 这里读了两个byte 然后转化成int
 		var extendLen []byte
@@ -102,10 +105,10 @@ func (d *defaultConn) Recv() (opcode byte, data []byte, err error) {
 	}
 
 	if payloadLen == 0 {
-		os.Exit(499)
+		panic("payload length error")
 	}
 
-	// 拿数据
+	// 拿数据，线程安全，内存安全
 	data, err = d.read(payloadLen)
 	//n, err := buf.Read(data)
 	handlerErr(err)
@@ -113,11 +116,12 @@ func (d *defaultConn) Recv() (opcode byte, data []byte, err error) {
 	return
 }
 
-// read 读一定长度的数据 超时时间5s
+// read 读一定长度的数据 超时时间在配置里
 // 设计成这样是因为之前改一个高并发的bug的时候 发现了一个问题
-// 在高并发场景下 client发了一个json 这边一次性read不完
+// 在高并发场景下 client发了一个包 这边一次性read不完
 // 报序列化错误 导致后面所有的包都乱序
 func (d *defaultConn) read(len uint) (data []byte, err error) {
+
 	data = make([]byte, len)
 	n, err := d.readWithTimeout(data)
 	if err != nil {
@@ -135,21 +139,20 @@ func (d *defaultConn) read(len uint) (data []byte, err error) {
 		n += size
 	}
 
-	if n > int(len) {
-		os.Exit(49)
-	}
-
 	return
 }
 
+// readWithTimeout 带超时时间的读，超时时间在config包里
 func (d *defaultConn) readWithTimeout(b []byte) (n int, err error) {
-	ch := make(chan int)
-	//TODO:超时时间的配置
+
+	ch := chPool.Get().(chan int)
+
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(config.C.Conn.ReadTimeout)*time.Second)
 	defer cancel()
 	go func() {
 		n, err = d.buf.Read(b)
 		ch <- n
+		chPool.Put(ch)
 	}()
 	select {
 	case n = <-ch:

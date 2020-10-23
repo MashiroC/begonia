@@ -1,7 +1,3 @@
-// Time : 2020/10/19 16:50
-// Author : Kieran
-
-// logic
 package logic
 
 import (
@@ -12,19 +8,21 @@ import (
 	"time"
 )
 
-// service.go something
-type ResultFunc struct {
-	Result func(result *CallResult, toConnID ...string)
-	ConnID string
-	ReqID  string
-}
+// logic_service.go service节点的logic层
 
+// Service 对api层暴露的logic Service 接口
 type Service interface {
+
+	// logic 基础的logic层
 	logic
-	RecvMsg() (msg *Call, wf ResultFunc)
+
+	// RecvMsg 获取一个调用请求，wf是回传数据的结构体
+	RecvCall() (msg *Call, wf ResultFunc)
 }
 
+// NewService 创建一个实例
 func NewService(dp dispatch.Dispatcher) Service {
+
 	c := &service{
 		baseLogic: baseLogic{
 			dp:       dp,
@@ -32,32 +30,39 @@ func NewService(dp dispatch.Dispatcher) Service {
 		},
 	}
 
+	// 判断是否需要在断开连接情况下重连，hook了dispatch层的close函数
 	if config.C.Logic.AutoReConnection {
+
 		c.dp.Hook("close", func(connID string, err error) {
+
 			ok := false
+
 			if config.C.Logic.ReConnectionRetryCount <= 0 {
+
 				for !ok {
 					log.Println("connot link to server,retry...")
 					time.Sleep(time.Duration(config.C.Logic.ReConnectionIntervalSecond) * time.Second)
 					ok = dp.ReLink()
 				}
-				return
+
 			} else {
+
 				for i := 0; i < config.C.Logic.ReConnectionRetryCount && !ok; i++ {
-					log.Println("connot link to server,retry",i,"limit",config.C.Logic.ReConnectionRetryCount)
+					log.Println("connot link to server,retry", i, "limit", config.C.Logic.ReConnectionRetryCount)
 					time.Sleep(time.Duration(config.C.Logic.ReConnectionIntervalSecond) * time.Second)
 					ok = dp.ReLink()
 				}
-				if ok {
-					return
-				} else {
+
+				if !ok {
 					panic("connect closed")
 				}
+
 			}
+
 		})
+
 	}
 
-	// TODO: add ctx
 	return c
 }
 
@@ -65,7 +70,7 @@ type service struct {
 	baseLogic
 }
 
-func (c *service) RecvMsg() (call *Call, wf ResultFunc) {
+func (c *service) RecvCall() (call *Call, wf ResultFunc) {
 
 	for {
 
@@ -82,7 +87,7 @@ func (c *service) RecvMsg() (call *Call, wf ResultFunc) {
 
 			wf = ResultFunc{
 				Result: func(result *CallResult, toConnID ...string) {
-					resp := frame.NewResponse(msg.ReqId, result.Result, result.Err)
+					resp := frame.NewResponse(msg.ReqID, result.Result, result.Err)
 					if toConnID != nil {
 						for _, connID := range toConnID {
 							c.dp.SendTo(connID, resp)
@@ -92,18 +97,21 @@ func (c *service) RecvMsg() (call *Call, wf ResultFunc) {
 					}
 				},
 				ConnID: connID,
-				ReqID:  msg.ReqId,
+				ReqID:  msg.ReqID,
 			}
-			return
+
 		case *frame.Response:
-			err := c.waitChan.Callback(msg.ReqId, &CallResult{
+
+			err := c.waitChan.Callback(msg.ReqID, &CallResult{
 				Result: msg.Result,
 				Err:    msg.Err,
 			})
 			if err != nil {
 				panic(err)
 			}
+
 		}
+
 	}
 
 }

@@ -1,57 +1,44 @@
-// Time : 2020/10/19 16:55
-// Author : Kieran
-
-// logic
 package logic
 
 import (
-	"begonia2/config"
 	"begonia2/dispatch"
 	"begonia2/dispatch/frame"
-	"errors"
+	"context"
 )
 
-// mix.go something
+// MixNode 混合节点
+type MixNode interface {
+	// logic 基础的logic接口
+	logic
 
-func NewMix(dp dispatch.Dispatcher) MixNode {
-	rs := NewReqSet(config.C.Logic.RequestTimeOut)
-	return NewMixWithReqSet(dp, rs)
+	// Close 释放资源
+	Close()
+
+	// RecvMsg 接收一个消息
+	// 只会接收到request，response会直接被转发到对应的连接里。
+	RecvCall() (msg *Call, wf ResultFunc)
 }
 
-func NewMixWithReqSet(dp dispatch.Dispatcher, rs *ReqSet) MixNode {
+// NewMix 创建一个mix节点
+func NewMix(dp dispatch.Dispatcher) MixNode {
+
 	c := &mix{
 		baseLogic: baseLogic{
 			dp:       dp,
 			waitChan: NewWaitChans(),
 		},
-		rs: rs,
 	}
-	// TODO: add ctx
-	go c.Handle()
-	return c
-}
 
-type MixNode interface {
-	logic
-	Close()
-	RecvMsg() (msg *Call, wf ResultFunc)
+	return c
 }
 
 type mix struct {
 	baseLogic
-	rs *ReqSet
 }
 
-// Handle 处理响应与请求，请求和响应在这里被直接转发，CoreService的请求被传到上层
-func (m *mix) Handle() {
+func (m *mix) Close() {}
 
-}
-
-func (m *mix) Close() {
-	panic("implement me")
-}
-
-func (m *mix) RecvMsg() (call *Call, wf ResultFunc) {
+func (m *mix) RecvCall() (call *Call, wf ResultFunc) {
 	//TODO:回收过期的key
 
 	for {
@@ -73,8 +60,6 @@ func (m *mix) RecvMsg() (call *Call, wf ResultFunc) {
 		switch f := msg.(type) {
 		case *frame.Request:
 
-			m.rs.Add(f.ReqId, connID)
-
 			call = &Call{
 				Service: f.Service,
 				Fun:     f.Fun,
@@ -82,35 +67,40 @@ func (m *mix) RecvMsg() (call *Call, wf ResultFunc) {
 			}
 
 			wf = ResultFunc{
+
 				Result: func(result *CallResult, toConnID ...string) {
 
 					var res frame.Frame
 					if result == Redirect {
 						res = f
 					} else {
-						res = frame.NewResponse(f.ReqId, result.Result, result.Err)
+						res = frame.NewResponse(f.ReqID, result.Result, result.Err)
 					}
 
 					if toConnID != nil {
-						for _, connID := range toConnID {
-							m.dp.SendTo(connID, res)
-						}
-					} else {
-						toID, ok := m.rs.Get(f.ReqId)
-						if !ok {
-							panic("toID err")
-						}
-						m.rs.Remove(f.ReqId)
 
-						err := m.dp.SendTo(toID, res)
+						for _, toID := range toConnID {
+
+							m.waitChan.AddCallback(context.TODO(), f.ReqID, func(result *CallResult) {
+								m.dp.SendTo(connID, frame.NewResponse(f.ReqID, result.Result, result.Err))
+							})
+
+							m.dp.SendTo(toID, res)
+
+						}
+
+					} else {
+
+						err := m.dp.SendTo(connID, res)
 						if err != nil {
 							panic(err)
 						}
+
 					}
 
 				},
 				ConnID: connID,
-				ReqID:  f.ReqId,
+				ReqID:  f.ReqID,
 			}
 
 			return
@@ -118,19 +108,14 @@ func (m *mix) RecvMsg() (call *Call, wf ResultFunc) {
 		case *frame.Response:
 
 			go func() {
-				// 如果是响应包，直接转发
-				toID, ok := m.rs.Get(f.ReqId)
-				if !ok {
-					err := errors.New("connID not found")
-					panic(err)
-				}
-
-				err := m.dp.SendTo(toID, f)
+				// 如果是响应包，直接回调
+				err := m.waitChan.Callback(f.ReqID, &CallResult{
+					Result: f.Result,
+					Err:    f.Err,
+				})
 				if err != nil {
 					panic(err)
 				}
-
-				m.rs.Remove(f.ReqId)
 			}()
 
 			continue

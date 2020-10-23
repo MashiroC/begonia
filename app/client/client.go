@@ -1,7 +1,4 @@
-// Time : 2020/9/19 16:02
-// Author : Kieran
-
-// client
+// Package client 的 api 层
 package client
 
 import (
@@ -12,7 +9,7 @@ import (
 	"errors"
 )
 
-// service.go something
+// logic_service.go something
 
 // Client 客户端的接口
 type Client interface {
@@ -85,7 +82,7 @@ func (r *rClient) Wait() {
 	}
 }
 
-func (r *rClient) Close(){
+func (r *rClient) Close() {
 	r.lg.Close()
 	r.cancel()
 }

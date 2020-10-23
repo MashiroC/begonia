@@ -1,16 +1,12 @@
-// Time : 2020/10/20 17:08
-// Author : Kieran
-
-// coding
 package coding
 
 import "errors"
 
-// success.go something
-
+// SuccessCoder 对于一些只需要bool值的类型，直接使用successCoder payload只有error或bool
 type SuccessCoder struct {
 }
 
+// Encode success encode
 func (s *SuccessCoder) Encode(data interface{}) ([]byte, error) {
 	if res, ok := data.(bool); ok && res {
 		return []byte{1}, nil
@@ -18,6 +14,7 @@ func (s *SuccessCoder) Encode(data interface{}) ([]byte, error) {
 	return []byte{0}, nil
 }
 
+// Decode Success decode
 func (s *SuccessCoder) Decode(bytes []byte) (data interface{}, err error) {
 	if len(bytes) != 1 {
 		data = false
@@ -34,6 +31,7 @@ func (s *SuccessCoder) Decode(bytes []byte) (data interface{}, err error) {
 	return
 }
 
+// DecodeIn success DecodeIN
 func (s *SuccessCoder) DecodeIn(bytes []byte, i interface{}) (err error) {
 	if len(bytes) != 1 {
 		i = false

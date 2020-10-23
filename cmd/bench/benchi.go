@@ -122,11 +122,11 @@ func hambaEncode() {
 	//fmt.Println(res)
 
 	/*
-	1. 1 string 1int < 4
-	2. 单结构体
-	3. other
+		1. 1 string 1int < 4
+		2. 单结构体
+		3. other
 
-	 */
+	*/
 
 	//var reqIn interface{}= reqNative
 	avro.Marshal(ReqSchema, req)
@@ -135,7 +135,7 @@ func hambaEncode() {
 func hambaDecode() {
 	//var res TestReq
 	var res map[string]interface{}
-	res=make(map[string]interface{})
+	res = make(map[string]interface{})
 	avro.Unmarshal(ReqSchema, reqBin, res)
 
 	//err := avro.Unmarshal(ReqSchema, reqBin, &res)

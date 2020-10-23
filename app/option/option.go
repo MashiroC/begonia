@@ -1,15 +1,12 @@
-// Time : 2020/9/26 21:17
-// Author : Kieran
-
-// option
+// Package option starter需要传入的配置相关
 package option
 
-// option.go something
+// WriteFunc 拿到的传入参数的map
+type WriteFunc func(optionMap map[string]interface{})
 
-type OptionFunc func(optionMap map[string]interface{})
-
-func ManagerAddr(addr string) OptionFunc {
-	return OptionFunc(func(optionMap map[string]interface{}) {
+// CenterAddr 中心的地址
+func CenterAddr(addr string) WriteFunc {
+	return func(optionMap map[string]interface{}) {
 		optionMap["managerAddr"] = addr
-	})
+	}
 }

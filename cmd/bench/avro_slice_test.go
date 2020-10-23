@@ -42,8 +42,8 @@ func BenchmarkMake(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		ttt:=make([]test,0)
-		err = avro.Unmarshal(o,bt, &ttt)
+		ttt := make([]test, 0)
+		err = avro.Unmarshal(o, bt, &ttt)
 		if err != nil {
 			panic(err)
 		}
@@ -81,7 +81,7 @@ func BenchmarkNoMake(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		var ttt []test
-		err = avro.Unmarshal(o,bt, &ttt)
+		err = avro.Unmarshal(o, bt, &ttt)
 		if err != nil {
 			panic(err)
 		}

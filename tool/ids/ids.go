@@ -1,14 +1,9 @@
-// Time : 2020/9/26 21:43
-// Author : Kieran
-
-// ids
+// Package ids 寓意是id(s)，是生成唯一id的工具包
 package ids
 
-import 	uuid "github.com/satori/go.uuid"
+import uuid "github.com/satori/go.uuid"
 
-
-// ids.go something
-
+// New 创建一个新id
 func New() string {
 	return uuid.NewV4().String()
 }
