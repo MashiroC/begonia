@@ -194,6 +194,7 @@ func (d *defaultDispatch) work(c conn.Conn) {
 
 		opcode, data, err := c.Recv()
 		if err != nil {
+			c.Close()
 			d.closeHookFunc(id, err)
 			d.connLock.Lock()
 			delete(d.connSet, id)
