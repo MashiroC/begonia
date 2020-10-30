@@ -89,8 +89,6 @@ func (d *defaultDispatch) Link(addr string) (err error) {
 	d.mode = linked
 	d.linkedConn = c
 
-	log.Println("link", addr, "success")
-
 	go d.work(c)
 
 	return
@@ -132,7 +130,8 @@ func (d *defaultDispatch) SendTo(connID string, f frame.Frame) (err error) {
 		d.connLock.Unlock()
 
 		if !ok {
-			panic("connID not found")
+			log.Printf("conn [%s] response timeout\n", connID)
+			return
 		}
 	default:
 		panic("mode error")
@@ -182,7 +181,9 @@ func (d *defaultDispatch) work(c conn.Conn) {
 	switch d.mode {
 	case linked:
 		d.linkID = id
+		log.Printf("link [%s] success\n", id)
 	case set:
+		log.Printf("new conn [%s]\n", id)
 		d.connLock.Lock()
 		d.connSet[id] = c
 		d.connLock.Unlock()

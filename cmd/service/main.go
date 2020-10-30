@@ -25,10 +25,11 @@ type HelloService struct {
 }
 
 func (h *HelloService) SayHello(name string) string {
-	fmt.Println("sayyHello")
+	fmt.Println("sayHello")
 	return "Hello " + name
 }
 
 func (h *HelloService) SayHello2(name string) (string, error) {
+	fmt.Println("sayHello2")
 	return "", errors.New("hello")
 }

@@ -100,6 +100,8 @@ func (c *service) RecvCall() (call *Call, wf ResultFunc) {
 				ReqID:  msg.ReqID,
 			}
 
+			return
+
 		case *frame.Response:
 
 			err := c.waitChan.Callback(msg.ReqID, &CallResult{
@@ -110,6 +112,8 @@ func (c *service) RecvCall() (call *Call, wf ResultFunc) {
 				panic(err)
 			}
 
+		default:
+			panic("err?")
 		}
 
 	}
