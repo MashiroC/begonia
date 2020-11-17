@@ -171,7 +171,6 @@ func (d *defaultConn) readByte() (data byte, err error) {
 
 func (d *defaultConn) Close() {
 	d.nc.Close()
-	d.buf = nil
 }
 
 func handlerErr(err error) {

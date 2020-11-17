@@ -104,7 +104,7 @@ func (d *defaultDispatch) Send(f frame.Frame) (err error) {
 
 	// TODO:请求实现幂等 断连时排序等待连接重连 这里暂时先直接传过去
 	if d.mode == linked {
-		log.Println("send to linkConn:", string(f.Marshal()))
+		//log.Println("send to linkConn:", string(f.Marshal()))
 		err = d.linkedConn.Write(byte(f.Opcode()), f.Marshal())
 	} else {
 		panic("mode err!")
