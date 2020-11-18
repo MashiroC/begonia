@@ -104,7 +104,6 @@ func (r *rService) FuncAsync(name string) (rf RemoteFunAsync, err error) {
 
 			res := reflects.ToInterfaces(out.(map[string]interface{}))
 
-			fmt.Println(res)
 			callback(res, err)
 		})
 	}

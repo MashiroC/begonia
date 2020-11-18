@@ -1,7 +1,6 @@
 package coding
 
 import (
-	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
@@ -141,7 +140,6 @@ func fieldKind(t reflect.Type) (fType string, isErr bool) {
 		child, _ := fieldKind(t.Elem())
 		fType = `{"type":"map","values":` + child + `}`
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32:
-		fmt.Println(t)
 		panic("avro not supported uint")
 	default:
 		fType += t.String()
