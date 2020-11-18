@@ -1,6 +1,7 @@
 package coding
 
 import (
+	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
@@ -10,51 +11,48 @@ import (
 
 // InSchema 根据反射类型 获得schema
 func InSchema(m reflect.Method) string {
+	namespace := "begonia.func." + m.Name
+	name := "In"
 
 	t := m.Type
-
 	num := t.NumIn()
 
-	fields := make([]string, num-1)
-
+	typ := make([]reflect.Type, 0, num-1)
 	for i := 1; i < num; i++ {
-		fieldSchema := fieldSchema("in"+strconv.FormatInt(int64(i), 10), t.In(i))
-		fields[i-1] = fieldSchema
+		typ = append(typ, t.In(i))
 	}
 
-	rawSchema := `
-{
-			"namespace":"begonia.func.` + m.Name + `",
-			"type":"record",
-			"name":"In",
-			"fields":[
-				` + strings.Join(fields, ",") + `
-			]
-		}`
-
-	return rawSchema
+	return makeSchema(namespace, name, typ)
 }
 
 // OutSchema 根据反射 获得出参schema
 func OutSchema(m reflect.Method) string {
-	t := m.Type
+	namespace := "begonia.func." + m.Name
+	name := "Out"
 
+	t := m.Type
 	num := t.NumOut()
 
-	//fmt.Println(t.Out(num-1).Kind())
-
-	fields := make([]string, num)
-
+	typ := make([]reflect.Type, 0, num)
 	for i := 0; i < num; i++ {
-		fieldSchema := fieldSchema("out"+strconv.FormatInt(int64(i+1), 10), t.Out(i))
-		fields[i] = fieldSchema
+		typ = append(typ, t.Out(i))
+	}
+
+	return makeSchema(namespace, name, typ)
+}
+
+func makeSchema(namespace, name string, typ []reflect.Type) string {
+	fields := make([]string, len(typ))
+
+	for i := 0; i < len(typ); i++ {
+		fields[i] = fieldSchema("f"+strconv.FormatInt(int64(i+1), 10), typ[i])
 	}
 
 	rawSchema := `
 {
-			"namespace":"begonia.func.` + m.Name + `",
+			"namespace":"` + namespace + `",
 			"type":"record",
-			"name":"Out",
+			"name":"` + name + `",
 			"fields":[
 				` + strings.Join(fields, ",") + `
 			]
@@ -63,21 +61,90 @@ func OutSchema(m reflect.Method) string {
 	return rawSchema
 }
 
+// fieldSchema 解析对应的类型到avro schema，如果遇到指针，会取指针后再对类型做解析
+// 目前支持的类型：
+// int, int8 ~ int32 -> int
+// int64             -> long
+// float32           -> float
+// float64           -> double
+// bool              -> boolean
+// string            -> string
+// error             -> ["string","null"]
+// slice             -> array
+// struct            -> record
+// []uint8           -> bytes
+// map[string]kind   -> map
+//
+// ps:
+// - 目前avro类型不支持无符号整数，uint uint8~uint64全部不支持，唯一的例外是[]uint8会被解析成bytes
+// - map的value，中只要上述类型支持的，都可以支持，不支持interface{}
+// - 结构体支持嵌套、内嵌
+// - 不支持array，请使用slice
 func fieldSchema(name string, t reflect.Type) string {
-	fType := ""
+	fType, isErr := fieldKind(t)
+	if isErr {
+		name = "err"
+	}
+	raw := `{"name":"` + name + `","type":` + fType + "}\n"
+
+	return raw
+}
+
+func fieldKind(t reflect.Type) (fType string, isErr bool) {
 	switch t.Kind() {
 	case reflect.String:
 		fType = `"string"`
-	case reflect.Int:
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32:
 		fType = `"int"`
+	case reflect.Int64, reflect.Uint64:
+		fType = `"long"`
+	case reflect.Float32:
+		fType = `"float"`
+	case reflect.Float64:
+		fType = `"double"`
+	case reflect.Bool:
+		fType = `"boolean"`
+	case reflect.Slice, reflect.Array:
+		if t.Elem().Kind() == reflect.Uint8 {
+			fType = `"bytes"`
+		} else {
+			childKind, _ := fieldKind(t.Elem())
+			fType = `{
+				"type": "array",
+				"items": ` + childKind + `
+			}`
+		}
 	case reflect.Interface:
 		if t.String() == "error" {
-			name = "err"
 			fType = `["string","null"]`
+			isErr = true
+		} else {
+			panic("avro parse not supported")
 		}
+	case reflect.Ptr:
+		fType, isErr = fieldKind(t.Elem())
+	case reflect.Struct:
+		n := t.NumField()
+		fields := make([]string, n)
+		for i := 0; i < n; i++ {
+			field := t.Field(i)
+			fields[i] = fieldSchema(field.Name, field.Type)
+		}
+
+		fType = `{
+				"type": "record",
+				"name": "` + t.Name() + `",
+				"fields":[` + strings.Join(fields, ",") + `
+				]
+			}`
+	case reflect.Map:
+		child, _ := fieldKind(t.Elem())
+		fType = `{"type":"map","values":` + child + `}`
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32:
+		fmt.Println(t)
+		panic("avro not supported uint")
 	default:
 		fType += t.String()
 	}
-	raw := `{"name":"` + name + `","type":` + fType + `}`
-	return raw
+	return
 }

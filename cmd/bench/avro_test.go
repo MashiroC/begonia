@@ -345,3 +345,25 @@ func TestForMap(t *testing.T) {
 		time.Sleep(5 * time.Second)
 	}
 }
+
+func TestInt64(t *testing.T) {
+	rawSchema := `
+{
+			"namespace":"begonia.func.Test",
+			"type":"record",
+			"name":"In",
+			"fields":[
+				{"name":"Test","type":"int"}
+			]
+		}`
+	schema:=avro.MustParse(rawSchema)
+	obj:= struct {
+		Test uint
+	}{Test: 123456}
+
+	res,err:=avro.Marshal(schema,obj)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(res)
+}

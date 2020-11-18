@@ -51,7 +51,7 @@ func (r *rService) Register(name string, service interface{}) {
 	}
 
 	var ok bool
-	success.DecodeIn(res.Result, &ok)
+	_ = success.DecodeIn(res.Result, &ok)
 
 	if ok {
 		return
