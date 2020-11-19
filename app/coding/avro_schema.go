@@ -1,12 +1,9 @@
 package coding
 
 import (
-	"github.com/mitchellh/mapstructure"
-	"github.com/modern-go/reflect2"
 	"reflect"
 	"strconv"
 	"strings"
-	"unsafe"
 )
 
 type parseMode int
@@ -32,12 +29,12 @@ func InSchema(m reflect.Method) string {
 		typ = append(typ, t.In(i))
 	}
 
-	res, _ := makeSchema(namespace, name, typ)
+	res := makeSchema(namespace, name, typ)
 	return res
 }
 
 // OutSchema 根据反射 获得出参schema
-func OutSchema(m reflect.Method) (string, []ReSharpFunc) {
+func OutSchema(m reflect.Method) string {
 	namespace := "begonia.func." + m.Name
 	name := "Out"
 
@@ -52,12 +49,11 @@ func OutSchema(m reflect.Method) (string, []ReSharpFunc) {
 	return makeSchema(namespace, name, typ)
 }
 
-func makeSchema(namespace, name string, typ []reflect.Type) (string, []ReSharpFunc) {
+func makeSchema(namespace, name string, typ []reflect.Type) string {
 	fields := make([]string, len(typ))
-	reSharp := make([]ReSharpFunc, len(typ))
 
 	for i := 0; i < len(typ); i++ {
-		fields[i], reSharp[i] = fieldSchema("f"+strconv.FormatInt(int64(i+1), 10), typ[i])
+		fields[i] = fieldSchema("f"+strconv.FormatInt(int64(i+1), 10), typ[i])
 	}
 
 	rawSchema := `
@@ -70,7 +66,7 @@ func makeSchema(namespace, name string, typ []reflect.Type) (string, []ReSharpFu
 			]
 		}`
 
-	return rawSchema, reSharp
+	return rawSchema
 }
 
 // fieldSchema 解析对应的类型到avro schema，如果遇到指针，会取指针后再对类型做解析
@@ -92,8 +88,8 @@ func makeSchema(namespace, name string, typ []reflect.Type) (string, []ReSharpFu
 // - map的value，中只要上述类型支持的，都可以支持，不支持interface{}
 // - 结构体支持嵌套、内嵌
 // - 不支持array，请使用slice
-func fieldSchema(name string, t reflect.Type) (schema string, reSharpFunc ReSharpFunc) {
-	fType, isErr, reSharpFunc := fieldKind(modeNormal, t)
+func fieldSchema(name string, t reflect.Type) (schema string) {
+	fType, isErr := fieldKind(modeNormal, t)
 	if isErr {
 		name = "err"
 	}
@@ -102,31 +98,11 @@ func fieldSchema(name string, t reflect.Type) (schema string, reSharpFunc ReShar
 	return
 }
 
-func fieldKind(mode parseMode, t reflect.Type) (fType string, isErr bool, sharpFunc ReSharpFunc) {
+func fieldKind(mode parseMode, t reflect.Type) (fType string, isErr bool) {
 	switch t.Kind() {
 	case reflect.String:
 		fType = `"string"`
-	case reflect.Int8:
-		sharpFunc = func(in interface{}) interface{} {
-			return int8(in.(int))
-		}
-		fallthrough
-	case reflect.Int16:
-		if sharpFunc == nil {
-			sharpFunc = func(in interface{}) interface{} {
-				return int16(in.(int))
-			}
-		}
-
-		fallthrough
-	case reflect.Int32:
-		if sharpFunc == nil {
-			sharpFunc = func(in interface{}) interface{} {
-				return int32(in.(int))
-			}
-		}
-		fallthrough
-	case reflect.Int:
+	case reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int:
 		fType = `"int"`
 	case reflect.Int64:
 		fType = `"long"`
@@ -140,18 +116,7 @@ func fieldKind(mode parseMode, t reflect.Type) (fType string, isErr bool, sharpF
 		if t.Elem().Kind() == reflect.Uint8 {
 			fType = `"bytes"`
 		} else {
-			sharpFunc = func(in interface{}) interface{} {
-				tmp := in.([]interface{})
-				s := reflect.MakeSlice(t, 0, 2)
-				for i := 0; i < len(tmp); i++ {
-					v := reflect.ValueOf(tmp[i])
-					s = reflect.Append(s, v)
-				}
-				//reflect.AppendSlice(s,)
-				return s.Interface()
-			}
-
-			childKind, _, _ := fieldKind(modeSlice, t.Elem())
+			childKind, _ := fieldKind(modeSlice, t.Elem())
 
 			fType = `{
 				"type": "array",
@@ -173,17 +138,7 @@ func fieldKind(mode parseMode, t reflect.Type) (fType string, isErr bool, sharpF
 		if mode == modeSlice {
 			panic("begonia not supported ptr")
 		}
-		var resharp ReSharpFunc
-		fType, isErr, resharp = fieldKind(modeNormal, t.Elem())
-		sharpFunc = func(in interface{}) interface{} {
-			if resharp != nil {
-				in = resharp(in)
-			}
-			v := reflect2.TypeOf(in).PackEFace(unsafe.Pointer(&in))
-			return v
-			//return in
-		}
-
+		fType, isErr = fieldKind(modeNormal, t.Elem())
 	case reflect.Struct:
 		if mode == modeSlice {
 			panic("slice not supported struct")
@@ -193,7 +148,7 @@ func fieldKind(mode parseMode, t reflect.Type) (fType string, isErr bool, sharpF
 
 		for i := 0; i < n; i++ {
 			field := t.Field(i)
-			fields[i], _ = fieldSchema(field.Name, field.Type)
+			fields[i] = fieldSchema(field.Name, field.Type)
 		}
 
 		fType = `{
@@ -202,39 +157,12 @@ func fieldKind(mode parseMode, t reflect.Type) (fType string, isErr bool, sharpF
 				"fields":[` + strings.Join(fields, ",") + `
 				]
 			}`
-
-		sharpFunc = func(in interface{}) interface{} {
-			v := reflect.New(t)
-			obj := v.Interface()
-			err := mapstructure.Decode(in, obj)
-			if err != nil {
-				panic(err)
-			}
-
-			return v.Elem().Interface()
-		}
-
 	case reflect.Map:
 		if mode == modeSlice {
 			panic("slice not supported map")
 		}
-		var resharp ReSharpFunc
-		if t.Elem().Kind() == reflect.Struct {
-			_, _, resharp = fieldKind(modeNormal, t.Elem())
-		}
-		sharpFunc = func(in interface{}) interface{} {
-			out := reflect.MakeMap(t)
-			m := in.(map[string]interface{})
-			for k, v := range m {
-				if resharp != nil {
-					v = resharp(v)
-				}
 
-				out.SetMapIndex(reflect.ValueOf(k), reflect.ValueOf(v))
-			}
-			return out.Interface()
-		}
-		child, _, _ := fieldKind(modeNormal, t.Elem())
+		child, _ := fieldKind(modeNormal, t.Elem())
 		fType = `{"type":"map","values":` + child + `}`
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32:
 		panic("avro not supported uint")

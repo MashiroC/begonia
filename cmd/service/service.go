@@ -97,7 +97,11 @@ func (*TestService) Echo(i1 int, i2 int8, i3 int16, i4 int32, i5 int64,
 	s1 []int, s2 []string, s6 []byte, st TestStruct,
 	m1 map[string]string, m2 map[string]int, m3 map[string]TestStruct,
 ) string {
-	QPS()
+	//QPS()
+	fmt.Println(i1,i2,i3,i4,i5)
+	fmt.Println(f1,f2,ok,str)
+	fmt.Println(s1,s2,s6,st)
+	fmt.Println(m1,m2,m3)
 	return "ok"
 }
 
@@ -106,7 +110,7 @@ func (*TestService) Echo2() (i1 int, i2 int8, i3 int16, i4 int32, i5 int64,
 	s1 []int, s2 []string, s6 []byte, st TestStruct,
 	m1 map[string]string, m2 map[string]int, m3 map[string]TestStruct,
 ) {
-	QPS()
+	//QPS()
 	i1 = 1
 	i2 = 2
 	i3 = 3

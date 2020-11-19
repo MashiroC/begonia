@@ -22,7 +22,9 @@ func main() {
 
 	in:=testFunc(c, "Test", "Echo2")
 	res:=in.([]interface{})
-	QPS(c,"Test","Echo",res...)
+	fmt.Println(res)
+	fmt.Println(testFunc(c,"Test","Echo",res...))
+	//QPS(c,"Test","Echo",res...)
 }
 
 func QPS(c client.Client, service, funName string, param ...interface{}) {

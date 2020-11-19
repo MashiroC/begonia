@@ -25,7 +25,7 @@ type rService struct {
 func (r *rService) Register(name string, service interface{}) {
 
 	// TODO:注册后 把函数注册到本地
-	fs, ms, reSharp := coding.Parse("avro", service)
+	fs, ms,reSharps := coding.Parse("avro", service)
 
 	for i, f := range fs {
 		inCoder, err := coding.NewAvro(f.InSchema)
@@ -40,7 +40,7 @@ func (r *rService) Register(name string, service interface{}) {
 			in:      inCoder,
 			out:     outCoder,
 			obj:     service,
-			reSharp: reSharp,
+			reSharp: reSharps[i],
 			method:  ms[i],
 		})
 	}
