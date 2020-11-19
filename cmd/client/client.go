@@ -18,22 +18,23 @@ const (
 
 func main() {
 	c := client.New(mode, option.CenterAddr(addr))
+	//TestQPS(c)
 
+	in:=testFunc(c, "Test", "Echo2")
+	res:=in.([]interface{})
+	QPS(c,"Test","Echo",res...)
+}
 
-	s, err := c.Service("Echo")
+func QPS(c client.Client, service, funName string, param ...interface{}) {
+	s, err := c.Service(service)
 	if err != nil {
 		panic(err)
 	}
 
-	sayHello, err := s.FuncSync("SayHello")
+	testFun, err := s.FuncSync(funName)
 	if err != nil {
 		panic(err)
 	}
-
-	//sayHello2, err := s.FuncSync("SayHello2")
-	//if err != nil {
-	//	panic(err)
-	//}
 
 	ch := make(chan struct{}, workLimit)
 	for i := 0; i < workLimit; i++ {
@@ -42,7 +43,7 @@ func main() {
 
 	t := time.Now()
 
-	wg:=sync.WaitGroup{}
+	wg := sync.WaitGroup{}
 	for i := 0; i < workNums; i++ {
 		<-ch
 		wg.Add(1)
@@ -51,8 +52,12 @@ func main() {
 				wg.Done()
 				ch <- struct{}{}
 			}()
-			res, err := sayHello("shiina")
-			if err != nil || res != "Hello shiina"{
+			if len(param) != 0 {
+				_, err = testFun(param...)
+			} else {
+				_, err = testFun()
+			}
+			if err != nil {
 				panic(err)
 			}
 		}()
@@ -61,22 +66,28 @@ func main() {
 	wg.Wait()
 
 	fmt.Println(time.Now().Sub(t).String())
+}
 
-	//s, err := c.Service("Hello")
-	//if err != nil {
-	//	panic(err)
-	//}
-	//
-	//sayHello, err := s.FuncSync("SayHello")
-	//if err != nil {
-	//	panic(err)
-	//}
-	//
-	//res, err := sayHello("shiina")
-	//if err != nil {
-	//	panic(err)
-	//}
-	//
-	//fmt.Println(res)
+func testFunc(c client.Client, service, funName string, param ...interface{}) interface{} {
+	s, err := c.Service(service)
+	if err != nil {
+		panic(err)
+	}
 
+	testFun, err := s.FuncSync(funName)
+	if err != nil {
+		panic(err)
+	}
+
+	var res interface{}
+	if len(param) != 0 {
+		res, err = testFun(param...)
+	} else {
+		res, err = testFun()
+	}
+	if err != nil {
+		panic(err)
+	}
+
+	return res
 }

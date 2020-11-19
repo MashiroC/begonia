@@ -2,22 +2,28 @@
 package reflects
 
 import (
+	"begonia2/app/coding"
+	"begonia2/tool/qconv"
 	"reflect"
 	"strconv"
 )
 
 // ToValue 将一个 map 转化为一个 reflect.Value 的数组
 // 该函数会抽取map中key为 “in” + i 的value，组装为数组。i的范围为 1 ~ ∞
-func ToValue(m map[string]interface{}) (res []reflect.Value) {
+func ToValue(m map[string]interface{}, resharp []coding.ReSharpFunc) (res []reflect.Value) {
 
 	res = make([]reflect.Value, 0, 2)
 
-	var i int64 = 1
+	var i = 1
 	for {
 
-		v, ok := m["f"+strconv.FormatInt(i, 10)]
+		v, ok := m["f"+qconv.I2S(i)]
 		if !ok {
 			break
+		}
+
+		if resharp != nil && len(resharp) >= i && resharp[i-1] != nil {
+			v = resharp[i-1](v)
 		}
 
 		res = append(res, reflect.ValueOf(v))

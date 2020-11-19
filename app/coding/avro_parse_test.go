@@ -3,6 +3,8 @@ package coding
 import (
 	"fmt"
 	"github.com/hamba/avro"
+	"github.com/mitchellh/mapstructure"
+	"github.com/modern-go/reflect2"
 	"reflect"
 	"testing"
 )
@@ -41,6 +43,14 @@ func (*EchoService) Echo(i1 int, i2 int8, i3 int16, i4 int32, i5 int64,
 	//m1 map[string]string, m2 map[string]int, m3 map[string]TestStruct
 }
 
+func (*EchoService) Echo2() (i1 int, i2 int8, i3 int16, i4 int32, i5 int64,
+	f1 float32, f2 float64, ok bool, str string,
+	s1 []int, s2 []string, s3 []*string, s6 []byte, st TestStruct, stp *TestStruct,
+	m1 map[string]string, m2 map[string]int, m3 map[string]TestStruct,
+) {
+	return
+}
+
 func TestParse(t *testing.T) {
 	type Input struct {
 		F1  int                   `avro:"f1"`
@@ -62,26 +72,8 @@ func TestParse(t *testing.T) {
 		F17 map[string]int        `avro:"f17"`
 		F18 map[string]TestStruct `avro:"f18"`
 	}
-	s := EchoService(1)
-	e := &s
-	typ := reflect.TypeOf(e)
-	m := typ.Method(0)
-	rawSchema := InSchema(m)
-	fmt.Println(rawSchema)
-	schema := avro.MustParse(rawSchema)
-	//obj := TestStruct{
-	//	S1: []int{1},
-	//	S2: []string{"asd"},
-	//	TestStruct2: TestStruct2{
-	//		b1: []byte{1, 2, 3},
-	//		b2: []uint8{1, 2, 3},
-	//	},
-	//	Test3: TestStruct2{
-	//		b1: []byte{1, 2, 3},
-	//		b2: []uint8{1, 2, 3},
-	//	},
-	//}
-	res, err := avro.Marshal(schema, Input{
+
+	obj := Input{
 		F1:  1,
 		F2:  2,
 		F3:  3,
@@ -135,12 +127,85 @@ func TestParse(t *testing.T) {
 			Map1: map[string]string{"test": "kieran"},
 			Map2: map[string][]int{"hello": {3, 4, 5}},
 		},
-		F16: map[string]string{"hello":"kieran"},
-		F17: map[string]int{"welcome":1},
+		F16: map[string]string{"hello": "kieran"},
+		F17: map[string]int{"welcome": 1},
 		F18: map[string]TestStruct{},
-	})
+	}
+
+	s := EchoService(1)
+	e := &s
+	typ := reflect.TypeOf(e)
+	m := typ.Method(0)
+
+	rawSchema := InSchema(m)
+	schema := avro.MustParse(rawSchema)
+	res, err := avro.Marshal(schema, obj)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(len(res),res)
+	fmt.Println(len(res), res)
+
+	m2 := typ.Method(1)
+	rawSchema2, _ := OutSchema(m2)
+	schema2 := avro.MustParse(rawSchema2)
+	res2, err := avro.Marshal(schema2, obj)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(len(res2), res2)
+
+	var obj2 Input
+	err = avro.Unmarshal(schema2, res2, &obj2)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(obj2)
+}
+
+func TestAvroSliceParse(t *testing.T) {
+	var arr []interface{}
+	arr = []interface{}{1, 2, 3}
+	typ := reflect.TypeOf(arr)
+	//childTyp := reflect.TypeOf(arr[0])
+	sTyp := reflect.TypeOf([]int{})
+	fmt.Println(typ, sTyp)
+	slice := reflect.MakeSlice(sTyp, 0, 2)
+
+	fmt.Println(slice.Type())
+	for i := 0; i < len(arr); i++ {
+		v := arr[i]
+		rv := reflect.ValueOf(v)
+		slice = reflect.Append(slice, rv)
+		fmt.Println(rv.Type())
+	}
+	fmt.Println(slice)
+}
+
+func TestReflectPtr(t *testing.T) {
+	type People struct {
+		Name string
+		Age  int
+	}
+
+	pTyp := reflect.TypeOf(People{})
+
+	var m interface{}
+	m = map[string]interface{}{"Name": "asd", "Age": 123}
+
+	in := reflect.New(pTyp)
+	people:=in.Interface()
+	err := mapstructure.Decode(m, &people)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(reflect2.Type2(pTyp).Indirect(people))
+	//fmt.Println(reflect.ValueOf(people).Elem().Interface())
+	fmt.Println(people)
+	fmt.Println(in.Interface())
+	fmt.Println(in.Elem().Interface())
+
+	//v:=reflect.ValueOf(p)
+
+	//fmt.Println(v)
 }

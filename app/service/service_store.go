@@ -58,10 +58,12 @@ func (s *serviceStore) store(service, funName string, fun reflectFun) {
 
 }
 
+
 // reflectFun 存储的使用反射实现的远程函数的信息
 type reflectFun struct {
-	in     coding.Coder
-	out    coding.Coder
-	obj    interface{}
-	method reflect.Method
+	in       coding.Coder
+	out      coding.Coder
+	reSharp []coding.ReSharpFunc
+	obj      interface{}
+	method   reflect.Method
 }

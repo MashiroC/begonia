@@ -1,6 +1,11 @@
 package coding
 
-import "reflect"
+import (
+	"reflect"
+)
+
+type ReSharpFunc func(in interface{}) interface{}
+
 
 func toAvroSchemaField(t reflect.Type) string {
 	return t.String()
@@ -15,7 +20,7 @@ type FunInfo struct {
 }
 
 // Parse 将一个结构体的函数信息解析
-func Parse(mode string, in interface{}) (fi []FunInfo, methods []reflect.Method) {
+func Parse(mode string, in interface{}) (fi []FunInfo, methods []reflect.Method,reSharp []ReSharpFunc ) {
 	//TODO:先简单写一下 后面再支持更多类型
 	if mode != "avro" {
 		panic("parse mode error")
@@ -32,7 +37,8 @@ func Parse(mode string, in interface{}) (fi []FunInfo, methods []reflect.Method)
 		methods[i] = m
 
 		inS := InSchema(m)
-		outS := OutSchema(m)
+		outS,tmp := OutSchema(m)
+		reSharp=tmp
 
 		fi[i] = FunInfo{
 			Name:      m.Name,
