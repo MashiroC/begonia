@@ -2,7 +2,7 @@
 package dispatch
 
 import (
-	"begonia2/dispatch/frame"
+	"github.com/MashiroC/begonia/dispatch/frame"
 )
 
 /*

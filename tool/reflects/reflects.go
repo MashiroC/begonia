@@ -2,8 +2,8 @@
 package reflects
 
 import (
-	"begonia2/app/coding"
-	"begonia2/tool/qconv"
+	"github.com/MashiroC/begonia/app/coding"
+	"github.com/MashiroC/begonia/tool/qconv"
 	"reflect"
 	"strconv"
 )

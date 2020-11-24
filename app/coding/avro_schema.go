@@ -18,7 +18,7 @@ const (
 
 // InSchema 根据反射类型 获得schema
 func InSchema(m reflect.Method) string {
-	namespace := "begonia.func." + m.Name
+	namespace := "github.com/MashiroC/begonia.func." + m.Name
 	name := "In"
 
 	t := m.Type
@@ -35,7 +35,7 @@ func InSchema(m reflect.Method) string {
 
 // OutSchema 根据反射 获得出参schema
 func OutSchema(m reflect.Method) string {
-	namespace := "begonia.func." + m.Name
+	namespace := "github.com/MashiroC/begonia.func." + m.Name
 	name := "Out"
 
 	t := m.Type
@@ -136,7 +136,7 @@ func fieldKind(mode parseMode, t reflect.Type) (fType string, isErr bool) {
 		}
 	case reflect.Ptr:
 		if mode == modeSlice {
-			panic("begonia not supported ptr")
+			panic("github.com/MashiroC/begonia not supported ptr")
 		}
 		fType, isErr = fieldKind(modeNormal, t.Elem())
 	case reflect.Struct:

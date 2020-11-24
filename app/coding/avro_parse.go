@@ -20,7 +20,7 @@ type FunInfo struct {
 }
 
 // Parse 将一个结构体的函数信息解析
-func Parse(mode string, in interface{}) (fi []FunInfo, methods []reflect.Method,reSharps [][]ReSharpFunc ) {
+func Parse(mode string, in interface{}) (fi []FunInfo, methods []reflect.Method,reSharps [][]ReSharpFunc) {
 	//TODO:先简单写一下 后面再支持更多类型
 	if mode != "avro" {
 		panic("parse mode error")

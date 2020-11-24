@@ -1,9 +1,9 @@
 package main
 
 import (
-	"begonia2/app/client"
-	"begonia2/app/option"
 	"fmt"
+	"github.com/MashiroC/begonia"
+	"github.com/MashiroC/begonia/app/option"
 	"sync"
 	"time"
 )
@@ -17,17 +17,17 @@ const (
 )
 
 func main() {
-	c := client.New(mode, option.CenterAddr(addr))
+	c := begonia.NewClient(mode, option.CenterAddr(addr))
 	//TestQPS(c)
 
-	in:=testFunc(c, "Test", "Echo2")
-	res:=in.([]interface{})
+	in := testFunc(c, "Test", "Echo2")
+	res := in.([]interface{})
 	fmt.Println(res)
-	fmt.Println(testFunc(c,"Test","Echo",res...))
+	fmt.Println(testFunc(c, "Test", "Echo", res...))
 	//QPS(c,"Test","Echo",res...)
 }
 
-func QPS(c client.Client, service, funName string, param ...interface{}) {
+func QPS(c begonia.Client, service, funName string, param ...interface{}) {
 	s, err := c.Service(service)
 	if err != nil {
 		panic(err)
@@ -70,7 +70,7 @@ func QPS(c client.Client, service, funName string, param ...interface{}) {
 	fmt.Println(time.Now().Sub(t).String())
 }
 
-func testFunc(c client.Client, service, funName string, param ...interface{}) interface{} {
+func testFunc(c begonia.Client, service, funName string, param ...interface{}) interface{} {
 	s, err := c.Service(service)
 	if err != nil {
 		panic(err)

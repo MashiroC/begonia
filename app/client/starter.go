@@ -1,16 +1,15 @@
 package client
 
 import (
-	"begonia2/app/option"
-	"begonia2/dispatch"
-	"begonia2/logic"
+	"github.com/MashiroC/begonia/dispatch"
+	"github.com/MashiroC/begonia/logic"
 	"context"
 )
 
 // starter.go something
 
-// bootStartByCenter 根据center cluster模式启动
-func bootstartByCenter(optionMap map[string]interface{}) Client {
+// BootStartByCenter 根据center cluster模式启动
+func BootStartByCenter(optionMap map[string]interface{}) *rClient {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	c := &rClient{
@@ -53,27 +52,5 @@ func bootstartByCenter(optionMap map[string]interface{}) Client {
 	return c
 }
 
-// New 初始化，获得一个service对象，传入一个mode参数，以及一个option的不定参数
-func New(mode string, optionFunc ...option.WriteFunc) (cli Client) {
-	optionMap := defaultClientConfig()
 
-	for _, f := range optionFunc {
-		f(optionMap)
-	}
 
-	switch mode {
-	case "center":
-		cli = bootstartByCenter(optionMap)
-		// TODO:其他的模式和模式出问题的判断
-	}
-
-	return
-}
-
-func defaultClientConfig() map[string]interface{} {
-	m := make(map[string]interface{})
-
-	// TODO:加入配置
-
-	return m
-}

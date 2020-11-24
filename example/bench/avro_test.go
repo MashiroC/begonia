@@ -5,7 +5,7 @@
 package bench
 
 import (
-	"begonia2/dispatch/frame"
+	"github.com/MashiroC/begonia/dispatch/frame"
 	"fmt"
 	"github.com/hamba/avro"
 	"strconv"
@@ -266,7 +266,7 @@ func TestAvroStruct(t *testing.T) {
 		]
 	},
 	{
-		"namespace": "begonia.entry",
+		"namespace": "github.com/MashiroC/begonia.entry",
 		"type": "record",
 		"name": "ServiceInfoCall",
 		"fields": [{
@@ -349,7 +349,7 @@ func TestForMap(t *testing.T) {
 func TestInt64(t *testing.T) {
 	rawSchema := `
 {
-			"namespace":"begonia.func.Test",
+			"namespace":"github.com/MashiroC/begonia.func.Test",
 			"type":"record",
 			"name":"In",
 			"fields":[

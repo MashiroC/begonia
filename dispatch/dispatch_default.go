@@ -1,9 +1,9 @@
 package dispatch
 
 import (
-	"begonia2/dispatch/conn"
-	"begonia2/dispatch/frame"
-	"begonia2/tool/ids"
+	"github.com/MashiroC/begonia/dispatch/conn"
+	"github.com/MashiroC/begonia/dispatch/frame"
+	"github.com/MashiroC/begonia/tool/ids"
 	"log"
 	"reflect"
 	"sync"

@@ -1,8 +1,8 @@
 package core
 
 import (
-	"begonia2/app/coding"
-	"begonia2/logic"
+	"github.com/MashiroC/begonia/app/coding"
+	"github.com/MashiroC/begonia/logic"
 )
 
 // call.go api层用来调用核心服务的工具函数

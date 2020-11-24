@@ -1,7 +1,7 @@
 package conn
 
 import (
-	"begonia2/config"
+	"github.com/MashiroC/begonia/config"
 	"bufio"
 	"context"
 	"encoding/binary"

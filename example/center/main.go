@@ -1,8 +1,8 @@
 package main
 
 import (
-	"begonia2/app/center"
-	"begonia2/app/option"
+	"github.com/MashiroC/begonia/app/center"
+	"github.com/MashiroC/begonia/app/option"
 )
 
 func main() {

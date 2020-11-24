@@ -1,7 +1,7 @@
 // Package app api层
 package app
 
-import "begonia2/app/coding"
+import "github.com/MashiroC/begonia/app/coding"
 
 // FunInfo 远程函数的一个封装
 type FunInfo struct {

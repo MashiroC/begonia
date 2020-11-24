@@ -1,7 +1,7 @@
 package logic
 
 import (
-	"begonia2/config"
+	"github.com/MashiroC/begonia/config"
 	"context"
 	"fmt"
 	"sync"

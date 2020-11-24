@@ -1,8 +1,8 @@
 package logic
 
 import (
-	"begonia2/dispatch"
-	"begonia2/dispatch/frame"
+	"github.com/MashiroC/begonia/dispatch"
+	"github.com/MashiroC/begonia/dispatch/frame"
 	"context"
 )
 

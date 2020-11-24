@@ -1,7 +1,7 @@
 package frame
 
 import (
-	"begonia2/tool/qconv"
+	"github.com/MashiroC/begonia/tool/qconv"
 	"bytes"
 	"errors"
 )

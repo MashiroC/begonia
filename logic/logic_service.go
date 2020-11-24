@@ -1,9 +1,9 @@
 package logic
 
 import (
-	"begonia2/config"
-	"begonia2/dispatch"
-	"begonia2/dispatch/frame"
+	"github.com/MashiroC/begonia/config"
+	"github.com/MashiroC/begonia/dispatch"
+	"github.com/MashiroC/begonia/dispatch/frame"
 	"log"
 	"time"
 )

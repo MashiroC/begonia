@@ -2,7 +2,7 @@ package core
 
 // coder.go 保存着一些硬编码的函数的coder
 
-import "begonia2/app/coding"
+import "github.com/MashiroC/begonia/app/coding"
 
 var (
 	serviceInfoCallCoder coding.Coder

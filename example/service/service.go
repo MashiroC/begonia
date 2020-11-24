@@ -1,10 +1,10 @@
 package main
 
 import (
-	"begonia2/app/option"
-	"begonia2/app/service"
 	"errors"
 	"fmt"
+	"github.com/MashiroC/begonia"
+	"github.com/MashiroC/begonia/app/option"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -20,7 +20,7 @@ var (
 	l     sync.Mutex
 )
 
-func QPS(){
+func QPS() {
 	if !flag {
 		l.Lock()
 		if !flag {
@@ -42,7 +42,7 @@ func main() {
 	count = 0
 	flag = false
 
-	s := service.New(mode, option.CenterAddr(":12306"))
+	s := begonia.NewService(mode, option.CenterAddr(":12306"))
 
 	echoService := &EchoService{}
 	testService := TestService(0)
@@ -98,10 +98,10 @@ func (*TestService) Echo(i1 int, i2 int8, i3 int16, i4 int32, i5 int64,
 	m1 map[string]string, m2 map[string]int, m3 map[string]TestStruct,
 ) string {
 	//QPS()
-	fmt.Println(i1,i2,i3,i4,i5)
-	fmt.Println(f1,f2,ok,str)
-	fmt.Println(s1,s2,s6,st)
-	fmt.Println(m1,m2,m3)
+	fmt.Println(i1, i2, i3, i4, i5)
+	fmt.Println(f1, f2, ok, str)
+	fmt.Println(s1, s2, s6, st)
+	fmt.Println(m1, m2, m3)
 	return "ok"
 }
 

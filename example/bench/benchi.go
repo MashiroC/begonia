@@ -47,7 +47,7 @@ var (
 func init() {
 	rawSchema := `
 {
-	"namespace": "begonia.entry",
+	"namespace": "github.com/MashiroC/begonia.entry",
 	"type": "record",
 	"name": "Request",
 	"fields": [{

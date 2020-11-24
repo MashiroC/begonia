@@ -2,8 +2,8 @@
 package center
 
 import (
-	"begonia2/app/core"
-	"begonia2/logic"
+	"github.com/MashiroC/begonia/core"
+	"github.com/MashiroC/begonia/logic"
 )
 
 // Center 服务中心的接口，对外统一用接口

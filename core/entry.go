@@ -1,6 +1,6 @@
 package core
 
-import "begonia2/app/coding"
+import "github.com/MashiroC/begonia/app/coding"
 
 // ServiceInfo 服务信息
 // 在注册服务时，为入参

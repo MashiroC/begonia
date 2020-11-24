@@ -2,25 +2,18 @@
 package client
 
 import (
-	"begonia2/app"
-	"begonia2/app/core"
-	"begonia2/logic"
 	"context"
 	"errors"
+	"github.com/MashiroC/begonia/app"
+	"github.com/MashiroC/begonia/core"
+	"github.com/MashiroC/begonia/logic"
 )
 
 // logic_service.go something
 
-// Client 客户端的接口
-type Client interface {
-	Service(name string) (Service, error)
-	FunSync(serviceName, funName string) (RemoteFunSync, error)
-	FunAsync(serviceName, funName string) (RemoteFunAsync, error)
-	Wait()
-	Close()
-}
 
-// rClient 客户端的begonia实现
+
+// rClient 客户端的github.com/MashiroC/begonia实现
 type rClient struct {
 	lg logic.Client
 	//pool *conn.Pool

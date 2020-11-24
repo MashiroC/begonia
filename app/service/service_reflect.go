@@ -3,12 +3,12 @@ package service
 // service_reflect.go 反射实现的api
 
 import (
-	"begonia2/app/coding"
-	"begonia2/app/core"
-	"begonia2/logic"
-	"begonia2/tool/qconv"
-	"begonia2/tool/reflects"
 	"context"
+	"github.com/MashiroC/begonia/app/coding"
+	"github.com/MashiroC/begonia/core"
+	"github.com/MashiroC/begonia/logic"
+	"github.com/MashiroC/begonia/tool/qconv"
+	"github.com/MashiroC/begonia/tool/reflects"
 	"log"
 	"reflect"
 )

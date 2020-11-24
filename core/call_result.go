@@ -1,8 +1,8 @@
 package core
 
 import (
-	"begonia2/app"
-	"begonia2/app/coding"
+	"github.com/MashiroC/begonia/app"
+	"github.com/MashiroC/begonia/app/coding"
 )
 
 type result struct {

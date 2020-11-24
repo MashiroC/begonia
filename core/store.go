@@ -1,8 +1,8 @@
 package core
 
 import (
-	"begonia2/app/coding"
 	"fmt"
+	"github.com/MashiroC/begonia/app/coding"
 	"sync"
 )
 

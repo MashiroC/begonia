@@ -1,10 +1,10 @@
 package client
 
 import (
-	"begonia2/app"
-	"begonia2/app/coding"
-	"begonia2/logic"
-	"begonia2/tool/reflects"
+	"github.com/MashiroC/begonia/app"
+	"github.com/MashiroC/begonia/app/coding"
+	"github.com/MashiroC/begonia/logic"
+	"github.com/MashiroC/begonia/tool/reflects"
 	"errors"
 	"fmt"
 )

@@ -5,7 +5,7 @@
 package containers
 
 import (
-	"begonia2/app/coding"
+	"github.com/MashiroC/begonia/app/coding"
 	"sync"
 )
 

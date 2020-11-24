@@ -74,7 +74,7 @@ func Listen(addr string) (acceptCh chan Conn, errCh chan error) {
 	return
 }
 
-// warp 包装一个net.Conn未为begonia.conn.Conn
+// warp 包装一个net.Conn未为github.com/MashiroC/begonia.conn.Conn
 func warp(nc net.Conn) (c Conn) {
 
 	r := bufio.NewReader(nc)

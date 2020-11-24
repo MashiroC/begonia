@@ -5,7 +5,7 @@
 package containers
 
 //import (
-//	"begonia/server/avros"
+//	"github.com/MashiroC/begonia/server/avros"
 //	"github.com/linkedin/goavro/v2"
 //	"reflect"
 //	"strconv"

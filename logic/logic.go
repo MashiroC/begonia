@@ -2,9 +2,9 @@
 package logic
 
 import (
-	"begonia2/dispatch"
-	"begonia2/dispatch/frame"
-	"begonia2/tool/ids"
+	"github.com/MashiroC/begonia/dispatch"
+	"github.com/MashiroC/begonia/dispatch/frame"
+	"github.com/MashiroC/begonia/tool/ids"
 	"context"
 	"strings"
 )
