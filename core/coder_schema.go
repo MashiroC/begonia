@@ -6,7 +6,7 @@ const (
 
 	// 获取服务的调用
 	serviceInfoCallRawSchema = `{
-    "namespace":"github.com/MashiroC/begonia.entry",
+    "namespace":"begonia.entry",
     "type":"record",
     "name":"ServiceInfoCall",
     "fields":[
@@ -19,7 +19,7 @@ const (
 
 	// 获取服务的结果
 	serviceInfoRawSchema = `{
-	"namespace": "github.com/MashiroC/begonia.entry",
+	"namespace": "begonia.entry",
 	"type": "record",
 	"name": "ServiceInfoCall",
 	"fields": [{
