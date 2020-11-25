@@ -4,6 +4,7 @@ import (
 	"github.com/MashiroC/begonia/config"
 	"github.com/MashiroC/begonia/dispatch"
 	"github.com/MashiroC/begonia/dispatch/frame"
+	"github.com/MashiroC/begonia/tool/berr"
 	"log"
 	"time"
 )
@@ -87,7 +88,7 @@ func (c *service) RecvCall() (call *Call, wf ResultFunc) {
 
 			wf = ResultFunc{
 				Result: func(result *CallResult, toConnID ...string) {
-					resp := frame.NewResponse(msg.ReqID, result.Result, result.Err)
+					resp := frame.NewResponse(msg.ReqID, result.Result, result.Err.Error())
 					if toConnID != nil {
 						for _, connID := range toConnID {
 							c.dp.SendTo(connID, resp)
@@ -106,7 +107,7 @@ func (c *service) RecvCall() (call *Call, wf ResultFunc) {
 
 			err := c.waitChan.Callback(msg.ReqID, &CallResult{
 				Result: msg.Result,
-				Err:    msg.Err,
+				Err:    berr.New("rpc", "call", msg.Err),
 			})
 			if err != nil {
 				panic(err)

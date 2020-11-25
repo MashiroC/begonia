@@ -1,6 +1,7 @@
 package center
 
 import (
+	"fmt"
 	"github.com/MashiroC/begonia/app/option"
 	"github.com/MashiroC/begonia/core"
 	"github.com/MashiroC/begonia/dispatch"
@@ -31,7 +32,8 @@ func bootstart(optionMap map[string]interface{}) Center {
 
 	core.C = core.NewSubService()
 
-	log.Println("github.com/MashiroC/begonia center started")
+	fmt.Println("  ____                              _        \n |  _ \\                            (_)       \n | |_) |  ___   __ _   ___   _ __   _   __ _ \n |  _ <  / _ \\ / _` | / _ \\ | '_ \\ | | / _` |\n | |_) ||  __/| (_| || (_) || | | || || (_| |\n |____/  \\___| \\__, | \\___/ |_| |_||_| \\__,_|\n                __/ |                        \n               |___/                         ")
+	log.Println("begonia center started")
 	//TODO: 发一个包，拉取配置
 
 	/*

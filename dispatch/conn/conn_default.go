@@ -1,24 +1,34 @@
 package conn
 
 import (
-	"github.com/MashiroC/begonia/config"
 	"bufio"
 	"context"
 	"encoding/binary"
 	"errors"
+	"fmt"
+	"github.com/MashiroC/begonia/config"
 	"net"
-	"strconv"
 	"sync"
 	"time"
 )
 
 var (
-	chPool sync.Pool
+	chPool       sync.Pool
+	bytesPool    sync.Pool
+	twoBytesPool sync.Pool
 )
 
 func init() {
 	chPool = sync.Pool{New: func() interface{} {
 		return make(chan int)
+	}}
+
+	bytesPool = sync.Pool{New: func() interface{} {
+		return make([]byte, 0, 1024)
+	}}
+
+	twoBytesPool = sync.Pool{New: func() interface{} {
+		return make([]byte, 2)
 	}}
 }
 
@@ -36,29 +46,34 @@ func (d *defaultConn) Write(opcode byte, data []byte) (err error) {
 	// 计算 payload length 与 extend payload length
 	var size []byte
 	if len(data) >= extendLengthMax {
-		err = errors.New("payload len " + strconv.FormatInt(int64(len(data)), 10) + " oversize")
+		err = fmt.Errorf("conn write error: payload len [%d] oversize", len(data))
 		return
 	} else if len(data) >= baseLenMax {
-		tmp := make([]byte, 2)
+		tmp := twoBytesPool.Get().([]byte)
 		binary.BigEndian.PutUint16(tmp, uint16(len(data)))
 		size = []byte{255}
 		size = append(size, tmp...)
+		twoBytesPool.Put(tmp)
 	} else {
 		size = append(size, byte(len(data)))
 	}
 
 	// 组装opcode length data
-	tmp := make([]byte, 0, len(size)+1+len(data))
+	tmp := bytesPool.Get().([]byte)
+	defer bytesPool.Put(tmp[:0])
 	tmp = append(tmp, opcode)
 	tmp = append(tmp, size...)
 	tmp = append(tmp, data...)
 
 	// 写数据
-	_, err = d.buf.Write(tmp)
-	if err != nil {
+	if _, err = d.buf.Write(tmp); err != nil {
+		err = fmt.Errorf("conn write error: %w", err)
 		return
 	}
-	err = d.buf.Flush()
+
+	if err = d.buf.Flush(); err != nil {
+		err = fmt.Errorf("conn write error: %w", err)
+	}
 
 	return
 }
@@ -69,6 +84,7 @@ func (d *defaultConn) Recv() (opcode byte, data []byte, err error) {
 		if errIn := recover(); err != nil {
 			d.Close()
 			err = errIn.(error)
+			err = fmt.Errorf("conn recv error: %w", err)
 			return
 		}
 	}()
@@ -105,7 +121,7 @@ func (d *defaultConn) Recv() (opcode byte, data []byte, err error) {
 	}
 
 	if payloadLen == 0 {
-		panic("payload length error")
+		panic("payload length zero")
 	}
 
 	// 拿数据，线程安全，内存安全
@@ -132,7 +148,10 @@ func (d *defaultConn) read(len uint) (data []byte, err error) {
 	for n < int(len) {
 		overSize := make([]byte, int(len)-n)
 		size, err := d.readWithTimeout(overSize)
-		handlerErr(err)
+		if err != nil {
+			return nil,err
+		}
+
 		for i := 0; i < size; i++ {
 			data[n+i] = overSize[i]
 		}

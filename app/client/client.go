@@ -3,7 +3,6 @@ package client
 
 import (
 	"context"
-	"errors"
 	"github.com/MashiroC/begonia/app"
 	"github.com/MashiroC/begonia/core"
 	"github.com/MashiroC/begonia/logic"
@@ -26,8 +25,7 @@ func (r *rClient) Service(serviceName string) (s Service, err error) {
 
 	res := r.lg.CallSync(core.Call.ServiceInfo(serviceName))
 
-	if res.Err != "" {
-		err = errors.New(res.Err)
+	if res.Err != nil {
 		return
 	}
 

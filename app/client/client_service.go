@@ -4,9 +4,8 @@ import (
 	"github.com/MashiroC/begonia/app"
 	"github.com/MashiroC/begonia/app/coding"
 	"github.com/MashiroC/begonia/logic"
+	"github.com/MashiroC/begonia/tool/berr"
 	"github.com/MashiroC/begonia/tool/reflects"
-	"errors"
-	"fmt"
 )
 
 // client_service.go something
@@ -37,7 +36,7 @@ type rService struct {
 func (r *rService) FuncSync(name string) (rf RemoteFunSync, err error) {
 	f, exist := r.funs[name]
 	if !exist {
-		err = fmt.Errorf("remote func [%s] not exist", name)
+		err = berr.NewF("app.client", "get func", "remote func [%s] not exist", name)
 		return
 	}
 
@@ -59,8 +58,8 @@ func (r *rService) FuncSync(name string) (rf RemoteFunSync, err error) {
 		})
 
 		tmp := <-ch
-		if tmp.Err != "" {
-			err = errors.New(tmp.Err)
+		if tmp.Err != nil {
+			err = tmp.Err
 			return
 		}
 
@@ -77,7 +76,7 @@ func (r *rService) FuncAsync(name string) (rf RemoteFunAsync, err error) {
 
 	f, exist := r.funs[name]
 	if !exist {
-		err = fmt.Errorf("remote func [%s] not exist", name)
+		err = berr.NewF("app.client", "get func async", "remote func [%s] not exist", name)
 		return
 	}
 
@@ -95,8 +94,8 @@ func (r *rService) FuncAsync(name string) (rf RemoteFunAsync, err error) {
 			Fun:     name,
 			Param:   b,
 		}, func(result *logic.CallResult) {
-			if result.Err != "" {
-				callback(nil, errors.New(result.Err))
+			if result.Err != nil {
+				callback(nil, result.Err)
 				return
 			}
 			// 对出参解码

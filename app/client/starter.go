@@ -1,15 +1,19 @@
 package client
 
 import (
+	"context"
+	"fmt"
 	"github.com/MashiroC/begonia/dispatch"
 	"github.com/MashiroC/begonia/logic"
-	"context"
 )
 
 // starter.go something
 
 // BootStartByCenter 根据center cluster模式启动
 func BootStartByCenter(optionMap map[string]interface{}) *rClient {
+
+	fmt.Println("  ____                              _        \n |  _ \\                            (_)       \n | |_) |  ___   __ _   ___   _ __   _   __ _ \n |  _ <  / _ \\ / _` | / _ \\ | '_ \\ | | / _` |\n | |_) ||  __/| (_| || (_) || | | || || (_| |\n |____/  \\___| \\__, | \\___/ |_| |_||_| \\__,_|\n                __/ |                        \n               |___/                         ")
+
 
 	ctx, cancel := context.WithCancel(context.Background())
 	c := &rClient{
@@ -49,6 +53,7 @@ func BootStartByCenter(optionMap map[string]interface{}) *rClient {
 		fmt.Println(m, err)
 		// 修改配置之前的一系列调用全部都是按默认配置来的
 	*/
+
 	return c
 }
 

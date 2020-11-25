@@ -1,15 +1,19 @@
 package service
 
 import (
+	"context"
+	"fmt"
 	"github.com/MashiroC/begonia/dispatch"
 	"github.com/MashiroC/begonia/logic"
-	"context"
 )
 
 // starter.go something
 
 // BootStartByManager 根据manager cluster模式启动
 func BootStartByManager(optionMap map[string]interface{}) *rService {
+
+	fmt.Println("  ____                              _        \n |  _ \\                            (_)       \n | |_) |  ___   __ _   ___   _ __   _   __ _ \n |  _ <  / _ \\ / _` | / _ \\ | '_ \\ | | / _` |\n | |_) ||  __/| (_| || (_) || | | || || (_| |\n |____/  \\___| \\__, | \\___/ |_| |_||_| \\__,_|\n                __/ |                        \n               |___/                         ")
+
 
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -54,6 +58,8 @@ func BootStartByManager(optionMap map[string]interface{}) *rService {
 	s.store = newServiceStore()
 
 	go s.work()
+
+
 
 	return s
 }

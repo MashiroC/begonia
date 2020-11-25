@@ -3,6 +3,7 @@ package conn
 
 import (
 	"bufio"
+	"fmt"
 	"net"
 )
 
@@ -33,6 +34,7 @@ func Dial(addr string) (c Conn, err error) {
 
 	nc, err := net.Dial(defaultNetwork, addr)
 	if err != nil {
+		err = fmt.Errorf("conn dial error: %w", err)
 		return
 	}
 
@@ -50,6 +52,7 @@ func Listen(addr string) (acceptCh chan Conn, errCh chan error) {
 
 	lt, err := net.Listen(defaultNetwork, addr)
 	if err != nil {
+		err = fmt.Errorf("conn listen error: %w", err)
 		errCh <- err
 		close(errCh)
 		close(acceptCh)
@@ -60,6 +63,7 @@ func Listen(addr string) (acceptCh chan Conn, errCh chan error) {
 		for {
 			nc, err := lt.Accept()
 			if err != nil {
+				err = fmt.Errorf("conn accept error: %w", err)
 				errCh <- err
 				close(errCh)
 				close(acceptCh)

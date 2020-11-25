@@ -1,9 +1,9 @@
 package frame
 
 import (
-	"github.com/MashiroC/begonia/tool/qconv"
 	"bytes"
 	"errors"
+	"github.com/MashiroC/begonia/tool/qconv"
 )
 
 // frame_response.go something
@@ -45,14 +45,14 @@ func unMarshalResponse(data []byte) (resp *Response, err error) {
 
 	reqIDBytes, err := buf.ReadBytes(breakByte)
 	if err != nil || len(reqIDBytes) <= 1 {
-		err = errors.New("unmarshal response reqId failed")
+		err = errors.New("frame unmarshal error: response reqId failed")
 		return
 	}
 	resp.ReqID = qconv.Qb2s(reqIDBytes[:len(reqIDBytes)-1])
 
 	respErrByte, err := buf.ReadBytes(breakByte)
 	if err != nil {
-		err = errors.New("unmarshal response error failed")
+		err = errors.New("frame unmarshal error: response error failed")
 		return
 	}
 	resp.Err = qconv.Qb2s(respErrByte[:len(respErrByte)-1])

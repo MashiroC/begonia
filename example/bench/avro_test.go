@@ -5,9 +5,12 @@
 package bench
 
 import (
-	"github.com/MashiroC/begonia/dispatch/frame"
+	"bytes"
 	"fmt"
+	"github.com/MashiroC/begonia/dispatch/frame"
+	"github.com/MashiroC/begonia/tool/berr"
 	"github.com/hamba/avro"
+	"log"
 	"strconv"
 	"testing"
 	"time"
@@ -366,4 +369,43 @@ func TestInt64(t *testing.T) {
 		panic(err)
 	}
 	fmt.Println(res)
+}
+
+func TestBErr(t *testing.T) {
+	berr.New("error system","test","you are in a black hole")
+
+	berr.NewAuto("auto","you are in a black hole")
+}
+
+//func BenchmarkBerr(b *testing.B) {
+//	for i := 0; i < b.N; i++ {
+//		berr.New("error system","test","you are in a black hole")
+//
+//	}
+//}
+//
+//func BenchmarkBErrAuto(b *testing.B) {
+//	for i := 0; i < b.N; i++ {
+//		berr.NewAuto("auto","you are in a black hole")
+//	}
+//}
+
+func BenchmarkLog1(b *testing.B) {
+	log.SetFlags(log.Ldate|log.Llongfile)
+	tmp:=bytes.NewBuffer([]byte{})
+	log.SetOutput(tmp)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		log.Println("hello")
+	}
+}
+
+func BenchmarkLog2(b *testing.B) {
+	log.SetFlags(log.Ldate)
+	tmp:=bytes.NewBuffer([]byte{})
+	log.SetOutput(tmp)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		log.Println("hello")
+	}
 }

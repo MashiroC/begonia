@@ -3,6 +3,9 @@ package logic
 import (
 	"github.com/MashiroC/begonia/dispatch"
 	"github.com/MashiroC/begonia/dispatch/frame"
+	"github.com/MashiroC/begonia/tool/berr"
+	"log"
+	"reflect"
 )
 
 // logic_client.go 客户端相关的logic层代码
@@ -49,17 +52,18 @@ func (c *client) Handle() {
 		_, f := c.dp.Recv()
 		msg, ok := f.(*frame.Response)
 		if !ok {
-			panic("response type error")
+			panic(berr.NewF("logic", "handle", "msg typ must *frame.Response but %s", reflect.TypeOf(f).String()))
 		}
 
 		reqID := msg.ReqID
 		err := c.waitChan.Callback(reqID, &CallResult{
 			Result: msg.Result,
-			Err:    msg.Err,
+			Err:    berr.New("rpc", "call", msg.Err),
 		})
 
 		if err != nil {
-			panic(err)
+			// TODO:Println => Errorln
+			log.Println(err)
 		}
 	}
 

@@ -1,9 +1,9 @@
 package logic
 
 import (
-	"github.com/MashiroC/begonia/config"
 	"context"
-	"fmt"
+	"github.com/MashiroC/begonia/config"
+	"github.com/MashiroC/begonia/tool/berr"
 	"sync"
 	"time"
 )
@@ -34,7 +34,7 @@ func (w *WaitChans) Callback(reqID string, cr *CallResult) (err error) {
 	w.chLock.RUnlock()
 
 	if !exist {
-		err = fmt.Errorf("reqID [%s] not found", reqID)
+		err = berr.NewF("waitChan", "callback", "reqID [%s] not found", reqID)
 		return
 	}
 
@@ -80,7 +80,7 @@ func (w *WaitChans) goWait(reqID string, timeout, parent <-chan struct{}, cb wai
 	if errStr != "" {
 		f = &CallResult{
 			Result: nil,
-			Err:    errStr,
+			Err:    berr.New("waitChat", "callback", errStr),
 		}
 	}
 
