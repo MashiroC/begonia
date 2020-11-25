@@ -1,9 +1,10 @@
 package logic
 
 import (
+	"context"
 	"github.com/MashiroC/begonia/dispatch"
 	"github.com/MashiroC/begonia/dispatch/frame"
-	"context"
+	"github.com/MashiroC/begonia/tool/berr"
 )
 
 // MixNode 混合节点
@@ -74,7 +75,7 @@ func (m *mix) RecvCall() (call *Call, wf ResultFunc) {
 					if result == Redirect {
 						res = f
 					} else {
-						res = frame.NewResponse(f.ReqID, result.Result, result.Err)
+						res = frame.NewResponse(f.ReqID, result.Result, result.Err.Error())
 					}
 
 					if toConnID != nil {
@@ -82,11 +83,17 @@ func (m *mix) RecvCall() (call *Call, wf ResultFunc) {
 						for _, toID := range toConnID {
 
 							m.waitChan.AddCallback(context.TODO(), f.ReqID, func(result *CallResult) {
-								m.dp.SendTo(connID, frame.NewResponse(f.ReqID, result.Result, result.Err))
+								err := m.dp.SendTo(connID, frame.NewResponse(f.ReqID, result.Result, result.Err.Error()))
+								// TODO: sendTo如果发送失败，加入到队列，这里先panic出去
+								if err != nil {
+									panic(err)
+								}
 							})
 
-							m.dp.SendTo(toID, res)
-
+							err := m.dp.SendTo(toID, res)
+							if err != nil {
+								panic(err)
+							}
 						}
 
 					} else {
@@ -111,7 +118,7 @@ func (m *mix) RecvCall() (call *Call, wf ResultFunc) {
 				// 如果是响应包，直接回调
 				err := m.waitChan.Callback(f.ReqID, &CallResult{
 					Result: f.Result,
-					Err:    f.Err,
+					Err:    berr.New("rpc", "call", f.Err),
 				})
 				if err != nil {
 					panic(err)

@@ -50,21 +50,21 @@ func unMarshalRequest(data []byte) (req *Request, err error) {
 
 	reqIDBytes, err := buf.ReadBytes(breakByte)
 	if err != nil || len(reqIDBytes) <= 1 {
-		err = errors.New("unmarshal request reqId failed")
+		err = errors.New("frame unmarshal error: request reqId failed")
 		return
 	}
 	req.ReqID = qconv.Qb2s(reqIDBytes[:len(reqIDBytes)-1])
 
 	serviceByte, err := buf.ReadBytes(breakByte)
 	if err != nil || len(serviceByte) <= 1 {
-		err = errors.New("unmarshal request service failed")
+		err = errors.New("frame unmarshal error: request service failed")
 		return
 	}
 	req.Service = qconv.Qb2s(serviceByte[:len(serviceByte)-1])
 
 	funByte, err := buf.ReadBytes(breakByte)
 	if err != nil || len(funByte) <= 1 {
-		err = errors.New("unmarshal request fun failed")
+		err = errors.New("frame unmarshal error: request fun failed")
 		return
 	}
 	req.Fun = qconv.Qb2s(funByte[:len(funByte)-1])

@@ -16,14 +16,14 @@ type Call struct {
 // [Err]变量不为空。正常情况下为空字符串
 type CallResult struct {
 	Result []byte // rpc调用的结果，远程函数的出参(已序列化)
-	Err    string // 错误
+	Err    error  // 错误
 }
 
 // Redirect 结果重定向
 // 在api层需要将收到的请求转发到另一条连接时，传递该变量，logic层会转发请求
 var Redirect = &CallResult{
 	Result: nil,
-	Err:    "",
+	Err:    nil,
 }
 
 // ResultFunc 回传结果的结构体
@@ -39,5 +39,5 @@ type ResultFunc struct {
 	ConnID string
 
 	// ReqID 请求id
-	ReqID  string
+	ReqID string
 }

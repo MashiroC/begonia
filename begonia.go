@@ -1,6 +1,16 @@
 package begonia
 
 /*
- github.com/MashiroC/begonia is a easy,tiny,fast rpc framework
+  ____                              _
+ |  _ \                            (_)
+ | |_) |  ___   __ _   ___   _ __   _   __ _
+ |  _ <  / _ \ / _` | / _ \ | '_ \ | | / _` |
+ | |_) ||  __/| (_| || (_) || | | || || (_| |
+ |____/  \___| \__, | \___/ |_| |_||_| \__,_|
+                __/ |
+               |___/
+
+ begonia is a easy,tiny,fast rpc framework
  by kieran
+
  */

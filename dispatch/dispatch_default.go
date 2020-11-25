@@ -3,6 +3,7 @@ package dispatch
 import (
 	"github.com/MashiroC/begonia/dispatch/conn"
 	"github.com/MashiroC/begonia/dispatch/frame"
+	"github.com/MashiroC/begonia/tool/berr"
 	"github.com/MashiroC/begonia/tool/ids"
 	"log"
 	"reflect"
@@ -54,16 +55,17 @@ type defaultDispatch struct {
 	closeHookFunc func(connID string, err error) // 关闭连接的hook
 }
 
-func (d *defaultDispatch) Hook(typ string, hookFunc interface{}) {
-	switch typ {
+// Hook 在这里可以去Hook一些事件。
+func (d *defaultDispatch) Hook(name string, hookFunc interface{}) {
+	switch name {
 	case "close":
 		if f, ok := hookFunc.(func(connID string, err error)); ok {
 			d.closeHookFunc = f
 			return
 		}
-		panic("hook close func error type " + reflect.TypeOf(hookFunc).String())
+		panic(berr.New("dispatch", "hook", "close func must func(connID string, err error) but "+reflect.TypeOf(hookFunc).String()))
 	default:
-		panic("hook typ error: " + typ)
+		panic(berr.New("dispatch", "hook", "hook func "+name+"not found"))
 	}
 }
 
@@ -79,11 +81,11 @@ func (d *defaultDispatch) Link(addr string) (err error) {
 
 	c, err := conn.Dial(addr)
 	if err != nil {
-		return
+		return berr.Warp("dispatch", "link", err)
 	}
 
 	if d.mode != 0 {
-		panic("mode error")
+		return berr.New("dispatch", "link", "mode must not zero")
 	}
 
 	d.mode = linked
@@ -104,10 +106,9 @@ func (d *defaultDispatch) Send(f frame.Frame) (err error) {
 
 	// TODO:请求实现幂等 断连时排序等待连接重连 这里暂时先直接传过去
 	if d.mode == linked {
-		//log.Println("send to linkConn:", string(f.Marshal()))
 		err = d.linkedConn.Write(byte(f.Opcode()), f.Marshal())
 	} else {
-		panic("mode err!")
+		err = berr.New("dispatch", "send", "in set mode, you can't use Send(), please use SendTo()")
 	}
 
 	return
@@ -118,7 +119,8 @@ func (d *defaultDispatch) SendTo(connID string, f frame.Frame) (err error) {
 	switch d.mode {
 	case linked:
 		if connID != d.linkID {
-			panic("connID and linkID error")
+			err = berr.New("dispatch", "send", "in linked mode, you can't use SendTo() to another conn, please use Send() or passing manager center connID")
+			return
 		}
 
 		c = d.linkedConn
@@ -130,14 +132,12 @@ func (d *defaultDispatch) SendTo(connID string, f frame.Frame) (err error) {
 		d.connLock.Unlock()
 
 		if !ok {
-			log.Printf("conn [%s] response timeout\n", connID)
-			return
+			return berr.NewF("dispatch", "send", "conn [%s] is broked or disconnection", connID)
 		}
 	default:
-		panic("mode error")
+		panic(berr.NewF("dispatch", "mode", "mode [%s] not support", d.mode))
 	}
 
-	log.Println("send to", connID, "opcode:", f.Opcode())
 	err = c.Write(byte(f.Opcode()), f.Marshal())
 	return
 }
@@ -167,7 +167,8 @@ out:
 			if !ok {
 				break out
 			}
-			panic(err)
+			//TODO: println更换errorln
+			log.Println("dispatch listen error:", err.Error())
 		}
 	}
 
@@ -188,7 +189,7 @@ func (d *defaultDispatch) work(c conn.Conn) {
 		d.connSet[id] = c
 		d.connLock.Unlock()
 	default:
-		panic("mode error")
+		panic(berr.NewF("dispatch", "mode", "mode [%s] not support", d.mode))
 	}
 
 	for {
@@ -220,7 +221,7 @@ func (d *defaultDispatch) work(c conn.Conn) {
 
 		} else {
 			// TODO:现在没有除了普通请求之外的ctrl code 支持
-			panic("ctrl code error!")
+			panic(berr.NewF("dispatch", "recv", "ctrl code [%s] not support", ctrl))
 		}
 	}
 

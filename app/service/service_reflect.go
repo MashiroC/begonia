@@ -7,9 +7,9 @@ import (
 	"github.com/MashiroC/begonia/app/coding"
 	"github.com/MashiroC/begonia/core"
 	"github.com/MashiroC/begonia/logic"
+	"github.com/MashiroC/begonia/tool/berr"
 	"github.com/MashiroC/begonia/tool/qconv"
 	"github.com/MashiroC/begonia/tool/reflects"
-	"log"
 	"reflect"
 )
 
@@ -25,7 +25,7 @@ type rService struct {
 func (r *rService) Register(name string, service interface{}) {
 
 	// TODO:注册后 把函数注册到本地
-	fs, ms,reSharps := coding.Parse("avro", service)
+	fs, ms, reSharps := coding.Parse("avro", service)
 
 	for i, f := range fs {
 		inCoder, err := coding.NewAvro(f.InSchema)
@@ -47,7 +47,7 @@ func (r *rService) Register(name string, service interface{}) {
 
 	res := r.lg.CallSync(core.Call.Register(name, fs))
 	// TODO:handler error
-	if res.Err != "" {
+	if res.Err != nil {
 		panic(res.Err)
 	}
 
@@ -75,17 +75,15 @@ func (r *rService) work() {
 func (r *rService) handleMsg(msg *logic.Call, wf logic.ResultFunc) {
 	fun, err := r.store.get(msg.Service, msg.Fun)
 	if err != nil {
-		log.Println("get fun err")
 		wf.Result(&logic.CallResult{
-			Err: "get fun err",
+			Err: berr.Warp("app.service", "handle get func", err),
 		})
 		return
 	}
 	data, err := fun.in.Decode(msg.Param)
 	if err != nil {
-		log.Println("decode err")
 		wf.Result(&logic.CallResult{
-			Err: "decode error",
+			Err: berr.Warp("app.service", "handle", err),
 		})
 		return
 	}
@@ -108,7 +106,7 @@ func (r *rService) handleMsg(msg *logic.Call, wf logic.ResultFunc) {
 
 	b, err := fun.out.Encode(m)
 	if err != nil {
-		// 这个error不应该有的
+		// out的schema是解析的函数，这里不应该有error，如果有直接panic出来，然后去修
 		panic(err)
 	}
 

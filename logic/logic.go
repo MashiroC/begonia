@@ -2,10 +2,12 @@
 package logic
 
 import (
+	"context"
 	"github.com/MashiroC/begonia/dispatch"
 	"github.com/MashiroC/begonia/dispatch/frame"
+	"github.com/MashiroC/begonia/tool/berr"
 	"github.com/MashiroC/begonia/tool/ids"
-	"context"
+	"log"
 	"strings"
 )
 
@@ -63,8 +65,14 @@ func (c *baseLogic) CallAsync(call *Call, callback Callback) {
 	})
 
 	if err := c.dp.Send(f); err != nil {
-		panic(err)
-		// TODO:handler error
+		err = c.waitChan.Callback(reqID, &CallResult{
+			Result: nil,
+			Err:    berr.Warp("logic", "call", err),
+		})
+		if err != nil {
+			// TODO:println => errorln
+			log.Println(err)
+		}
 	}
 
 }
@@ -85,6 +93,6 @@ func (c *baseLogic) Hook(typ string, hookFunc interface{}) {
 		// 现在logic还没有需要hook的
 	}
 
-	panic("hook error!")
+	panic(berr.NewF("logic", "hook", "func name [%s] not found", typ))
 
 }

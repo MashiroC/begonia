@@ -58,8 +58,9 @@ type EchoService struct {
 }
 
 func (h *EchoService) SayHello(name string) string {
+	QPS()
 	//fmt.Println("sayHello")
-	return "Hello " + name
+	return "Hello 😈" + name
 }
 
 func (h *EchoService) SayHello2(name string) (string, error) {
@@ -97,11 +98,11 @@ func (*TestService) Echo(i1 int, i2 int8, i3 int16, i4 int32, i5 int64,
 	s1 []int, s2 []string, s6 []byte, st TestStruct,
 	m1 map[string]string, m2 map[string]int, m3 map[string]TestStruct,
 ) string {
-	//QPS()
-	fmt.Println(i1, i2, i3, i4, i5)
-	fmt.Println(f1, f2, ok, str)
-	fmt.Println(s1, s2, s6, st)
-	fmt.Println(m1, m2, m3)
+	QPS()
+	//fmt.Println(i1, i2, i3, i4, i5)
+	//fmt.Println(f1, f2, ok, str)
+	//fmt.Println(s1, s2, s6, st)
+	//fmt.Println(m1, m2, m3)
 	return "ok"
 }
 

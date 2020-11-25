@@ -13,18 +13,21 @@ const (
 	addr = ":12306"
 
 	workLimit = 50
-	workNums  = 100000
+	nodeNums = 5
+	workNums  = 1000000
 )
 
 func main() {
 	c := begonia.NewClient(mode, option.CenterAddr(addr))
 	//TestQPS(c)
 
-	in := testFunc(c, "Test", "Echo2")
-	res := in.([]interface{})
-	fmt.Println(res)
-	fmt.Println(testFunc(c, "Test", "Echo", res...))
+	//in := testFunc(c, "Test", "Echo2")
+	//res := in.([]interface{})
+	//fmt.Println(res)
+	//fmt.Println(testFunc(c, "Test", "Echo", res...))
 	//QPS(c,"Test","Echo",res...)
+	//QPS(c,"Echo","SayHello","shiina")
+	fmt.Println(testFunc(c,"Echo","SayHello","shiina"))
 }
 
 func QPS(c begonia.Client, service, funName string, param ...interface{}) {
@@ -38,36 +41,46 @@ func QPS(c begonia.Client, service, funName string, param ...interface{}) {
 		panic(err)
 	}
 
-	ch := make(chan struct{}, workLimit)
-	for i := 0; i < workLimit; i++ {
-		ch <- struct{}{}
-	}
+	wg1 := sync.WaitGroup{}
 
-	t := time.Now()
-
-	wg := sync.WaitGroup{}
-	for i := 0; i < workNums; i++ {
-		<-ch
-		wg.Add(1)
+	for i:=0;i<nodeNums;i++{
+		wg1.Add(1)
 		go func() {
-			defer func() {
-				wg.Done()
+			ch := make(chan struct{}, workLimit)
+			for i := 0; i < workLimit; i++ {
 				ch <- struct{}{}
-			}()
-			if len(param) != 0 {
-				_, err = testFun(param...)
-			} else {
-				_, err = testFun()
 			}
-			if err != nil {
-				panic(err)
+
+			t := time.Now()
+
+			wg := sync.WaitGroup{}
+			for i := 0; i < workNums; i++ {
+				<-ch
+				wg.Add(1)
+				go func() {
+					defer func() {
+						wg.Done()
+						ch <- struct{}{}
+					}()
+					if len(param) != 0 {
+						_, err = testFun(param...)
+					} else {
+						_, err = testFun()
+					}
+					if err != nil {
+						panic(err)
+					}
+				}()
 			}
+
+			wg.Wait()
+
+			fmt.Println(time.Now().Sub(t).String())
+
+			wg1.Done()
 		}()
 	}
-
-	wg.Wait()
-
-	fmt.Println(time.Now().Sub(t).String())
+	wg1.Wait()
 }
 
 func testFunc(c begonia.Client, service, funName string, param ...interface{}) interface{} {
