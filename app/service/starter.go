@@ -14,7 +14,6 @@ func BootStartByManager(optionMap map[string]interface{}) *rService {
 
 	fmt.Println("  ____                              _        \n |  _ \\                            (_)       \n | |_) |  ___   __ _   ___   _ __   _   __ _ \n |  _ <  / _ \\ / _` | / _ \\ | '_ \\ | | / _` |\n | |_) ||  __/| (_| || (_) || | | || || (_| |\n |____/  \\___| \\__, | \\___/ |_| |_||_| \\__,_|\n                __/ |                        \n               |___/                         ")
 
-
 	ctx, cancel := context.WithCancel(context.Background())
 
 	// 读配置
@@ -25,8 +24,11 @@ func BootStartByManager(optionMap map[string]interface{}) *rService {
 
 	// 创建 dispatch
 	var dp dispatch.Dispatcher
-	dp = dispatch.NewByDefaultCluster()
-	dp.Link(addr)
+	dp = dispatch.NewLinkedByDefaultCluster()
+
+	if err := dp.Link(addr); err != nil {
+		panic(err)
+	}
 
 	// 创建 logic
 	var lg logic.Service
@@ -58,8 +60,6 @@ func BootStartByManager(optionMap map[string]interface{}) *rService {
 	s.store = newServiceStore()
 
 	go s.work()
-
-
 
 	return s
 }

@@ -25,7 +25,7 @@ func bootstart(optionMap map[string]interface{}) Center {
 	}
 
 	var dp dispatch.Dispatcher
-	dp = dispatch.NewByDefaultCluster()
+	dp = dispatch.NewSetByDefaultCluster()
 	go dp.Listen(addr)
 
 	c.lg = logic.NewMix(dp)
