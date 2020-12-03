@@ -3,7 +3,7 @@ package client
 import (
 	"github.com/MashiroC/begonia/app"
 	"github.com/MashiroC/begonia/app/coding"
-	"github.com/MashiroC/begonia/logic/containers"
+	"github.com/MashiroC/begonia/logic"
 	"github.com/MashiroC/begonia/tool/berr"
 	"github.com/MashiroC/begonia/tool/reflects"
 )
@@ -41,7 +41,7 @@ func (r *rService) FuncSync(name string) (rf RemoteFunSync, err error) {
 	}
 
 	rf = func(params ...interface{}) (result interface{}, err error) {
-		ch := make(chan *containers.CallResult)
+		ch := make(chan *logic.CallResult)
 
 		b, err := f.InCoder.Encode(coding.ToAvroObj(params))
 		if err != nil {
@@ -49,11 +49,11 @@ func (r *rService) FuncSync(name string) (rf RemoteFunSync, err error) {
 			panic(err)
 		}
 
-		r.c.lg.CallAsync(&containers.Call{
+		r.c.lg.CallAsync(&logic.Call{
 			Service: r.name,
 			Fun:     name,
 			Param:   b,
-		}, func(res *containers.CallResult) {
+		}, func(res *logic.CallResult) {
 			ch <- res
 		})
 
@@ -89,11 +89,11 @@ func (r *rService) FuncAsync(name string) (rf RemoteFunAsync, err error) {
 			panic(err)
 		}
 
-		r.c.lg.CallAsync(&containers.Call{
+		r.c.lg.CallAsync(&logic.Call{
 			Service: r.name,
 			Fun:     name,
 			Param:   b,
-		}, func(result *containers.CallResult) {
+		}, func(result *logic.CallResult) {
 			if result.Err != nil {
 				callback(nil, result.Err)
 				return

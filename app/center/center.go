@@ -5,7 +5,6 @@ import (
 	"context"
 	"github.com/MashiroC/begonia/core"
 	"github.com/MashiroC/begonia/logic"
-	"github.com/MashiroC/begonia/logic/containers"
 )
 
 // Center 服务中心的接口，对外统一用接口
@@ -28,13 +27,13 @@ func (c *rCenter) Run() {
 	<-c.ctx.Done()
 }
 
-func (c *rCenter) work(call *containers.Call, wf containers.ResultFunc) {
+func (c *rCenter) work(call *logic.Call, wf logic.ResultFunc) {
 	res, err := core.C.Invoke(wf.ConnID, wf.ReqID, call.Fun, call.Param)
 	if err != nil {
-		wf.Result(&containers.CallResult{Err: err})
+		wf.Result(&logic.CallResult{Err: err})
 	}
 
-	wf.Result(&containers.CallResult{
+	wf.Result(&logic.CallResult{
 		Result: res,
 	})
 	return

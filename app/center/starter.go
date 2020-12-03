@@ -9,7 +9,6 @@ import (
 	"github.com/MashiroC/begonia/dispatch/frame"
 	"github.com/MashiroC/begonia/dispatch/proxy"
 	"github.com/MashiroC/begonia/logic"
-	"github.com/MashiroC/begonia/logic/containers"
 	"log"
 )
 
@@ -34,8 +33,8 @@ func bootstart(optionMap map[string]interface{}) Center {
 
 	// ========== 初始化logic ==========
 
-	var waitChans *containers.WaitChans
-	waitChans = containers.NewWaitChans()
+	var waitChans *logic.WaitChans
+	waitChans = logic.NewWaitChans()
 
 	var lg *logic.Service
 	lg = logic.NewService(dp, waitChans)
@@ -44,11 +43,30 @@ func bootstart(optionMap map[string]interface{}) Center {
 
 	// ========== 初始化代理器 ==========
 
-	p := proxy.NewCenterProxyHandler()
+	p := proxy.NewHandler()
+
+	p.Check= func(connID string, f frame.Frame) (redirectConnID string, ok bool) {
+
+		// Response不走proxy器
+		if _, okk := f.(*frame.Response); okk {
+			return
+		}
+
+		req := f.(*frame.Request)
+
+		if req.Service != core.ServiceName {
+
+			redirectConnID, ok = core.C.GetToID(req.Service)
+			if !ok {
+				panic("unknown bu ok error")
+			}
+		}
+		return
+	}
 
 	p.AddAction(func(connID, redirectConnID string, f frame.Frame) {
 		req := f.(*frame.Request)
-		waitChans.AddCallback(context.TODO(), req.ReqID, func(result *containers.CallResult) {
+		waitChans.AddCallback(context.TODO(), req.ReqID, func(result *logic.CallResult) {
 			err := dp.SendTo(connID, frame.NewResponse(req.ReqID, result.Result, result.Err))
 			// TODO: sendTo如果发送失败，加入到队列，这里先log一下
 			if err != nil {

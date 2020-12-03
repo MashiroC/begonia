@@ -7,7 +7,6 @@ import (
 	"github.com/MashiroC/begonia/app/coding"
 	"github.com/MashiroC/begonia/core"
 	"github.com/MashiroC/begonia/logic"
-	"github.com/MashiroC/begonia/logic/containers"
 	"github.com/MashiroC/begonia/tool/berr"
 	"github.com/MashiroC/begonia/tool/qconv"
 	"github.com/MashiroC/begonia/tool/reflects"
@@ -64,17 +63,17 @@ func (r *rService) Wait() {
 	<-r.ctx.Done()
 }
 
-func (r *rService) handleMsg(msg *containers.Call, wf containers.ResultFunc) {
+func (r *rService) handleMsg(msg *logic.Call, wf logic.ResultFunc) {
 	fun, err := r.store.get(msg.Service, msg.Fun)
 	if err != nil {
-		wf.Result(&containers.CallResult{
+		wf.Result(&logic.CallResult{
 			Err: berr.Warp("app.service", "handle get func", err),
 		})
 		return
 	}
 	data, err := fun.in.Decode(msg.Param)
 	if err != nil {
-		wf.Result(&containers.CallResult{
+		wf.Result(&logic.CallResult{
 			Err: berr.Warp("app.service", "handle", err),
 		})
 		return
@@ -102,5 +101,5 @@ func (r *rService) handleMsg(msg *containers.Call, wf containers.ResultFunc) {
 		panic(err)
 	}
 
-	wf.Result(&containers.CallResult{Result: b})
+	wf.Result(&logic.CallResult{Result: b})
 }

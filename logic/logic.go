@@ -5,7 +5,6 @@ import (
 	"context"
 	"github.com/MashiroC/begonia/dispatch"
 	"github.com/MashiroC/begonia/dispatch/frame"
-	"github.com/MashiroC/begonia/logic/containers"
 	"github.com/MashiroC/begonia/tool/berr"
 	"github.com/MashiroC/begonia/tool/ids"
 	"log"
@@ -13,38 +12,38 @@ import (
 )
 
 // Callback logic层回调函数的alias
-type Callback = func(result *containers.CallResult)
+type Callback = func(result *CallResult)
 
 // baseLogic 基础逻辑层的实现结构体
 type baseLogic struct {
-	dp       dispatch.Dispatcher   // dispatch层的接口，供logic层向下继续调用
-	waitChan *containers.WaitChans // 等待管道，可以在这里注册回调，调用回调
+	dp       dispatch.Dispatcher // dispatch层的接口，供logic层向下继续调用
+	waitChan *WaitChans          // 等待管道，可以在这里注册回调，调用回调
 }
 
-func (c *baseLogic) CallSync(call *containers.Call) *containers.CallResult {
+func (c *baseLogic) CallSync(call *Call) *CallResult {
 
-	ch := make(chan *containers.CallResult)
+	ch := make(chan *CallResult)
 	defer close(ch)
 
-	c.CallAsync(call, func(result *containers.CallResult) {
+	c.CallAsync(call, func(result *CallResult) {
 		ch <- result
 	})
 
 	return <-ch
 }
 
-func (c *baseLogic) CallAsync(call *containers.Call, callback Callback) {
+func (c *baseLogic) CallAsync(call *Call, callback Callback) {
 
 	reqID := ids.New()
 	var f frame.Frame
 	f = frame.NewRequest(reqID, call.Service, call.Fun, call.Param)
 
-	c.waitChan.AddCallback(context.TODO(), reqID, func(cr *containers.CallResult) {
+	c.waitChan.AddCallback(context.TODO(), reqID, func(cr *CallResult) {
 		callback(cr)
 	})
 
 	if err := c.dp.Send(f); err != nil {
-		err = c.waitChan.Callback(reqID, &containers.CallResult{
+		err = c.waitChan.Callback(reqID, &CallResult{
 			Result: nil,
 			Err:    berr.Warp("logic", "call", err),
 		})

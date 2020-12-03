@@ -1,4 +1,4 @@
-package containers
+package logic
 
 import "github.com/MashiroC/begonia/dispatch/frame"
 

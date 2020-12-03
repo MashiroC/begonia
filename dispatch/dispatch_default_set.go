@@ -32,7 +32,7 @@ type setDispatch struct {
 	baseDispatch
 
 	// 代理器，如果一个节点被赋予了代理职责，会在这里检查是否要重定向
-	Proxy proxy.Handler
+	Proxy *proxy.Handler
 
 	// set模式相关变量
 	connSet  map[string]conn.Conn // 保存连接的map
@@ -153,7 +153,7 @@ func (d *setDispatch) work(c conn.Conn) {
 func (d *setDispatch) Handle(typ string, in interface{}) {
 	switch typ {
 	case "proxy":
-		if p, ok := in.(proxy.Handler); ok {
+		if p, ok := in.(*proxy.Handler); ok {
 			d.Proxy = p
 			return
 		}

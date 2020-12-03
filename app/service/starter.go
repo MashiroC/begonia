@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/MashiroC/begonia/dispatch"
 	"github.com/MashiroC/begonia/logic"
-	"github.com/MashiroC/begonia/logic/containers"
 )
 
 // starter.go something
@@ -31,8 +30,8 @@ func BootStartByManager(optionMap map[string]interface{}) *rService {
 		panic(err)
 	}
 
-	var waitChans *containers.WaitChans
-	waitChans=containers.NewWaitChans()
+	var waitChans *logic.WaitChans
+	waitChans= logic.NewWaitChans()
 
 	// 创建 logic
 	var lg *logic.Service

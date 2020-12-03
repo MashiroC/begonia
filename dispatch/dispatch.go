@@ -3,7 +3,6 @@ package dispatch
 
 import (
 	"errors"
-	"fmt"
 	"github.com/MashiroC/begonia/dispatch/frame"
 	"github.com/MashiroC/begonia/tool/berr"
 	"reflect"
@@ -82,7 +81,6 @@ func (d *baseDispatch) Handle(typ string, in interface{}) {
 			d.LgHandleFrame = fun
 			return
 		}
-		fmt.Println(in)
 	default:
 		panic(errors.New("dispatch handle error: you handle func not exist"))
 	}

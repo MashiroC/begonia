@@ -2,7 +2,7 @@ package core
 
 import (
 	"github.com/MashiroC/begonia/app/coding"
-	"github.com/MashiroC/begonia/logic/containers"
+	"github.com/MashiroC/begonia/logic"
 )
 
 // call.go api层用来调用核心服务的工具函数
@@ -14,7 +14,7 @@ type call int
 var Call call
 
 // Register 注册一个函数
-func (call) Register(serviceName string, funs []coding.FunInfo) *containers.Call {
+func (call) Register(serviceName string, funs []coding.FunInfo) *logic.Call {
 
 	b, err := serviceInfoCoder.Encode(ServiceInfo{
 		Service: serviceName,
@@ -24,7 +24,7 @@ func (call) Register(serviceName string, funs []coding.FunInfo) *containers.Call
 		panic(err)
 	}
 
-	return &containers.Call{
+	return &logic.Call{
 		Service: ServiceName,
 		Fun:     "Register",
 		Param:   b,
@@ -36,12 +36,12 @@ type serviceInfoCall struct {
 }
 
 // ServiceInfo 获得服务信息
-func (call) ServiceInfo(serviceName string) *containers.Call {
+func (call) ServiceInfo(serviceName string) *logic.Call {
 	b, err := serviceInfoCallCoder.Encode(serviceInfoCall{Service: serviceName})
 	if err != nil {
 		panic(err)
 	}
-	return &containers.Call{
+	return &logic.Call{
 		Service: ServiceName,
 		Fun:     "ServiceInfo",
 		Param:   b,
