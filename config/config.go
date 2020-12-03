@@ -17,15 +17,14 @@ type envConfig struct {
 
 // DispatchConfig dispatch的配置
 type DispatchConfig struct {
+	AutoReConnection           bool // 断开连接时是否自动重新连接
+	ReConnectionIntervalSecond int  // 断连时重新连接的间隔时间
+	ReConnectionRetryCount     int  // 重试次数
 }
 
 // LogicConfig logic层的配置
 type LogicConfig struct {
 	RequestTimeOut int // 逻辑层中一个请求发来，等待响应时的超时时间
-
-	AutoReConnection           bool // 断开连接时是否自动重新连接
-	ReConnectionIntervalSecond int  // 断连时重新连接的间隔时间
-	ReConnectionRetryCount     int  // 重试次数
 }
 
 // ConnConfig 连接的config
@@ -52,11 +51,12 @@ func defaultConfig() envConfig {
 		Conn: ConnConfig{
 			ReadTimeout: 10,
 		},
-		Dispatch: DispatchConfig{},
-		Logic: LogicConfig{
-			RequestTimeOut:             10,
+		Dispatch: DispatchConfig{
 			AutoReConnection:           true,
 			ReConnectionIntervalSecond: 2,
 			ReConnectionRetryCount:     5,
+		},
+		Logic: LogicConfig{
+			RequestTimeOut: 10,
 		}}
 }

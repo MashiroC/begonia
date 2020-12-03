@@ -1,11 +1,15 @@
 package center
 
 import (
+	"context"
 	"fmt"
 	"github.com/MashiroC/begonia/app/option"
 	"github.com/MashiroC/begonia/core"
 	"github.com/MashiroC/begonia/dispatch"
+	"github.com/MashiroC/begonia/dispatch/frame"
+	"github.com/MashiroC/begonia/dispatch/proxy"
 	"github.com/MashiroC/begonia/logic"
+	"github.com/MashiroC/begonia/logic/containers"
 	"log"
 )
 
@@ -13,29 +17,67 @@ import (
 // bootStartByCenter 根据center cluster模式启动
 func bootstart(optionMap map[string]interface{}) Center {
 
-	//ctx, cancel := context.WithCancel(context.Background())
-	c := &rCenter{
-		//ctx:    ctx,
-		//cancel: cancel,
-	}
+	ctx, cancel := context.WithCancel(context.Background())
 
 	var addr string
 	if addrIn, ok := optionMap["managerAddr"]; ok {
 		addr = addrIn.(string)
 	}
 
+	// ========== 初始化dispatch ==========
+
 	var dp dispatch.Dispatcher
 	dp = dispatch.NewSetByDefaultCluster()
 	go dp.Listen(addr)
 
-	c.lg = logic.NewMix(dp)
+	// ========== END ==========
 
+	// ========== 初始化logic ==========
+
+	var waitChans *containers.WaitChans
+	waitChans = containers.NewWaitChans()
+
+	var lg *logic.Service
+	lg = logic.NewService(dp, waitChans)
+
+	// ========== END ==========
+
+	// ========== 初始化代理器 ==========
+
+	p := proxy.NewCenterProxyHandler()
+
+	p.AddAction(func(connID, redirectConnID string, f frame.Frame) {
+		req := f.(*frame.Request)
+		waitChans.AddCallback(context.TODO(), req.ReqID, func(result *containers.CallResult) {
+			err := dp.SendTo(connID, frame.NewResponse(req.ReqID, result.Result, result.Err))
+			// TODO: sendTo如果发送失败，加入到队列，这里先log一下
+			if err != nil {
+				log.Println(err)
+			}
+		})
+	})
+
+	p.AddAction(func(connID, redirectConnID string, f frame.Frame) {
+		err := dp.SendTo(redirectConnID, f)
+		if err != nil {
+			panic(err)
+		}
+		// TODO:handler err not panic
+		return
+	})
+
+	dp.Handle("proxy", p)
+
+	// ========== END ==========
+
+	// ========== 初始化核心服务 ==========
 	core.C = core.NewSubService()
 
 	fmt.Println("  ____                              _        \n |  _ \\                            (_)       \n | |_) |  ___   __ _   ___   _ __   _   __ _ \n |  _ <  / _ \\ / _` | / _ \\ | '_ \\ | | / _` |\n | |_) ||  __/| (_| || (_) || | | || || (_| |\n |____/  \\___| \\__, | \\___/ |_| |_||_| \\__,_|\n                __/ |                        \n               |___/                         ")
 	log.Println("begonia center started")
 	//TODO: 发一个包，拉取配置
 
+	// ========== END ==========
 	/*
 
 		先不去拉配置 后面再加
@@ -53,7 +95,11 @@ func bootstart(optionMap map[string]interface{}) Center {
 		fmt.Println(m, err)
 		// 修改配置之前的一系列调用全部都是按默认配置来的
 	*/
-	return c
+	return &rCenter{
+		ctx:    ctx,
+		cancel: cancel,
+		lg: lg,
+	}
 }
 
 // New 初始化，获得一个service对象，传入一个mode参数，以及一个option的不定参数

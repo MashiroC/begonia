@@ -14,7 +14,7 @@ import (
 
 // rClient 客户端的github.com/MashiroC/begonia实现
 type rClient struct {
-	lg logic.Client
+	lg *logic.Client
 	//pool *conn.Pool
 	ctx    context.Context
 	cancel context.CancelFunc

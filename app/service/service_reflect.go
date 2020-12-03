@@ -7,6 +7,7 @@ import (
 	"github.com/MashiroC/begonia/app/coding"
 	"github.com/MashiroC/begonia/core"
 	"github.com/MashiroC/begonia/logic"
+	"github.com/MashiroC/begonia/logic/containers"
 	"github.com/MashiroC/begonia/tool/berr"
 	"github.com/MashiroC/begonia/tool/qconv"
 	"github.com/MashiroC/begonia/tool/reflects"
@@ -15,7 +16,7 @@ import (
 
 // rService 反射的 reflect service api
 type rService struct {
-	lg     logic.Service
+	lg     *logic.Service
 	ctx    context.Context
 	cancel context.CancelFunc
 
@@ -63,26 +64,17 @@ func (r *rService) Wait() {
 	<-r.ctx.Done()
 }
 
-func (r *rService) work() {
-	for {
-		msg, wf := r.lg.RecvCall()
-
-		go r.handleMsg(msg, wf)
-
-	}
-}
-
-func (r *rService) handleMsg(msg *logic.Call, wf logic.ResultFunc) {
+func (r *rService) handleMsg(msg *containers.Call, wf containers.ResultFunc) {
 	fun, err := r.store.get(msg.Service, msg.Fun)
 	if err != nil {
-		wf.Result(&logic.CallResult{
+		wf.Result(&containers.CallResult{
 			Err: berr.Warp("app.service", "handle get func", err),
 		})
 		return
 	}
 	data, err := fun.in.Decode(msg.Param)
 	if err != nil {
-		wf.Result(&logic.CallResult{
+		wf.Result(&containers.CallResult{
 			Err: berr.Warp("app.service", "handle", err),
 		})
 		return
@@ -110,5 +102,5 @@ func (r *rService) handleMsg(msg *logic.Call, wf logic.ResultFunc) {
 		panic(err)
 	}
 
-	wf.Result(&logic.CallResult{Result: b})
+	wf.Result(&containers.CallResult{Result: b})
 }

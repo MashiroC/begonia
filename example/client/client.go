@@ -21,12 +21,12 @@ func main() {
 	c := begonia.NewClient(mode, option.CenterAddr(addr))
 	//TestQPS(c)
 
-	in := testFunc(c, "Test", "Echo2")
-	res := in.([]interface{})
+	//in := testFunc(c, "Test", "Echo2")
+	//res := in.([]interface{})
 	//fmt.Println(res)
 	//fmt.Println(testFunc(c, "Test", "Echo", res...))
-	QPS(c,"Test","Echo",res...)
-	//QPS(c,"Echo","SayHello","shiina")
+	//QPS(c,"Test","Echo",res...)
+	QPS(c,"Echo","SayHello","shiina")
 	//fmt.Println(testFunc(c,"Echo","SayHello","shiina"))
 }
 

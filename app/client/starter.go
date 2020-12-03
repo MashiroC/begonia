@@ -36,6 +36,8 @@ func BootStartByCenter(optionMap map[string]interface{}) *rClient {
 
 	c.lg = logic.NewClient(dp)
 
+	dp.Handle("frame", c.lg.DpHandler)
+
 	//TODO: 发一个包，拉取配置
 
 	/*

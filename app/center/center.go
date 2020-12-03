@@ -2,9 +2,10 @@
 package center
 
 import (
+	"context"
 	"github.com/MashiroC/begonia/core"
 	"github.com/MashiroC/begonia/logic"
-	"github.com/MashiroC/begonia/tool/berr"
+	"github.com/MashiroC/begonia/logic/containers"
 )
 
 // Center 服务中心的接口，对外统一用接口
@@ -13,42 +14,28 @@ type Center interface {
 }
 
 type rCenter struct {
-	lg logic.MixNode
+	ctx context.Context
+	cancel context.CancelFunc
+	lg *logic.Service
 }
 
 func (c *rCenter) Run() {
 
 	c.lg.Hook("dispatch.close", core.C.HandleConnClose)
 
-	for {
-		call, wf := c.lg.RecvCall()
+	c.lg.HandleRequest = c.work
 
-		go c.work(call, wf)
-	}
+	<-c.ctx.Done()
 }
 
-func (c *rCenter) work(call *logic.Call, wf logic.ResultFunc) {
-
-	if call.Service == core.ServiceName {
-		// 核心服务
-		res, err := core.C.Invoke(wf.ConnID, wf.ReqID, call.Fun, call.Param)
-		if err != nil {
-			wf.Result(&logic.CallResult{Err: err})
-		}
-
-		wf.Result(&logic.CallResult{
-			Result: res,
-		})
-		return
+func (c *rCenter) work(call *containers.Call, wf containers.ResultFunc) {
+	res, err := core.C.Invoke(wf.ConnID, wf.ReqID, call.Fun, call.Param)
+	if err != nil {
+		wf.Result(&containers.CallResult{Err: err})
 	}
 
-	toID, ok := core.C.GetToID(call.Service)
-	if !ok {
-		wf.Result(&logic.CallResult{
-			Err: berr.NewF("app.center","work","service [%s] not found",call.Service),
-		})
-		return
-	}
-
-	wf.Result(logic.Redirect, toID)
+	wf.Result(&containers.CallResult{
+		Result: res,
+	})
+	return
 }

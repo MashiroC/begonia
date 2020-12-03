@@ -2,7 +2,11 @@
 package dispatch
 
 import (
+	"errors"
+	"fmt"
 	"github.com/MashiroC/begonia/dispatch/frame"
+	"github.com/MashiroC/begonia/tool/berr"
+	"reflect"
 )
 
 /*
@@ -35,8 +39,6 @@ type Dispatcher interface {
 	// SendTo 发送帧到指定连接
 	SendTo(connID string, f frame.Frame) error
 
-	// Recv 接收一个请求
-	Recv() (connID string, f frame.Frame)
 
 	// Listen 对一个地址开始监听
 	Listen(addr string)
@@ -48,4 +50,55 @@ type Dispatcher interface {
 	// 目前可以hook的：
 	// - close
 	Hook(typ string, hookFunc interface{})
+
+	// Handle 对某些地方添加一个handle func来处理一些情况。
+	// example:
+	// dp.DpHandler("request",func(f *frame.Response) { fmt.Println(f) })
+	// 目前可以handle的：
+	// - client.handleResponse (response)
+	// - client.handleRequest  (request)
+	Handle(typ string,handleFunc interface{})
+
+	//HandleResponse(func(f frame.Frame))
+}
+
+type baseDispatch struct {
+
+	// handle func
+	LgHandleFrame func(connID string, f frame.Frame)
+
+	// hook func
+	CloseHookFunc func(connID string, err error) // 关闭连接的hook
+}
+
+func (d *baseDispatch) HandleFrame(connID string,f frame.Frame){
+	d.LgHandleFrame(connID,f)
+}
+
+func (d *baseDispatch) Handle(typ string, in interface{}) {
+	switch typ {
+	case "frame":
+		if fun, ok := in.(func(connID string, f frame.Frame)); ok {
+			d.LgHandleFrame = fun
+			return
+		}
+		fmt.Println(in)
+	default:
+		panic(errors.New("dispatch handle error: you handle func not exist"))
+	}
+	panic(errors.New("dispatch handle error: handle func not match"))
+}
+
+// Hook 在这里可以去Hook一些事件。
+func (d *baseDispatch) Hook(name string, hookFunc interface{}) {
+	switch name {
+	case "close":
+		if f, ok := hookFunc.(func(connID string, err error)); ok {
+			d.CloseHookFunc = f
+			return
+		}
+		panic(berr.New("dispatch", "hook", "close func must func(connID string, err error) but "+reflect.TypeOf(hookFunc).String()))
+	default:
+		panic(berr.New("dispatch", "hook", "hook func "+name+"not found"))
+	}
 }

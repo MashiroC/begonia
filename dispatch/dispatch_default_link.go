@@ -1,12 +1,13 @@
 package dispatch
 
 import (
+	"github.com/MashiroC/begonia/config"
 	"github.com/MashiroC/begonia/dispatch/conn"
 	"github.com/MashiroC/begonia/dispatch/frame"
 	"github.com/MashiroC/begonia/tool/berr"
 	"github.com/MashiroC/begonia/tool/ids"
 	"log"
-	"reflect"
+	"time"
 )
 
 // dispatch_default.go something
@@ -16,41 +17,59 @@ func NewLinkedByDefaultCluster() Dispatcher {
 
 	d := &linkDispatch{}
 
-	d.msgCh = make(chan recvMsg, 10)
+	// 判断是否需要在断开连接情况下重连，hook了dispatch层的close函数
+	if !config.C.Dispatch.AutoReConnection {
 
-	// 默认连接被关闭时只打印log
-	d.closeHookFunc = func(connID string, err error) {
-		log.Printf("connID [%s] has some error: [%s]\n", connID, err)
+		// 不配置自动重连时 默认连接被关闭时只打印log
+		// TODO:hook变链式执行
+		d.CloseHookFunc = func(connID string, err error) {
+			log.Printf("connID [%s] has some error: [%s]\n", connID, err)
+		}
+	} else {
+
+		d.CloseHookFunc = func(connID string, err error) {
+
+			// 用一个协程跑 避免阻塞
+			go func() {
+				ok := false
+
+				if config.C.Dispatch.ReConnectionRetryCount <= 0 {
+
+					for !ok {
+						log.Println("connot link to server,retry...")
+						time.Sleep(time.Duration(config.C.Dispatch.ReConnectionIntervalSecond) * time.Second)
+						ok = d.ReLink()
+					}
+
+				} else {
+
+					for i := 0; i < config.C.Dispatch.ReConnectionRetryCount && !ok; i++ {
+						log.Println("connot link to server,retry", i, "limit", config.C.Dispatch.ReConnectionRetryCount)
+						time.Sleep(time.Duration(config.C.Dispatch.ReConnectionIntervalSecond) * time.Second)
+						ok = d.ReLink()
+					}
+
+					if !ok {
+						panic("connect closed")
+					}
+
+				}
+			}()
+
+		}
+
 	}
 
 	return d
 }
 
 type linkDispatch struct {
+	baseDispatch
 
 	// link模式相关变量
 	linkAddr   string    // 单连接的地址
 	linkedConn conn.Conn // 连接
 	linkID     string    // 连接的id
-
-	msgCh chan recvMsg // 接收消息用的管道
-
-	// hook func
-	closeHookFunc func(connID string, err error) // 关闭连接的hook
-}
-
-// Hook 在这里可以去Hook一些事件。
-func (d *linkDispatch) Hook(name string, hookFunc interface{}) {
-	switch name {
-	case "close":
-		if f, ok := hookFunc.(func(connID string, err error)); ok {
-			d.closeHookFunc = f
-			return
-		}
-		panic(berr.New("dispatch", "hook", "close func must func(connID string, err error) but "+reflect.TypeOf(hookFunc).String()))
-	default:
-		panic(berr.New("dispatch", "hook", "hook func "+name+"not found"))
-	}
 }
 
 // Link 建立连接，center cluster模式下，会开一条和center的tcp连接
@@ -92,13 +111,6 @@ func (d *linkDispatch) SendTo(connID string, f frame.Frame) (err error) {
 	return
 }
 
-func (d *linkDispatch) Recv() (connID string, f frame.Frame) {
-	msg := <-d.msgCh
-	connID = msg.connID
-	f = msg.f
-	return
-}
-
 func (d *linkDispatch) Listen(addr string) {
 	panic(berr.New("dispatch", "listen", "link mode can't use Listen()"))
 }
@@ -116,7 +128,7 @@ func (d *linkDispatch) work(c conn.Conn) {
 		opcode, data, err := c.Recv()
 		if err != nil {
 			c.Close()
-			d.closeHookFunc(id, err)
+			d.CloseHookFunc(id, err)
 			break
 		}
 
@@ -130,10 +142,11 @@ func (d *linkDispatch) work(c conn.Conn) {
 				panic(err)
 			}
 
-			d.msgCh <- recvMsg{
-				connID: id,
-				f:      f,
-			}
+			//d.msgCh <- recvMsg{
+			//	connID: id,
+			//	f:      f,
+			//}
+			go d.LgHandleFrame(id,f)
 
 		} else {
 			// TODO:现在没有除了普通请求之外的ctrl code 支持

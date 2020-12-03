@@ -1,12 +1,13 @@
 package dispatch
 
 import (
+	"errors"
 	"github.com/MashiroC/begonia/dispatch/conn"
 	"github.com/MashiroC/begonia/dispatch/frame"
+	"github.com/MashiroC/begonia/dispatch/proxy"
 	"github.com/MashiroC/begonia/tool/berr"
 	"github.com/MashiroC/begonia/tool/ids"
 	"log"
-	"reflect"
 	"sync"
 )
 
@@ -17,11 +18,10 @@ func NewSetByDefaultCluster() Dispatcher {
 
 	d := &setDispatch{}
 
-	d.msgCh = make(chan recvMsg, 10)
 	d.connSet = make(map[string]conn.Conn)
 
 	// 默认连接被关闭时只打印log
-	d.closeHookFunc = func(connID string, err error) {
+	d.CloseHookFunc = func(connID string, err error) {
 		log.Printf("connID [%s] has some error: [%s]\n", connID, err)
 	}
 
@@ -29,29 +29,14 @@ func NewSetByDefaultCluster() Dispatcher {
 }
 
 type setDispatch struct {
+	baseDispatch
+
+	// 代理器，如果一个节点被赋予了代理职责，会在这里检查是否要重定向
+	Proxy proxy.Handler
 
 	// set模式相关变量
 	connSet  map[string]conn.Conn // 保存连接的map
 	connLock sync.Mutex           // 锁，保证connSet线程安全
-
-	msgCh chan recvMsg // 接收消息用的管道
-
-	// hook func
-	closeHookFunc func(connID string, err error) // 关闭连接的hook
-}
-
-// Hook 在这里可以去Hook一些事件。
-func (d *setDispatch) Hook(name string, hookFunc interface{}) {
-	switch name {
-	case "close":
-		if f, ok := hookFunc.(func(connID string, err error)); ok {
-			d.closeHookFunc = f
-			return
-		}
-		panic(berr.New("dispatch", "hook", "close func must func(connID string, err error) but "+reflect.TypeOf(hookFunc).String()))
-	default:
-		panic(berr.New("dispatch", "hook", "hook func "+name+"not found"))
-	}
 }
 
 // Link 建立连接，center cluster模式下，会开一条和center的tcp连接
@@ -68,6 +53,18 @@ func (d *setDispatch) Send(f frame.Frame) (err error) {
 	panic(berr.New("dispatch", "send", "in set mode, you can't use Send(), please use SendTo()"))
 }
 
+func (d *setDispatch) HandleFrame(connID string, f frame.Frame) {
+
+	redirectConnID, ok := d.Proxy.Check(connID, f)
+
+	if ok {
+		d.Proxy.Action(connID, redirectConnID, f)
+		return
+	}
+
+	d.LgHandleFrame(connID, f)
+}
+
 func (d *setDispatch) SendTo(connID string, f frame.Frame) (err error) {
 	// 及时解锁，不使用defer，避免大数据包的write协程持续占有锁
 	d.connLock.Lock()
@@ -79,13 +76,6 @@ func (d *setDispatch) SendTo(connID string, f frame.Frame) (err error) {
 	}
 
 	err = c.Write(byte(f.Opcode()), f.Marshal())
-	return
-}
-
-func (d *setDispatch) Recv() (connID string, f frame.Frame) {
-	msg := <-d.msgCh
-	connID = msg.connID
-	f = msg.f
 	return
 }
 
@@ -129,7 +119,7 @@ func (d *setDispatch) work(c conn.Conn) {
 		opcode, data, err := c.Recv()
 		if err != nil {
 			c.Close()
-			d.closeHookFunc(id, err)
+			d.CloseHookFunc(id, err)
 			d.connLock.Lock()
 			delete(d.connSet, id)
 			d.connLock.Unlock()
@@ -146,10 +136,11 @@ func (d *setDispatch) work(c conn.Conn) {
 				panic(err)
 			}
 
-			d.msgCh <- recvMsg{
-				connID: id,
-				f:      f,
-			}
+			go d.HandleFrame(id, f)
+			//d.msgCh <- recvMsg{
+			//	connID: id,
+			//	f:      f,
+			//}
 
 		} else {
 			// TODO:现在没有除了普通请求之外的ctrl code 支持
@@ -157,6 +148,20 @@ func (d *setDispatch) work(c conn.Conn) {
 		}
 	}
 
+}
+
+func (d *setDispatch) Handle(typ string, in interface{}) {
+	switch typ {
+	case "proxy":
+		if p, ok := in.(proxy.Handler); ok {
+			d.Proxy = p
+			return
+		}
+	default:
+		d.baseDispatch.Handle(typ, in)
+		return
+	}
+	panic(errors.New("dispatch handle error: handle func not match"))
 }
 
 func (d *setDispatch) Close() {

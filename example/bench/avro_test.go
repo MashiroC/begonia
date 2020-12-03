@@ -412,22 +412,19 @@ func BenchmarkLog2(b *testing.B) {
 }
 
 func TestName(t *testing.T) {
-	str := `8092
-8309
-8194
-8211
-8332
-8392
-8155
-8003
-8274
-8093
-7449
-7868
-7718
-8176
-8178
-7997`
+	str := `22051
+22634
+22164
+21892
+22956
+21799
+20952
+22057
+21896
+20059
+21907
+21686
+21051`
 res:=strings.Split(str,"\n")
 num:=0
 for i:=0;i<len(res);i++{
@@ -439,4 +436,27 @@ for i:=0;i<len(res);i++{
 }
 fmt.Println(num/len(res))
 // 8090 21712
+// 7958|8221 21777
 }
+
+func TestAB(t *testing.T) {
+	var a A
+	a=StdA
+
+	fmt.Println(a==StdA)
+	fmt.Println(a==&B{Name: "asd"})
+}
+
+type A interface {
+	String()
+}
+
+type B struct {
+	Name string
+}
+
+func (b *B) String(){
+
+}
+
+var StdA = &B{Name: "asd"}

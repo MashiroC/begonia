@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/MashiroC/begonia/dispatch"
 	"github.com/MashiroC/begonia/logic"
+	"github.com/MashiroC/begonia/logic/containers"
 )
 
 // starter.go something
@@ -30,9 +31,12 @@ func BootStartByManager(optionMap map[string]interface{}) *rService {
 		panic(err)
 	}
 
+	var waitChans *containers.WaitChans
+	waitChans=containers.NewWaitChans()
+
 	// 创建 logic
-	var lg logic.Service
-	lg = logic.NewService(dp)
+	var lg *logic.Service
+	lg = logic.NewService(dp,waitChans)
 
 	//TODO: 发一个包，拉取配置
 
@@ -55,11 +59,10 @@ func BootStartByManager(optionMap map[string]interface{}) *rService {
 	s.cancel = cancel
 
 	s.lg = lg
+	s.lg.HandleRequest=s.handleMsg
 
 	// 创建服务存储的数据结构
 	s.store = newServiceStore()
-
-	go s.work()
 
 	return s
 }
