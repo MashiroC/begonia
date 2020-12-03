@@ -12,6 +12,7 @@ import (
 	"github.com/hamba/avro"
 	"log"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 )
@@ -374,7 +375,7 @@ func TestInt64(t *testing.T) {
 func TestBErr(t *testing.T) {
 	berr.New("error system","test","you are in a black hole")
 
-	berr.NewAuto("auto","you are in a black hole")
+	//berr.NewAuto("auto","you are in a black hole")
 }
 
 //func BenchmarkBerr(b *testing.B) {
@@ -408,4 +409,34 @@ func BenchmarkLog2(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		log.Println("hello")
 	}
+}
+
+func TestName(t *testing.T) {
+	str := `8092
+8309
+8194
+8211
+8332
+8392
+8155
+8003
+8274
+8093
+7449
+7868
+7718
+8176
+8178
+7997`
+res:=strings.Split(str,"\n")
+num:=0
+for i:=0;i<len(res);i++{
+	tmp,err:=strconv.Atoi(res[i])
+	if err != nil {
+		panic(err)
+	}
+	num+=tmp
+}
+fmt.Println(num/len(res))
+// 8090 21712
 }

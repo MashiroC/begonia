@@ -75,7 +75,7 @@ func (m *mix) RecvCall() (call *Call, wf ResultFunc) {
 					if result == Redirect {
 						res = f
 					} else {
-						res = frame.NewResponse(f.ReqID, result.Result, result.Err.Error())
+							res = frame.NewResponse(f.ReqID, result.Result, result.Err)
 					}
 
 					if toConnID != nil {
@@ -83,7 +83,7 @@ func (m *mix) RecvCall() (call *Call, wf ResultFunc) {
 						for _, toID := range toConnID {
 
 							m.waitChan.AddCallback(context.TODO(), f.ReqID, func(result *CallResult) {
-								err := m.dp.SendTo(connID, frame.NewResponse(f.ReqID, result.Result, result.Err.Error()))
+								err := m.dp.SendTo(connID, frame.NewResponse(f.ReqID, result.Result, result.Err))
 								// TODO: sendTo如果发送失败，加入到队列，这里先panic出去
 								if err != nil {
 									panic(err)

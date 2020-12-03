@@ -88,7 +88,7 @@ func (c *service) RecvCall() (call *Call, wf ResultFunc) {
 
 			wf = ResultFunc{
 				Result: func(result *CallResult, toConnID ...string) {
-					resp := frame.NewResponse(msg.ReqID, result.Result, result.Err.Error())
+					resp := frame.NewResponse(msg.ReqID, result.Result, result.Err)
 					if toConnID != nil {
 						for _, connID := range toConnID {
 							c.dp.SendTo(connID, resp)

@@ -28,10 +28,16 @@ type Response struct {
 }
 
 // NewResponse 创建一个response
-func NewResponse(reqID string, result []byte, err string) Frame {
+func NewResponse(reqID string, result []byte, err error) Frame {
+	var errStr string
+	if err==nil{
+		errStr =""
+	}else{
+		errStr=err.Error()
+	}
 	return &Response{
 		ReqID:  reqID,
-		Err:    err,
+		Err:    errStr,
 		Result: result,
 		opcode: -1,
 	}
