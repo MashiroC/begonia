@@ -10,3 +10,9 @@ func CenterAddr(addr string) WriteFunc {
 		optionMap["managerAddr"] = addr
 	}
 }
+
+func P2P() WriteFunc{
+	return func(optionMap map[string]interface{}) {
+		optionMap["dpTyp"]="p2p"
+	}
+}

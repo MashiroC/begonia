@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"github.com/MashiroC/begonia/core"
 	"github.com/MashiroC/begonia/dispatch"
 	"github.com/MashiroC/begonia/logic"
 )
@@ -15,7 +16,7 @@ func BootStartByManager(optionMap map[string]interface{}) *rService {
 	fmt.Println("  ____                              _        \n |  _ \\                            (_)       \n | |_) |  ___   __ _   ___   _ __   _   __ _ \n |  _ <  / _ \\ / _` | / _ \\ | '_ \\ | | / _` |\n | |_) ||  __/| (_| || (_) || | | || || (_| |\n |____/  \\___| \\__, | \\___/ |_| |_||_| \\__,_|\n                __/ |                        \n               |___/                         ")
 
 	ctx, cancel := context.WithCancel(context.Background())
-
+	var isLocal bool
 	// 读配置
 	var addr string
 	if addrIn, ok := optionMap["managerAddr"]; ok {
@@ -24,18 +25,23 @@ func BootStartByManager(optionMap map[string]interface{}) *rService {
 
 	// 创建 dispatch
 	var dp dispatch.Dispatcher
-	dp = dispatch.NewLinkedByDefaultCluster()
-
-	if err := dp.Link(addr); err != nil {
-		panic(err)
+	if dpTyp, ok := optionMap["dpTyp"]; ok && dpTyp == "p2p" {
+		dp = dispatch.NewSetByDefaultCluster()
+		go dp.Listen(addr)
+		isLocal=true
+	} else {
+		dp = dispatch.NewLinkedByDefaultCluster()
+		if err := dp.Link(addr); err != nil {
+			panic(err)
+		}
 	}
 
 	var waitChans *logic.WaitChans
-	waitChans= logic.NewWaitChans()
+	waitChans = logic.NewWaitChans()
 
 	// 创建 logic
 	var lg *logic.Service
-	lg = logic.NewService(dp,waitChans)
+		lg=logic.NewService(dp,waitChans)
 
 	//TODO: 发一个包，拉取配置
 
@@ -58,10 +64,31 @@ func BootStartByManager(optionMap map[string]interface{}) *rService {
 	s.cancel = cancel
 
 	s.lg = lg
-	s.lg.HandleRequest=s.handleMsg
+	s.lg.HandleRequest = s.handleMsg
+	s.isLocalRegister=isLocal
 
 	// 创建服务存储的数据结构
 	s.store = newServiceStore()
 
+	if isLocal{
+		core.C=core.NewSubService()
+		s.Register(core.ServiceName,&Core{})
+	}
+
+
 	return s
+}
+
+
+type Core struct {
+
+}
+
+func (c *Core) ServiceInfo(serviceName string) []byte {
+	s:=core.Call.ServiceInfo(serviceName)
+	res, err := core.C.Invoke("", "", s.Fun, s.Param)
+	if err != nil {
+		panic(err)
+	}
+	return res
 }

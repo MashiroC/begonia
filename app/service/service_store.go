@@ -1,8 +1,8 @@
 package service
 
 import (
-	"github.com/MashiroC/begonia/app/coding"
 	"errors"
+	"github.com/MashiroC/begonia/app/coding"
 	"reflect"
 	"sync"
 )
@@ -57,7 +57,6 @@ func (s *serviceStore) store(service, funName string, fun reflectFun) {
 	}
 
 }
-
 
 // reflectFun 存储的使用反射实现的远程函数的信息
 type reflectFun struct {

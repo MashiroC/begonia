@@ -19,7 +19,8 @@ type rService struct {
 	ctx    context.Context
 	cancel context.CancelFunc
 
-	store *serviceStore
+	store           *serviceStore
+	isLocalRegister bool
 }
 
 func (r *rService) Register(name string, service interface{}) {
@@ -45,18 +46,27 @@ func (r *rService) Register(name string, service interface{}) {
 		})
 	}
 
-	res := r.lg.CallSync(core.Call.Register(name, fs))
-	// TODO:handler error
-	if res.Err != nil {
-		panic(res.Err)
+	if r.isLocalRegister {
+		register := core.Call.Register(name, fs)
+		_, err := core.C.Invoke("", "", register.Fun, register.Param)
+		if err != nil {
+			panic(err)
+		}
+	} else {
+		res := r.lg.CallSync(core.Call.Register(name, fs))
+		// TODO:handler error
+		if res.Err != nil {
+			panic(res.Err)
+		}
+
+		var ok bool
+		_ = success.DecodeIn(res.Result, &ok)
+
+		if ok {
+			return
+		}
 	}
 
-	var ok bool
-	_ = success.DecodeIn(res.Result, &ok)
-
-	if ok {
-		return
-	}
 }
 
 func (r *rService) Wait() {
@@ -64,6 +74,15 @@ func (r *rService) Wait() {
 }
 
 func (r *rService) handleMsg(msg *logic.Call, wf logic.ResultFunc) {
+
+	if r.isLocalRegister && msg.Service==core.ServiceName && msg.Fun=="ServiceInfo"{
+		res, err := core.C.Invoke("", "", "ServiceInfo", msg.Param)
+		wf.Result(&logic.CallResult{
+			Result: res,
+			Err:    err,
+		})
+	}
+
 	fun, err := r.store.get(msg.Service, msg.Fun)
 	if err != nil {
 		wf.Result(&logic.CallResult{

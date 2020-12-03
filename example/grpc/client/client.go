@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/MashiroC/begonia/example/grpc/echo"
-	"google.golang.org/grpc"
+	grpc "google.golang.org/grpc"
 	"sync"
 	"time"
 )

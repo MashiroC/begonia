@@ -42,7 +42,7 @@ func main() {
 	count = 0
 	flag = false
 
-	s := begonia.NewService(mode, option.CenterAddr(":12306"))
+	s := begonia.NewService(mode, option.P2P(), option.CenterAddr(":12306"))
 
 	echoService := &EchoService{}
 	testService := TestService(0)

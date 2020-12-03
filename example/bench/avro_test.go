@@ -412,25 +412,17 @@ func BenchmarkLog2(b *testing.B) {
 }
 
 func TestName(t *testing.T) {
-	str := `8170
-8212
-8000
-8205
-8039
-8336
-8109
-7973
-8038
-8122
-8119
-7989
-8073
-8212
-7731
-8158
-8060
-7983
-8086`
+	str := `43203
+43856
+43617
+42908
+43569
+43542
+43397
+42912
+42093
+43710
+42825`
 res:=strings.Split(str,"\n")
 num:=0
 for i:=0;i<len(res);i++{
@@ -441,8 +433,11 @@ for i:=0;i<len(res);i++{
 	num+=tmp
 }
 fmt.Println(num/len(res))
-// 8090 21712
-// 8085|8221 22007
+
+// old center 8090 21712
+// new center 8221 22007
+// p2p        9891 31290
+// grpc            43239
 }
 
 func TestAB(t *testing.T) {

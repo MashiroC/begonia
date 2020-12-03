@@ -55,11 +55,12 @@ func (d *setDispatch) Send(f frame.Frame) (err error) {
 
 func (d *setDispatch) HandleFrame(connID string, f frame.Frame) {
 
-	redirectConnID, ok := d.Proxy.Check(connID, f)
-
-	if ok {
-		d.Proxy.Action(connID, redirectConnID, f)
-		return
+	if d.Proxy != nil {
+		redirectConnID, ok := d.Proxy.Check(connID, f)
+		if ok {
+			d.Proxy.Action(connID, redirectConnID, f)
+			return
+		}
 	}
 
 	d.LgHandleFrame(connID, f)
