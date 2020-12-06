@@ -1,9 +1,9 @@
 package frame
 
 import (
-	"github.com/MashiroC/begonia/tool/qconv"
 	"bytes"
 	"errors"
+	"github.com/MashiroC/begonia/tool/qconv"
 )
 
 // frame_request.go something

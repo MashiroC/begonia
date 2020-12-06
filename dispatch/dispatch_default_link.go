@@ -146,7 +146,7 @@ func (d *linkDispatch) work(c conn.Conn) {
 			//	connID: id,
 			//	f:      f,
 			//}
-			go d.LgHandleFrame(id,f)
+			go d.LgHandleFrame(id, f)
 
 		} else {
 			// TODO:现在没有除了普通请求之外的ctrl code 支持

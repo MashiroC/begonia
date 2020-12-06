@@ -11,8 +11,6 @@ import (
 
 // logic_service.go something
 
-
-
 // rClient 客户端的github.com/MashiroC/begonia实现
 type rClient struct {
 	lg *logic.Client

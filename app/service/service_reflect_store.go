@@ -7,7 +7,7 @@ import (
 	"sync"
 )
 
-// service_store.go 存放远程函数的数据结构
+// service_reflect_store.go 存放远程函数的数据结构
 
 // newServiceStore 创建一个新的实例
 func newServiceStore() *serviceStore {

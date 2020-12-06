@@ -1,0 +1,22 @@
+{
+	"namespace": "begonia.entry",
+	"type": "record",
+	"name": "TestReq1",
+	"fields": [{
+			"name": "reqId",
+			"type": "string"
+		},
+		{
+			"name": "service",
+			"type": "string"
+		},
+		{
+			"name": "fun",
+			"type": "string"
+		},
+		{
+			"name": "params",
+			"type": "bytes"
+		}
+	]
+}

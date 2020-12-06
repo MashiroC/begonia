@@ -28,7 +28,7 @@ func NewClient(dp dispatch.Dispatcher) *Client {
 	return c
 }
 
-func (c *Client) DpHandler(connID string,f frame.Frame) {
+func (c *Client) DpHandler(connID string, f frame.Frame) {
 
 	if resp, ok := f.(*frame.Response); ok {
 		c.HandleResponse(resp)

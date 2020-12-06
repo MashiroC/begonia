@@ -9,15 +9,15 @@ import (
 type parseMode int
 
 const (
-	invalid parseMode = iota
+	_invalid parseMode = iota
 	modeNormal
 	modeSlice
 )
 
 // avro_schema.go something
 
-// InSchema 根据反射类型 获得schema
-func InSchema(m reflect.Method) string {
+// inReflectSchema 根据反射类型 获得schema
+func inReflectSchema(m reflect.Method) string {
 	namespace := "begonia.func." + m.Name
 	name := "In"
 
@@ -33,8 +33,8 @@ func InSchema(m reflect.Method) string {
 	return res
 }
 
-// OutSchema 根据反射 获得出参schema
-func OutSchema(m reflect.Method) string {
+// outReflectSchema 根据反射 获得出参schema
+func outReflectSchema(m reflect.Method) string {
 	namespace := "begonia.func." + m.Name
 	name := "Out"
 

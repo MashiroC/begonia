@@ -5,6 +5,8 @@
 package bench
 
 import (
+	"bytes"
+	"github.com/actgardner/gogen-avro/v7/soe"
 	"github.com/hamba/avro"
 	"github.com/linkedin/goavro/v2"
 )
@@ -41,7 +43,15 @@ var (
 		Params:  []byte{1, 2, 3},
 	}
 
+	reqAst = TestReq{
+		ReqId:   "test",
+		Service: "logService",
+		Fun:     "ServiceInfoCall",
+		Params:  []byte{1, 2, 3},
+	}
+
 	reqBin = []byte{8, 116, 101, 115, 116, 22, 67, 111, 114, 101, 83, 101, 114, 118, 105, 99, 101, 16, 83, 105, 103, 110, 73, 110, 102, 111, 6, 1, 2, 3}
+	reqBi1 = []byte{8, 116, 101, 115, 116, 20, 108, 111, 103, 83, 101, 114, 118, 105, 99, 101, 30, 83, 101, 114, 118, 105, 99, 101, 73, 110, 102, 111, 67, 97, 108, 108, 6, 1, 2, 3}
 )
 
 func init() {
@@ -85,7 +95,6 @@ func linkedinEncode() {
 	//}
 	//fmt.Println(res)
 	ReqCodec.BinaryFromNative(nil, req)
-
 }
 
 func linkedinDecode() {
@@ -129,18 +138,102 @@ func hambaEncode() {
 	*/
 
 	//var reqIn interface{}= reqNative
+
 	avro.Marshal(ReqSchema, req)
-}
-
-func hambaDecode() {
-	//var res TestReq
-	var res map[string]interface{}
-	res = make(map[string]interface{})
-	avro.Unmarshal(ReqSchema, reqBin, res)
-
-	//err := avro.Unmarshal(ReqSchema, reqBin, &res)
+	//b, err := avro.Marshal(ReqSchema, reqNative)
 	//if err != nil {
 	//	panic(err)
 	//}
+	//fmt.Println(b)
+}
+
+func hambaDecode() {
+	var res TestReq
+	//var res map[string]interface{}
+	//res = make(map[string]interface{})
+	//avro.Unmarshal(ReqSchema, reqBin, res)
+
+	err := avro.Unmarshal(ReqSchema, reqBin, &res)
+	if err != nil {
+		panic(err)
+	}
+	//fmt.Println(res)
+}
+
+func AstEncode() {
+	buf := bytes.NewBuffer(make([]byte, 0, 10))
+	err := reqAst.Serialize(buf)
+	if err != nil {
+		panic(err)
+	}
+	//res := buf.Bytes()
+	buf.Bytes()
+	//tmp := []byte("{")
+	//for i := 0; i < len(res); i++ {
+	//	tmp = append(tmp, []byte(qconv.I2S(int(res[i])))...)
+	//	tmp = append(tmp, byte(','))
+	//}
+	//tmp = tmp[:len(tmp)-1]
+	//tmp = append(tmp, byte('}'))
+	//fmt.Println(len(res))
+	//fmt.Println(string(tmp))
+
+}
+
+func AstDecode() {
+	buf := bytes.NewBuffer(reqBi1)
+	//res, err := DeserializeTestReq(buf)
+	//fmt.Println(res, err)
+	//res, err = DeserializeTestReq(buf)
+	//fmt.Println(res,err)
+	soe.ReadHeader(buf)
+	DeserializeTestReq(buf)
+	//_, err := DeserializeTestReq(buf)
+	//if err != nil {
+	//	panic(err)
+	//}
+	//fmt.Println(res)
+}
+
+func hamba() {
+	req := TestReq{
+		ReqId:   "test",
+		Service: "logService",
+		Fun:     "ServiceInfoCall",
+		Params:  []byte{1, 2, 3},
+	}
+	b, err := avro.Marshal(ReqSchema, req)
+	if err != nil {
+		panic(err)
+	}
+	//fmt.Println(b)
+
+	var req2 TestReq
+	err = avro.Unmarshal(ReqSchema, b, &req2)
+	if err != nil {
+		panic(err)
+	}
+	//fmt.Println(req2)
+}
+
+func ast() {
+	req := TestReq{
+		ReqId:   "test",
+		Service: "logService",
+		Fun:     "ServiceInfoCall",
+		Params:  []byte{1, 2, 3},
+	}
+	buf := &bytes.Buffer{}
+	err := req.Serialize(buf)
+	if err != nil {
+		panic(err)
+	}
+	//fmt.Println(buf.Bytes())
+	//res, err := DeserializeTestReq(buf)
+	//if err != nil {
+	//	panic(err)
+	//}
+	DeserializeTestReq(buf)
+
 	//fmt.Println(res)
 }

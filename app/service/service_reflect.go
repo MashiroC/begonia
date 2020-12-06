@@ -25,7 +25,6 @@ type rService struct {
 
 func (r *rService) Register(name string, service interface{}) {
 
-	// TODO:注册后 把函数注册到本地
 	fs, ms, reSharps := coding.Parse("avro", service)
 
 	for i, f := range fs {
@@ -75,7 +74,7 @@ func (r *rService) Wait() {
 
 func (r *rService) handleMsg(msg *logic.Call, wf logic.ResultFunc) {
 
-	if r.isLocalRegister && msg.Service==core.ServiceName && msg.Fun=="ServiceInfo"{
+	if r.isLocalRegister && msg.Service == core.ServiceName && msg.Fun == "ServiceInfo" {
 		res, err := core.C.Invoke("", "", "ServiceInfo", msg.Param)
 		wf.Result(&logic.CallResult{
 			Result: res,

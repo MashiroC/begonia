@@ -3,7 +3,7 @@ package frame
 
 const (
 	// frame中payload部分，string字段的分隔符
-	breakByte       = 0x00
+	breakByte = 0x00
 
 	// CtrlDefaultCode 默认的ctrl code
 	CtrlDefaultCode = 0

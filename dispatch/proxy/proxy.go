@@ -11,11 +11,9 @@ func NewHandler() *Handler {
 }
 
 type Handler struct {
-
 	Check func(connID string, f frame.Frame) (redirectConnID string, ok bool)
 
 	handlerChains []HandlerAction
-
 }
 
 func (c *Handler) AddAction(action HandlerAction) {

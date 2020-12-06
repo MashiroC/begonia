@@ -28,7 +28,7 @@ func BootStartByManager(optionMap map[string]interface{}) *rService {
 	if dpTyp, ok := optionMap["dpTyp"]; ok && dpTyp == "p2p" {
 		dp = dispatch.NewSetByDefaultCluster()
 		go dp.Listen(addr)
-		isLocal=true
+		isLocal = true
 	} else {
 		dp = dispatch.NewLinkedByDefaultCluster()
 		if err := dp.Link(addr); err != nil {
@@ -41,7 +41,7 @@ func BootStartByManager(optionMap map[string]interface{}) *rService {
 
 	// 创建 logic
 	var lg *logic.Service
-		lg=logic.NewService(dp,waitChans)
+	lg = logic.NewService(dp, waitChans)
 
 	//TODO: 发一个包，拉取配置
 
@@ -65,27 +65,24 @@ func BootStartByManager(optionMap map[string]interface{}) *rService {
 
 	s.lg = lg
 	s.lg.HandleRequest = s.handleMsg
-	s.isLocalRegister=isLocal
+	s.isLocalRegister = isLocal
 
 	// 创建服务存储的数据结构
 	s.store = newServiceStore()
 
-	if isLocal{
-		core.C=core.NewSubService()
-		s.Register(core.ServiceName,&Core{})
+	if isLocal {
+		core.C = core.NewSubService()
+		s.Register(core.ServiceName, &Core{})
 	}
-
 
 	return s
 }
 
-
 type Core struct {
-
 }
 
 func (c *Core) ServiceInfo(serviceName string) []byte {
-	s:=core.Call.ServiceInfo(serviceName)
+	s := core.Call.ServiceInfo(serviceName)
 	res, err := core.C.Invoke("", "", s.Fun, s.Param)
 	if err != nil {
 		panic(err)

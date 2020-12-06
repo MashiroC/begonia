@@ -13,7 +13,7 @@ const (
 	addr = ":12306"
 
 	workLimit = 50
-	nodeNums = 5
+	nodeNums  = 5
 	workNums  = 1000000
 )
 
@@ -26,7 +26,7 @@ func main() {
 	//fmt.Println(res)
 	//fmt.Println(testFunc(c, "Test", "Echo", res...))
 	//QPS(c,"Test","Echo",res...)
-	QPS(c,"Echo","SayHello","shiina")
+	QPS(c, "Echo", "SayHello", "shiina")
 	//fmt.Println(testFunc(c,"Echo","SayHello","shiina"))
 }
 
@@ -43,7 +43,7 @@ func QPS(c begonia.Client, service, funName string, param ...interface{}) {
 
 	wg1 := sync.WaitGroup{}
 
-	for i:=0;i<nodeNums;i++{
+	for i := 0; i < nodeNums; i++ {
 		wg1.Add(1)
 		go func() {
 			ch := make(chan struct{}, workLimit)
@@ -85,7 +85,7 @@ func QPS(c begonia.Client, service, funName string, param ...interface{}) {
 
 func testFunc(c begonia.Client, service, funName string, param ...interface{}) interface{} {
 	s, err := c.Service(service)
-	fmt.Println(s,err)
+	fmt.Println(s, err)
 	if err != nil {
 		panic(err)
 	}

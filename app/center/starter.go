@@ -45,7 +45,7 @@ func bootstart(optionMap map[string]interface{}) Center {
 
 	p := proxy.NewHandler()
 
-	p.Check= func(connID string, f frame.Frame) (redirectConnID string, ok bool) {
+	p.Check = func(connID string, f frame.Frame) (redirectConnID string, ok bool) {
 
 		// Response不走proxy器
 		if _, okk := f.(*frame.Response); okk {
@@ -116,7 +116,7 @@ func bootstart(optionMap map[string]interface{}) Center {
 	return &rCenter{
 		ctx:    ctx,
 		cancel: cancel,
-		lg: lg,
+		lg:     lg,
 	}
 }
 

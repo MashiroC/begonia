@@ -11,8 +11,8 @@ func CenterAddr(addr string) WriteFunc {
 	}
 }
 
-func P2P() WriteFunc{
+func P2P() WriteFunc {
 	return func(optionMap map[string]interface{}) {
-		optionMap["dpTyp"]="p2p"
+		optionMap["dpTyp"] = "p2p"
 	}
 }

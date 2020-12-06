@@ -11,22 +11,21 @@ import (
 
 const (
 	workLimit = 50
-	nodeNums = 5
+	nodeNums  = 5
 	workNums  = 1000000
 )
 
 func main() {
-	conn,err:=grpc.Dial(":12306",grpc.WithInsecure())
+	conn, err := grpc.Dial(":12306", grpc.WithInsecure())
 	defer conn.Close()
 	if err != nil {
-	 panic(err)
+		panic(err)
 	}
-	client:=echo.NewGreeterClient(conn)
-
+	client := echo.NewGreeterClient(conn)
 
 	wg1 := sync.WaitGroup{}
 
-	for i:=0;i<nodeNums;i++{
+	for i := 0; i < nodeNums; i++ {
 		wg1.Add(1)
 		go func() {
 			ch := make(chan struct{}, workLimit)
@@ -45,7 +44,7 @@ func main() {
 						wg.Done()
 						ch <- struct{}{}
 					}()
-					_,err=client.SayHello(context.Background(),&echo.HelloRequest{
+					_, err = client.SayHello(context.Background(), &echo.HelloRequest{
 						Name: "shiina",
 					})
 					if err != nil {
@@ -65,7 +64,7 @@ func main() {
 
 	res, err := client.SayHello(context.Background(), &echo.HelloRequest{Name: "shiina"})
 	if err != nil {
-	 panic(err)
+		panic(err)
 	}
 	fmt.Println(res.Message)
 }

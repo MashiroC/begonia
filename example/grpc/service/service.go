@@ -35,7 +35,7 @@ type EchoServer struct{}
 
 func (*EchoServer) SayHello(ctx context.Context, req *echo.HelloRequest) (reply *echo.HelloReply, err error) {
 	QPS()
-	return &echo.HelloReply{Message: "Hello "+req.Name},nil
+	return &echo.HelloReply{Message: "Hello " + req.Name}, nil
 }
 
 func QPS() {

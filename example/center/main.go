@@ -5,8 +5,6 @@ import (
 	"github.com/MashiroC/begonia/app/option"
 )
 
-
-
 func main() {
 
 	mode := "center"

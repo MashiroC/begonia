@@ -13,9 +13,9 @@ type Center interface {
 }
 
 type rCenter struct {
-	ctx context.Context
+	ctx    context.Context
 	cancel context.CancelFunc
-	lg *logic.Service
+	lg     *logic.Service
 }
 
 func (c *rCenter) Run() {
