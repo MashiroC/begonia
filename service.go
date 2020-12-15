@@ -21,7 +21,8 @@ func NewService(mode string, optionFunc ...option.WriteFunc) (s Service) {
 
 	switch mode {
 	case "center":
-		s = service.BootStartByManager(optionMap)
+		in := service.BootStartByManager(optionMap)
+		return in.(Service)
 		// TODO:其他的模式和模式出问题的判断
 	}
 

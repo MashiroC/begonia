@@ -50,7 +50,7 @@ func ToAvroObj(params []interface{}) interface{} {
 		//	}
 		//	out["in"+fmt.Sprintf("%d",i)]=m
 		//}else{
-		out["f"+fmt.Sprintf("%d", i+1)] = params[i]
+		out["F"+fmt.Sprintf("%d", i+1)] = params[i]
 		//}
 	}
 	return out

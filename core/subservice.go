@@ -1,6 +1,9 @@
 package core
 
-import "log"
+import (
+	"fmt"
+	"log"
+)
 
 const (
 	// ServiceName 默认的核心子服务服务名
@@ -51,6 +54,7 @@ func (s *SubService) Invoke(connID, reqID string, fun string, param []byte) (res
 		if err != nil {
 			return
 		}
+		fmt.Println(si)
 	default:
 		panic("err")
 	}

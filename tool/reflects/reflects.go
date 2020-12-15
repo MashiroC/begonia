@@ -46,7 +46,7 @@ func ToInterfaces(m map[string]interface{}) (res interface{}) {
 
 	var i int64 = 1
 	for {
-		v, ok := m["f"+strconv.FormatInt(i, 10)]
+		v, ok := m["F"+strconv.FormatInt(i, 10)]
 		if !ok {
 			break
 		}

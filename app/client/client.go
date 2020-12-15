@@ -30,8 +30,8 @@ func (r *rClient) Service(serviceName string) (s Service, err error) {
 	}
 
 	fs := core.Result.ServiceInfo(res.Result)
-
 	fmt.Println(fs)
+	fmt.Println(res)
 
 	s = r.newService(serviceName, fs)
 	return

@@ -14,8 +14,8 @@ func toAvroSchemaField(t reflect.Type) string {
 type FunInfo struct {
 	Name      string `avro:"name"`
 	Mode      string `avro:"mode"`
-	InSchema  string `avro:"inReflectSchema"`
-	OutSchema string `avro:"outReflectSchema"`
+	InSchema  string `avro:"inSchema"`
+	OutSchema string `avro:"outSchema"`
 	ParamTyp  []string
 	ResultTyp []string
 }

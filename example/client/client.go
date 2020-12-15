@@ -21,12 +21,14 @@ func main() {
 	c := begonia.NewClient(mode, option.CenterAddr(addr))
 	//TestQPS(c)
 
+	res := testFunc(c, "Echo", "SayHello", "shiina")
+	fmt.Println(res)
 	//in := testFunc(c, "Test", "Echo2")
 	//res := in.([]interface{})
 	//fmt.Println(res)
 	//fmt.Println(testFunc(c, "Test", "Echo", res...))
 	//QPS(c,"Test","Echo",res...)
-	QPS(c, "Echo", "SayHello", "shiina")
+	//QPS(c, "Echo", "SayHello", "shiina")
 	//fmt.Println(testFunc(c,"Echo","SayHello","shiina"))
 }
 
@@ -85,7 +87,6 @@ func QPS(c begonia.Client, service, funName string, param ...interface{}) {
 
 func testFunc(c begonia.Client, service, funName string, param ...interface{}) interface{} {
 	s, err := c.Service(service)
-	fmt.Println(s, err)
 	if err != nil {
 		panic(err)
 	}

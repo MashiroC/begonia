@@ -11,7 +11,7 @@ import (
 // starter.go something
 
 // BootStartByManager 根据manager cluster模式启动
-func BootStartByManager(optionMap map[string]interface{}) *rService {
+func BootStartByManager(optionMap map[string]interface{}) interface{} {
 
 	fmt.Println("  ____                              _        \n |  _ \\                            (_)       \n | |_) |  ___   __ _   ___   _ __   _   __ _ \n |  _ <  / _ \\ / _` | / _ \\ | '_ \\ | | / _` |\n | |_) ||  __/| (_| || (_) || | | || || (_| |\n |____/  \\___| \\__, | \\___/ |_| |_||_| \\__,_|\n                __/ |                        \n               |___/                         ")
 
@@ -59,7 +59,7 @@ func BootStartByManager(optionMap map[string]interface{}) *rService {
 	// 修改配置之前的一系列调用全部都是按默认配置来的
 
 	// 创建实例
-	s := &rService{}
+	s := &astService{}
 	s.ctx = ctx
 	s.cancel = cancel
 
@@ -68,12 +68,12 @@ func BootStartByManager(optionMap map[string]interface{}) *rService {
 	s.isLocalRegister = isLocal
 
 	// 创建服务存储的数据结构
-	s.store = newServiceStore()
+	s.store = newAstServiceStore()
 
-	if isLocal {
-		core.C = core.NewSubService()
-		s.Register(core.ServiceName, &Core{})
-	}
+	//if isLocal {
+	//	core.C = core.NewSubService()
+	//	s.Register(core.ServiceName, &Core{})
+	//}
 
 	return s
 }

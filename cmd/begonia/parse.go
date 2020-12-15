@@ -1,18 +1,10 @@
-package demo
+package main
 
 import (
 	"go/ast"
 	"reflect"
 	"strconv"
 	"strings"
-)
-
-type parseMode int
-
-const (
-	_invalid parseMode = iota
-	modeNormal
-	modeSlice
 )
 
 type AstParam struct {
@@ -29,17 +21,18 @@ func MakeSchema(funcName, objName string, fl *ast.FieldList) (schema string, typ
 		f := fl.List
 		fields = make([]string, 0, len(f))
 		typs = make([]string, 0, len(f))
-
 		count := 1
 
 		for i := 0; i < len(f); i++ {
 			if len(f[i].Names) == 0 {
 				fields = append(fields, fieldSchema("F"+strconv.FormatInt(int64(count), 10), f[i]))
+				typs = append(typs, getTyp(f[i].Type))
 			} else {
 				for range f[i].Names {
 					fields = append(fields, fieldSchema("F"+strconv.FormatInt(int64(count), 10), f[i]))
 					typs = append(typs, getTyp(f[i].Type))
 					count++
+					//fmt.Println(typs)
 				}
 			}
 
@@ -84,7 +77,7 @@ func fieldSchema(name string, f *ast.Field) (schema string) {
 	//} else {
 	//	name = f.Names[0].Name
 	//}
-	fType, isErr := fieldKind(name, f.Type)
+	fType, isErr := fieldKind(f.Type)
 	if isErr {
 		name = "err"
 	}
@@ -93,14 +86,14 @@ func fieldSchema(name string, f *ast.Field) (schema string) {
 	return
 }
 
-func fieldKind(name string, expr ast.Expr) (fType string, isErr bool) {
+func fieldKind(expr ast.Expr) (fType string, isErr bool) {
 
 	switch in := expr.(type) {
 	case *ast.StarExpr:
 		panic("not support pointer")
 	case *ast.ArrayType:
 		// slice
-		childKind, _ := fieldKind("", in.Elt)
+		childKind, _ := fieldKind(in.Elt)
 		if childKind == "byte" || childKind == "uint8" {
 			fType = `"bytes"`
 		} else {
@@ -112,11 +105,11 @@ func fieldKind(name string, expr ast.Expr) (fType string, isErr bool) {
 
 	case *ast.MapType:
 		// map
-		k, _ := fieldKind("", in.Key)
+		k, _ := fieldKind(in.Key)
 		if k != `"string"` {
 			panic("map key must string but " + k)
 		}
-		v, _ := fieldKind("", in.Value)
+		v, _ := fieldKind(in.Value)
 		fType = `{"type":"map","values":` + v + `}`
 	case *ast.Ident:
 		// 其他类型
