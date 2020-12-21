@@ -38,6 +38,7 @@ func QPS() {
 	}
 }
 
+//go:generate begonia -r -g ../
 func main() {
 	count = 0
 	flag = false
@@ -48,7 +49,6 @@ func main() {
 	testService := TestService(0)
 
 	s.Register("Echo", echoService)
-
 	s.Register("Test", &testService)
 
 	s.Wait()
