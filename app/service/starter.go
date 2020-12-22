@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/MashiroC/begonia/dispatch"
 	"github.com/MashiroC/begonia/logic"
+	"time"
 )
 
 // starter.go something
@@ -16,17 +17,13 @@ func BootStartByManager(optionMap map[string]interface{}) *rService {
 
 	ctx, cancel := context.WithCancel(context.Background())
 
-	// 读配置
-	var addr string
-	if addrIn, ok := optionMap["managerAddr"]; ok {
-		addr = addrIn.(string)
-	}
+	optionMap["pingpongTime"] = 10 * time.Second
 
 	// 创建 dispatch
 	var dp dispatch.Dispatcher
 	dp = dispatch.NewLinkedByDefaultCluster()
 
-	if err := dp.Link(addr); err != nil {
+	if err := dp.Link(optionMap); err != nil {
 		panic(err)
 	}
 

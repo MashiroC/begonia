@@ -3,10 +3,12 @@ package frame
 
 const (
 	// frame中payload部分，string字段的分隔符
-	breakByte       = 0x00
+	breakByte = 0x00
 
-	// CtrlDefaultCode 默认的ctrl code
-	CtrlDefaultCode = 0
+	// BasicCtrlCode 发送信息的ctrl code
+	BasicCtrlCode = 0
+	// PingPongCtrlCode ping-pong的ctrl code
+	PingPongCtrlCode = 7
 
 	// ProtocolVersion 默认的版本
 	ProtocolVersion = 0
@@ -37,16 +39,16 @@ func ParseOpcode(opcode int) (typCode, ctrlCode int) {
 }
 
 // makeOpcode 使用默认字段构建opcode
-func makeOpcode(typCode int) int {
-	dispatchCode := CtrlDefaultCode // 0 ~ 7
+func makeOpcode(typCode int, ctrlCode int) int {
+	dispatchCode := ctrlCode // 0 ~ 7
 
 	version := ProtocolVersion // 0 ~ 15
 
 	return ((typCode<<3)|dispatchCode)<<4 | version
 }
 
-// UnMarshal 根据typCode和序列化的数据，反序列化为frame
-func UnMarshal(typCode int, data []byte) (f Frame, err error) {
+// UnMarshalBasic 根据typCode和序列化的数据，反序列化为frame
+func UnMarshalBasic(typCode int, data []byte) (f Frame, err error) {
 	switch typCode {
 	case requestTypCode:
 		f, err = unMarshalRequest(data)
@@ -54,6 +56,15 @@ func UnMarshal(typCode int, data []byte) (f Frame, err error) {
 		f, err = unMarshalResponse(data)
 	default:
 		panic(typCode)
+	}
+	return
+}
+func UnMarshalPingPong(typCode int, data []byte) (f Frame, err error) {
+	switch typCode {
+	case pingTypCode:
+		f, err = unMarshalPing(data)
+	case pongTypCode:
+		f, err = unMarshalPong(data)
 	}
 	return
 }

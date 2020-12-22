@@ -3,6 +3,7 @@ package dispatch
 
 import (
 	"github.com/MashiroC/begonia/dispatch/frame"
+	"sync"
 )
 
 /*
@@ -18,7 +19,7 @@ type Dispatcher interface {
 	// Link 连接到某个服务或中心
 	// 会直接连接到指定的地址，[error]是用来返回连接时候的错误值的。
 	// 连接断开不会在这里返回错误，而是提供一个hook，通过hook "close" 来捕获断开连接
-	Link(addr string) error
+	Link(config map[string]interface{}) error
 
 	// ReLink 重新连接
 	// 需要先调用 Link 之后才能调用ReLink，相当于是重新调用了一次Link，返回这次重连是否成功
@@ -48,4 +49,22 @@ type Dispatcher interface {
 	// 目前可以hook的：
 	// - close
 	Hook(typ string, hookFunc interface{})
+}
+
+type Machine struct {
+	sync.Mutex
+	Info map[string]string
+}
+
+func (m *Machine) Get(key string) (value string, has bool) {
+	m.Lock()
+	defer m.Unlock()
+	value, has = m.Info[key]
+	return
+}
+
+func (m *Machine) StoreMachine(info map[string]string) {
+	m.Lock()
+	defer m.Unlock()
+	m.Info = info
 }

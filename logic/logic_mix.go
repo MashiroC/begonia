@@ -75,7 +75,7 @@ func (m *mix) RecvCall() (call *Call, wf ResultFunc) {
 					if result == Redirect {
 						res = f
 					} else {
-							res = frame.NewResponse(f.ReqID, result.Result, result.Err)
+						res = frame.NewResponse(f.ReqID, result.Result, result.Err)
 					}
 
 					if toConnID != nil {

@@ -58,7 +58,7 @@ type EchoService struct {
 }
 
 func (h *EchoService) SayHello(name string) string {
-	QPS()
+	//QPS()
 	//fmt.Println("sayHello")
 	return "Hello 😈" + name
 }

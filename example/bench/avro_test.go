@@ -226,7 +226,7 @@ func TestSelect(t *testing.T) {
 
 func TestResp(t *testing.T) {
 	typCode := 1
-	dispatchCode := frame.CtrlDefaultCode // 0 ~ 7
+	dispatchCode := frame.BasicCtrlCode // 0 ~ 7
 
 	version := frame.ProtocolVersion // 0 ~ 15
 
@@ -360,12 +360,12 @@ func TestInt64(t *testing.T) {
 				{"name":"Test","type":"int"}
 			]
 		}`
-	schema:=avro.MustParse(rawSchema)
-	obj:= struct {
+	schema := avro.MustParse(rawSchema)
+	obj := struct {
 		Test uint
 	}{Test: 123456}
 
-	res,err:=avro.Marshal(schema,obj)
+	res, err := avro.Marshal(schema, obj)
 	if err != nil {
 		panic(err)
 	}
@@ -373,7 +373,7 @@ func TestInt64(t *testing.T) {
 }
 
 func TestBErr(t *testing.T) {
-	berr.New("error system","test","you are in a black hole")
+	berr.New("error system", "test", "you are in a black hole")
 
 	//berr.NewAuto("auto","you are in a black hole")
 }
@@ -392,8 +392,8 @@ func TestBErr(t *testing.T) {
 //}
 
 func BenchmarkLog1(b *testing.B) {
-	log.SetFlags(log.Ldate|log.Llongfile)
-	tmp:=bytes.NewBuffer([]byte{})
+	log.SetFlags(log.Ldate | log.Llongfile)
+	tmp := bytes.NewBuffer([]byte{})
 	log.SetOutput(tmp)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -403,7 +403,7 @@ func BenchmarkLog1(b *testing.B) {
 
 func BenchmarkLog2(b *testing.B) {
 	log.SetFlags(log.Ldate)
-	tmp:=bytes.NewBuffer([]byte{})
+	tmp := bytes.NewBuffer([]byte{})
 	log.SetOutput(tmp)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -428,15 +428,15 @@ func TestName(t *testing.T) {
 8176
 8178
 7997`
-res:=strings.Split(str,"\n")
-num:=0
-for i:=0;i<len(res);i++{
-	tmp,err:=strconv.Atoi(res[i])
-	if err != nil {
-		panic(err)
+	res := strings.Split(str, "\n")
+	num := 0
+	for i := 0; i < len(res); i++ {
+		tmp, err := strconv.Atoi(res[i])
+		if err != nil {
+			panic(err)
+		}
+		num += tmp
 	}
-	num+=tmp
-}
-fmt.Println(num/len(res))
-// 8090 21712
+	fmt.Println(num / len(res))
+	// 8090 21712
 }

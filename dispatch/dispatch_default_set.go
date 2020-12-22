@@ -8,6 +8,7 @@ import (
 	"log"
 	"reflect"
 	"sync"
+	"time"
 )
 
 // dispatch_default.go something
@@ -29,6 +30,7 @@ func NewSetByDefaultCluster() Dispatcher {
 }
 
 type setDispatch struct {
+	Machine
 
 	// set模式相关变量
 	connSet  map[string]conn.Conn // 保存连接的map
@@ -55,7 +57,7 @@ func (d *setDispatch) Hook(name string, hookFunc interface{}) {
 }
 
 // Link 建立连接，center cluster模式下，会开一条和center的tcp连接
-func (d *setDispatch) Link(addr string) (err error) {
+func (d *setDispatch) Link(config map[string]interface{}) (err error) {
 	panic(berr.New("dispatch", "link", "in set mode, you can't use Link()"))
 }
 
@@ -124,6 +126,10 @@ func (d *setDispatch) work(c conn.Conn) {
 	d.connSet[id] = c
 	d.connLock.Unlock()
 
+	timer := time.NewTimer(1 * time.Minute)
+	var pingPongTime time.Duration
+	go receivePong(c, timer)
+
 	for {
 
 		opcode, data, err := c.Recv()
@@ -138,10 +144,9 @@ func (d *setDispatch) work(c conn.Conn) {
 
 		// 解析opcode
 		typ, ctrl := frame.ParseOpcode(int(opcode))
-
-		if ctrl == frame.CtrlDefaultCode {
-
-			f, err := frame.UnMarshal(typ, data)
+		switch ctrl {
+		case frame.BasicCtrlCode:
+			f, err := frame.UnMarshalBasic(typ, data)
 			if err != nil {
 				panic(err)
 			}
@@ -150,11 +155,25 @@ func (d *setDispatch) work(c conn.Conn) {
 				connID: id,
 				f:      f,
 			}
-
-		} else {
+		case frame.PingPongCtrlCode:
+			f, err := frame.UnMarshalPingPong(typ, data)
+			if err != nil {
+				panic(err)
+			}
+			switch p := f.(type) {
+			case *frame.Ping:
+				pingPongTime = p.PingPongTime
+				timer.Reset(pingPongTime + 5*time.Second)
+				go sendPing(c, pingPongTime)
+			case *frame.Pong:
+				timer.Reset(pingPongTime + 5*time.Second)
+				d.StoreMachine(p.Machine)
+			}
+		default:
 			// TODO:现在没有除了普通请求之外的ctrl code 支持
 			panic(berr.NewF("dispatch", "recv", "ctrl code [%s] not support", ctrl))
 		}
+
 	}
 
 }
@@ -163,4 +182,21 @@ func (d *setDispatch) Close() {
 	for _, v := range d.connSet {
 		v.Close()
 	}
+}
+
+func sendPing(c conn.Conn, d time.Duration) {
+	ticker := time.NewTicker(d)
+	ping := frame.NewPing(0)
+	for {
+		<-ticker.C
+		err := c.Write(byte(ping.Opcode()), ping.Marshal())
+		if err != nil {
+			log.Println("sendPing err", err)
+			return
+		}
+	}
+}
+func receivePong(c conn.Conn, timer *time.Timer) {
+	<-timer.C
+	c.Close()
 }

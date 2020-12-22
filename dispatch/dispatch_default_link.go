@@ -7,14 +7,26 @@ import (
 	"github.com/MashiroC/begonia/tool/ids"
 	"log"
 	"reflect"
+	"runtime"
+	"strconv"
+	"time"
 )
 
 // dispatch_default.go something
+
+type GetMachineFunc func(map[string]string) error
 
 // NewByDefaultCluster 在default cluster模式下创建一个dispatch
 func NewLinkedByDefaultCluster() Dispatcher {
 
 	d := &linkDispatch{}
+
+	var f []GetMachineFunc
+	f = append(f, func(m map[string]string) error {
+		m["cpu"] = strconv.Itoa(runtime.GOMAXPROCS(0))
+		return nil
+	})
+	d.MachineInfo = f
 
 	d.msgCh = make(chan recvMsg, 10)
 
@@ -27,8 +39,10 @@ func NewLinkedByDefaultCluster() Dispatcher {
 }
 
 type linkDispatch struct {
+	MachineInfo []GetMachineFunc
 
 	// link模式相关变量
+	config     map[string]interface{}
 	linkAddr   string    // 单连接的地址
 	linkedConn conn.Conn // 连接
 	linkID     string    // 连接的id
@@ -54,7 +68,23 @@ func (d *linkDispatch) Hook(name string, hookFunc interface{}) {
 }
 
 // Link 建立连接，center cluster模式下，会开一条和center的tcp连接
-func (d *linkDispatch) Link(addr string) (err error) {
+func (d *linkDispatch) Link(config map[string]interface{}) (err error) {
+
+	var f []GetMachineFunc
+	f = append(f, func(m map[string]string) error {
+		m["cpu"] = strconv.Itoa(runtime.GOMAXPROCS(0))
+		return nil
+	})
+	d.MachineInfo = f
+
+	var addr string
+	if addrIn, ok := config["managerAddr"]; ok {
+		addr = addrIn.(string)
+	}
+	var pingpongtime time.Duration
+	if pptime, ok := config["pingpongTime"]; ok {
+		pingpongtime = pptime.(time.Duration)
+	}
 
 	d.linkAddr = addr
 
@@ -63,15 +93,18 @@ func (d *linkDispatch) Link(addr string) (err error) {
 		return berr.Warp("dispatch", "link", err)
 	}
 
+	ping := frame.NewPing(pingpongtime)
+	c.Write(byte(ping.Opcode()), ping.Marshal())
+
 	d.linkedConn = c
 
-	go d.work(c)
+	go d.work(c, pingpongtime)
 
 	return
 }
 
 func (d *linkDispatch) ReLink() bool {
-	err := d.Link(d.linkAddr)
+	err := d.Link(d.config)
 	return err == nil
 }
 
@@ -104,12 +137,15 @@ func (d *linkDispatch) Listen(addr string) {
 }
 
 // work 获得一个新的连接之后持续监听连接，然后把消息发送到msgCh里
-func (d *linkDispatch) work(c conn.Conn) {
+func (d *linkDispatch) work(c conn.Conn, pingPongTime time.Duration) {
 
 	id := ids.New()
 
 	d.linkID = id
 	log.Printf("link [%s] success\n", id)
+
+	timer := time.NewTimer(2 * pingPongTime)
+	go isTimeOut(timer, d)
 
 	for {
 
@@ -123,9 +159,9 @@ func (d *linkDispatch) work(c conn.Conn) {
 		// 解析opcode
 		typ, ctrl := frame.ParseOpcode(int(opcode))
 
-		if ctrl == frame.CtrlDefaultCode {
-
-			f, err := frame.UnMarshal(typ, data)
+		switch ctrl {
+		case frame.BasicCtrlCode:
+			f, err := frame.UnMarshalBasic(typ, data)
 			if err != nil {
 				panic(err)
 			}
@@ -134,9 +170,17 @@ func (d *linkDispatch) work(c conn.Conn) {
 				connID: id,
 				f:      f,
 			}
+		case frame.PingPongCtrlCode:
+			timer.Reset(2 * pingPongTime)
+			info, err := getMachineInfo(d)
+			pong := frame.NewPong(info, err)
 
-		} else {
-			// TODO:现在没有除了普通请求之外的ctrl code 支持
+			err = d.Send(pong)
+
+			if err != nil {
+				log.Println("sendPong err", err)
+			}
+		default:
 			panic(berr.NewF("dispatch", "recv", "ctrl code [%s] not support", ctrl))
 		}
 	}
@@ -145,4 +189,22 @@ func (d *linkDispatch) work(c conn.Conn) {
 
 func (d *linkDispatch) Close() {
 	d.linkedConn.Close()
+}
+
+func getMachineInfo(d *linkDispatch) (map[string]string, error) {
+	info := make(map[string]string)
+	var err error
+	for _, fun := range d.MachineInfo {
+		if err = fun(info); err != nil {
+			break
+		}
+	}
+	return info, err
+}
+func isTimeOut(timer *time.Timer, d *linkDispatch) {
+	<-timer.C
+	d.Close()
+	//d.closeHookFunc(d.linkID, errors.New("not receive ping"))
+	//fmt.Println("not receive ping")
+	//d.ReLink()
 }
