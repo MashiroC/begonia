@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"github.com/MashiroC/begonia"
 	"github.com/MashiroC/begonia/app/option"
@@ -31,6 +30,8 @@ func QPS() {
 				flag = false
 				count = 0
 			}()
+		} else {
+			atomic.AddInt32(&count, 1)
 		}
 		l.Unlock()
 	} else {
@@ -38,12 +39,12 @@ func QPS() {
 	}
 }
 
-//go:generate begonia -r -g ../
+//go:generate begonia -r -s ../
 func main() {
 	count = 0
 	flag = false
 
-	s := begonia.NewService(mode, option.GenCode(), option.CenterAddr(":12306"))
+	s := begonia.NewService(mode, option.Addr(":12306"))
 
 	echoService := &EchoService{}
 	testService := TestService(0)
@@ -63,9 +64,19 @@ func (h *EchoService) SayHello(name string) string {
 	return "Hello 😈" + name
 }
 
-func (h *EchoService) SayHello2(name string) (string, error) {
-	fmt.Println("sayHello2")
-	return "", errors.New("hello")
+func (h *EchoService) Add(i1, i2 int) (res int, err error) {
+	res = i1 + i2
+	return
+}
+
+func (h *EchoService) Mod(i1, i2 int) (res1 int, res2 int) {
+	res1 = i1 / i2
+	res2 = i1 % i2
+	return
+}
+
+func (h *EchoService) NULL() {
+
 }
 
 type TestStruct struct {
@@ -93,7 +104,7 @@ type TestStruct2 struct {
 
 type TestService int
 
-func (*TestService) Echo(i1 int, i2 int8, i3 int16, i4 int32, i5 int64,
+func (*TestService) Echo(i1, it int, i2 int8, i3 int16, i4 int32, i5 int64,
 	f1 float32, f2 float64, ok bool, str string,
 	s1 []int, s2 []string, s6 []byte, st TestStruct,
 	m1 map[string]string, m2 map[string]int, m3 map[string]TestStruct,

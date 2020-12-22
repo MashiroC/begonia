@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"github.com/MashiroC/begonia/app"
 	"github.com/MashiroC/begonia/core"
 	"github.com/MashiroC/begonia/dispatch"
 	"github.com/MashiroC/begonia/logic"
@@ -59,23 +60,44 @@ func BootStartByManager(optionMap map[string]interface{}) interface{} {
 	// 修改配置之前的一系列调用全部都是按默认配置来的
 
 	// 创建实例
-	s := &astService{}
-	s.ctx = ctx
-	s.cancel = cancel
+	if app.ServiceAppMode == "ast" {
+		s := &astService{}
+		s.ctx = ctx
+		s.cancel = cancel
 
-	s.lg = lg
-	s.lg.HandleRequest = s.handleMsg
-	s.isLocalRegister = isLocal
+		s.lg = lg
+		s.lg.HandleRequest = s.handleMsg
+		s.isLocalRegister = isLocal
 
-	// 创建服务存储的数据结构
-	s.store = newAstServiceStore()
+		// 创建服务存储的数据结构
+		s.store = newAstServiceStore()
 
-	//if isLocal {
-	//	core.C = core.NewSubService()
-	//	s.Register(core.ServiceName, &Core{})
-	//}
+		//if isLocal {
+		//	core.C = core.NewSubService()
+		//	s.Register(core.ServiceName, &Core{})
+		//}
 
-	return s
+		return s
+	} else {
+		s := &rService{}
+		s.ctx = ctx
+		s.cancel = cancel
+
+		s.lg = lg
+		s.lg.HandleRequest = s.handleMsg
+		s.isLocalRegister = isLocal
+
+		// 创建服务存储的数据结构
+		s.store = newServiceStore()
+
+		//if isLocal {
+		//	core.C = core.NewSubService()
+		//	s.Register(core.ServiceName, &Core{})
+		//}
+
+		return s
+	}
+
 }
 
 type Core struct {

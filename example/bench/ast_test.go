@@ -2,9 +2,7 @@ package bench
 
 import (
 	"errors"
-	"fmt"
 	"sync"
-	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -49,18 +47,6 @@ import (
 //		ast()
 //	}
 //}
-
-func TestMutex(t *testing.T) {
-	//err := Timeout(func() {
-	//	time.Sleep(time.Second*100)
-	//})
-	//if err != nil {
-	//	panic(err)
-	//}
-	var i int32
-	flag := atomic.CompareAndSwapInt32(&i, 10, 11)
-	fmt.Println(flag)
-}
 
 func BenchmarkChan(b *testing.B) {
 	//ctx,_:=context.WithTimeout(context.Background(),5*time.Second)

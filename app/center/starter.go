@@ -110,7 +110,6 @@ func bootstart(optionMap map[string]interface{}) Center {
 
 		// TODO:根据拿到的远程配置来修改配置
 		// do some thing
-		fmt.Println(m, err)
 		// 修改配置之前的一系列调用全部都是按默认配置来的
 	*/
 	return &rCenter{

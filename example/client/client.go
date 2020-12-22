@@ -9,7 +9,6 @@ import (
 )
 
 const (
-	mode = "center"
 	addr = ":12306"
 
 	workLimit = 50
@@ -18,18 +17,18 @@ const (
 )
 
 func main() {
-	c := begonia.NewClient(mode, option.CenterAddr(addr))
+	c := begonia.NewClient(option.Addr(addr))
 	//TestQPS(c)
 
-	res := testFunc(c, "Echo", "SayHello", "shiina")
-	fmt.Println(res)
+	//res := testFunc(c, "Test", "Echo2")
+	//fmt.Println(res.([]interface{})[12])
 	//in := testFunc(c, "Test", "Echo2")
 	//res := in.([]interface{})
 	//fmt.Println(res)
 	//fmt.Println(testFunc(c, "Test", "Echo", res...))
 	//QPS(c,"Test","Echo",res...)
 	//QPS(c, "Echo", "SayHello", "shiina")
-	//fmt.Println(testFunc(c,"Echo","SayHello","shiina"))
+	fmt.Println(testFunc(c,"Echo","SayHello","shiina"))
 }
 
 func QPS(c begonia.Client, service, funName string, param ...interface{}) {
@@ -39,6 +38,13 @@ func QPS(c begonia.Client, service, funName string, param ...interface{}) {
 	}
 
 	testFun, err := s.FuncSync(funName)
+	testFunAsync, err := s.FuncAsync(funName)
+	testFunAsync(func(res interface{}, err error) {
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println(res)
+	}, "kieran")
 	if err != nil {
 		panic(err)
 	}

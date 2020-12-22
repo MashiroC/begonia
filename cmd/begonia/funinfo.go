@@ -40,6 +40,7 @@ func parseObj(pkgName string, node ast.Node) (res bool) {
 		// 解析
 		if len(call.Args) == 2 {
 			var ue *ast.UnaryExpr
+
 			if tmp, ok := call.Args[1].(*ast.Ident); ok {
 				ue = tmp.Obj.Decl.(*ast.AssignStmt).Rhs[0].(*ast.UnaryExpr)
 			} else {
@@ -52,7 +53,7 @@ func parseObj(pkgName string, node ast.Node) (res bool) {
 				ident = ue.X.(*ast.Ident).Obj.Decl.(*ast.AssignStmt).Rhs[0].(*ast.CallExpr).Fun.(*ast.Ident)
 			}
 			name := pkgName + "." + ident.Name
-			names[name] = struct{}{}
+			names[name] = call.Args[0].(*ast.BasicLit).Value
 
 			return true
 		}
@@ -62,9 +63,6 @@ func parseObj(pkgName string, node ast.Node) (res bool) {
 }
 
 func parseStruct(pkgName string, node ast.Node) bool {
-	//serviceName string, fi []coding.FunInfo
-
-	//res = make(map[string][]coding.FunInfo)
 	f, ok := node.(*ast.File)
 	if !ok {
 		return false
@@ -95,24 +93,8 @@ func parseStruct(pkgName string, node ast.Node) bool {
 			}
 		}
 
-		//	if _, ok := res[recv]; !ok {
-		//		res[recv] = make([]coding.FunInfo, 0, 1)
-		//	}
-		//
-		//	inSchema, inTyps := demo.MakeSchema(fd.Name.Name, "In", fd.Type.Params)
-		//	outSchema, outTyps := demo.MakeSchema(fd.Name.Name, "Out", fd.Type.Results)
-		//	res[recv] = append(res[recv], coding.FunInfo{
-		//		Name:      fd.Name.Name,
-		//		Mode:      "avro",
-		//		InSchema:  inSchema,
-		//		OutSchema: outSchema,
-		//		ParamTyp:  inTyps,
-		//		ResultTyp: outTyps,
-		//	})
-		//	avro.MustParse(inSchema)
-		//	avro.MustParse(outSchema)
+
 	}
-	//codegen:=demo.Codegen(inSchema,outSchema)
 
 	return false
 }

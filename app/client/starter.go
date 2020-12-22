@@ -25,6 +25,8 @@ func BootStartByCenter(optionMap map[string]interface{}) *rClient {
 	var addr string
 	if addrIn, ok := optionMap["managerAddr"]; ok {
 		addr = addrIn.(string)
+	}else{
+		addr = ":12306"
 	}
 
 	var dp dispatch.Dispatcher
@@ -54,7 +56,6 @@ func BootStartByCenter(optionMap map[string]interface{}) *rClient {
 
 		// TODO:根据拿到的远程配置来修改配置
 		// do some thing
-		fmt.Println(m, err)
 		// 修改配置之前的一系列调用全部都是按默认配置来的
 	*/
 

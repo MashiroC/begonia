@@ -4,8 +4,8 @@ package option
 // WriteFunc 拿到的传入参数的map
 type WriteFunc func(optionMap map[string]interface{})
 
-// CenterAddr 中心的地址
-func CenterAddr(addr string) WriteFunc {
+// Addr 中心的地址
+func Addr(addr string) WriteFunc {
 	return func(optionMap map[string]interface{}) {
 		optionMap["managerAddr"] = addr
 	}

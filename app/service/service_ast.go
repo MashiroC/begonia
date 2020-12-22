@@ -4,7 +4,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"github.com/MashiroC/begonia/app/coding"
 	"github.com/MashiroC/begonia/core"
 	"github.com/MashiroC/begonia/logic"
@@ -53,8 +52,6 @@ func (r *astService) Register(name string, service interface{}) {
 			panic(err)
 		}
 	} else {
-		fmt.Println(fs[0].InSchema)
-		fmt.Println(fs[0].OutSchema)
 		res := r.lg.CallSync(core.Call.Register(name, fs))
 		// TODO:handler error
 		if res.Err != nil {

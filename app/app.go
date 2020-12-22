@@ -3,6 +3,13 @@ package app
 
 import "github.com/MashiroC/begonia/app/coding"
 
+var ServiceAppMode = ServiceAppModeReflect
+
+const (
+	ServiceAppModeAst = "ast"
+	ServiceAppModeReflect = "reflect"
+)
+
 // FunInfo 远程函数的一个封装
 type FunInfo struct {
 	Name     string       // 远程函数名

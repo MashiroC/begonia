@@ -15,18 +15,15 @@ type Client interface {
 }
 
 // NewClient 初始化，获得一个service对象，传入一个mode参数，以及一个option的不定参数
-func NewClient(mode string, optionFunc ...option.WriteFunc) (cli Client) {
+func NewClient(optionFunc ...option.WriteFunc) (cli Client) {
 	optionMap := defaultClientConfig()
 
 	for _, f := range optionFunc {
 		f(optionMap)
 	}
 
-	switch mode {
-	case "center":
-		cli = client.BootStartByCenter(optionMap)
-		// TODO:其他的模式和模式出问题的判断
-	}
+	// 默认直接center模式
+	cli = client.BootStartByCenter(optionMap)
 
 	return
 }

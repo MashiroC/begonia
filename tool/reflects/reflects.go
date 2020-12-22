@@ -17,7 +17,7 @@ func ToValue(m map[string]interface{}, resharp []coding.ReSharpFunc) (res []refl
 	var i = 1
 	for {
 
-		v, ok := m["f"+qconv.I2S(i)]
+		v, ok := m["F"+qconv.I2S(i)]
 		if !ok {
 			break
 		}
@@ -74,7 +74,7 @@ func FromValue(values []reflect.Value) (m map[string]interface{}) {
 	m = make(map[string]interface{})
 
 	for i, v := range values {
-		m["f"+strconv.FormatInt(int64(i+1), 10)] = v.Interface()
+		m["F"+strconv.FormatInt(int64(i+1), 10)] = v.Interface()
 	}
 
 	return

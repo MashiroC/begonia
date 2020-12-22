@@ -1,7 +1,6 @@
 package core
 
 import (
-	"fmt"
 	"log"
 )
 
@@ -54,7 +53,6 @@ func (s *SubService) Invoke(connID, reqID string, fun string, param []byte) (res
 		if err != nil {
 			return
 		}
-		fmt.Println(si)
 	default:
 		panic("err")
 	}

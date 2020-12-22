@@ -3,7 +3,6 @@ package client
 
 import (
 	"context"
-	"fmt"
 	"github.com/MashiroC/begonia/app"
 	"github.com/MashiroC/begonia/core"
 	"github.com/MashiroC/begonia/logic"
@@ -22,18 +21,22 @@ type rClient struct {
 // Service 获取一个服务
 func (r *rClient) Service(serviceName string) (s Service, err error) {
 
-	res := r.lg.CallSync(core.Call.ServiceInfo(serviceName))
+	if app.ServiceAppMode == app.ServiceAppModeAst {
+		s = newAstService(serviceName, r)
+	} else if app.ServiceAppMode == app.ServiceAppModeReflect {
+		res := r.lg.CallSync(core.Call.ServiceInfo(serviceName))
 
-	if res.Err != nil {
-		err = res.Err
-		return
+		if res.Err != nil {
+			err = res.Err
+			return
+		}
+
+		fs := core.Result.ServiceInfo(res.Result)
+
+		s = r.newService(serviceName, fs)
+	} else {
+		panic("eeeeeeeeeerror!")
 	}
-
-	fs := core.Result.ServiceInfo(res.Result)
-	fmt.Println(fs)
-	fmt.Println(res)
-
-	s = r.newService(serviceName, fs)
 	return
 }
 
@@ -44,6 +47,7 @@ func (r *rClient) newService(name string, funs []app.FunInfo) Service {
 	for i := 0; i < len(funs); i++ {
 		f[funs[i].Name] = funs[i]
 	}
+
 	return &rService{
 		name: name,
 		funs: f,

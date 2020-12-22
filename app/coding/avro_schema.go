@@ -53,7 +53,7 @@ func makeSchema(namespace, name string, typ []reflect.Type) string {
 	fields := make([]string, len(typ))
 
 	for i := 0; i < len(typ); i++ {
-		fields[i] = fieldSchema("f"+strconv.FormatInt(int64(i+1), 10), typ[i])
+		fields[i] = fieldSchema("F"+strconv.FormatInt(int64(i+1), 10), typ[i])
 	}
 
 	rawSchema := `

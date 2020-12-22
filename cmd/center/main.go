@@ -9,7 +9,7 @@ func main() {
 
 	mode := "center"
 	addr := ":12306"
-	c := center.New(mode, option.CenterAddr(addr))
+	c := center.New(mode, option.Addr(addr))
 
 	c.Run()
 }

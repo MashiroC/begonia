@@ -25,11 +25,11 @@ func MakeSchema(funcName, objName string, fl *ast.FieldList) (schema string, typ
 
 		for i := 0; i < len(f); i++ {
 			if len(f[i].Names) == 0 {
-				fields = append(fields, fieldSchema("F"+strconv.FormatInt(int64(count), 10), f[i]))
+				fields = append(fields, fieldSchema("", "F"+strconv.FormatInt(int64(count), 10), f[i]))
 				typs = append(typs, getTyp(f[i].Type))
 			} else {
-				for range f[i].Names {
-					fields = append(fields, fieldSchema("F"+strconv.FormatInt(int64(count), 10), f[i]))
+				for _, nativeName := range f[i].Names {
+					fields = append(fields, fieldSchema(nativeName.Name, "F"+strconv.FormatInt(int64(count), 10), f[i]))
 					typs = append(typs, getTyp(f[i].Type))
 					count++
 					//fmt.Println(typs)
@@ -37,6 +37,12 @@ func MakeSchema(funcName, objName string, fl *ast.FieldList) (schema string, typ
 			}
 
 		}
+	}
+
+	// 如果函数最后一个是error， avro schema里面就把它去掉
+	if fields != nil && len(fields)>0 && len(fields[len(fields)-1])>38 &&
+		fields[len(fields)-1][:38] == `{"name":"err","type":["string","null"]`{
+		fields=fields[:len(fields)-1]
 	}
 
 	schema = `
@@ -71,29 +77,32 @@ func MakeSchema(funcName, objName string, fl *ast.FieldList) (schema string, typ
 // - map的value，中只要上述类型支持的，都可以支持，不支持interface{}
 // - 结构体支持嵌套、内嵌
 // - 不支持array，请使用slice
-func fieldSchema(name string, f *ast.Field) (schema string) {
-	//if len(f.Names) == 0 {
-	//	name = "hello"
-	//} else {
-	//	name = f.Names[0].Name
-	//}
-	fType, isErr := fieldKind(f.Type)
-	if isErr {
-		name = "err"
+func fieldSchema(nativeName, fieldName string, f *ast.Field) (schema string) {
+
+	fType := fieldKind(f.Type)
+	if fType == `["string","null"]` {
+		fieldName = "err"
 	}
-	schema = `{"name":"` + name + `","type":` + fType + "}\n"
+
+	schema = `{"name":"` + fieldName + `","type":` + fType
+
+	if nativeName != "" {
+		schema += `,"alias":"` + nativeName + `"`
+	}
+
+	schema += "}\n"
 
 	return
 }
 
-func fieldKind(expr ast.Expr) (fType string, isErr bool) {
+func fieldKind(expr ast.Expr) (fType string) {
 
 	switch in := expr.(type) {
 	case *ast.StarExpr:
 		panic("not support pointer")
 	case *ast.ArrayType:
 		// slice
-		childKind, _ := fieldKind(in.Elt)
+		childKind := fieldKind(in.Elt)
 		if childKind == "byte" || childKind == "uint8" {
 			fType = `"bytes"`
 		} else {
@@ -102,14 +111,17 @@ func fieldKind(expr ast.Expr) (fType string, isErr bool) {
 				"items": ` + childKind + `
 			}`
 		}
-
+	case *ast.SelectorExpr:
+		// 其他包
+		// TODO: 支持导入其他包的结构体
+		panic("please do not use other package struct")
 	case *ast.MapType:
 		// map
-		k, _ := fieldKind(in.Key)
+		k := fieldKind(in.Key)
 		if k != `"string"` {
 			panic("map key must string but " + k)
 		}
-		v, _ := fieldKind(in.Value)
+		v := fieldKind(in.Value)
 		fType = `{"type":"map","values":` + v + `}`
 	case *ast.Ident:
 		// 其他类型
@@ -130,7 +142,7 @@ func fieldKind(expr ast.Expr) (fType string, isErr bool) {
 
 		// 不支持uint
 		if strings.HasPrefix(in.Name, "uint") || in.Name == "interface{}" {
-			isErr = true
+			panic("avro not support uint")
 			return
 		}
 
@@ -153,16 +165,15 @@ func fieldKind(expr ast.Expr) (fType string, isErr bool) {
 			f := in.Obj.Decl.(*ast.TypeSpec).Type.(*ast.StructType).Fields.List
 			fields := make([]string, len(f))
 
-			//log.Fatalln(in.Name,f.List)
 			for i := 0; i < len(f); i++ {
 				var fieldName string
 				if len(f[i].Names) == 0 {
 					// 内嵌结构体
-					fieldName = "asd"
+					fieldName = f[i].Type.(*ast.Ident).Name
 				} else {
 					fieldName = f[i].Names[0].Name
 				}
-				fields[i] = fieldSchema(fieldName, f[i])
+				fields[i] = fieldSchema("", fieldName, f[i])
 			}
 			//
 			fType = `{
@@ -174,6 +185,7 @@ func fieldKind(expr ast.Expr) (fType string, isErr bool) {
 		}
 
 	default:
+		//fmt.Println(expr.(*ast.SelectorExpr).Sel)
 		panic(reflect.TypeOf(expr))
 	}
 

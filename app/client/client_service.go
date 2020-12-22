@@ -83,7 +83,7 @@ func (r *rService) FuncAsync(name string) (rf RemoteFunAsync, err error) {
 	rf = func(callback AsyncCallback, params ...interface{}) {
 
 		// 对入参编码
-		b, err := f.InCoder.Encode(params)
+		b, err := f.InCoder.Encode(coding.ToAvroObj(params))
 		if err != nil {
 			//TODO: 当传入参数和要求类型不符时的错误返回
 			panic(err)

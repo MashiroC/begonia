@@ -16,18 +16,19 @@ import (
 
 // begonia 代码生成 脚手架
 // 以xxx文件来生成代码
-// ./begonia -g ./demo.go
-// 在根目录下查找所有注册在begonia上的服务，然后生成代码。
-// ./begonia -g .
+// ./begonia -s ./demo.go
+// 在xxx目录下查找所有注册在begonia上的服务，然后生成代码。
+// ./begonia -s ./
 
 var (
-	isGenerate bool
-	isRemove   bool
+	isGenerateService bool
+	isGenerateClient  bool
+	isRemove          bool
 )
 
 var (
 	fset  = token.NewFileSet()
-	names = make(map[string]struct{})
+	names = make(map[string]string)
 	recvs = make(map[string]Service)
 	root  string
 )
@@ -39,10 +40,14 @@ type Service struct {
 
 func init() {
 	shortHand := " (shorthand)"
-	isGenerateUsage := "generate code from begonia"
-	isRemoveUsage := "remove old begonia service gencode"
-	flag.BoolVar(&isGenerate, "generate", false, isGenerateUsage)
-	flag.BoolVar(&isGenerate, "g", false, isGenerateUsage+shortHand)
+	isGenerateServiceUsage := "generate service code from begonia"
+	isGenerateClientUsage := "generate client code from begonia"
+	isRemoveUsage := "remove old begonia generate code"
+	flag.BoolVar(&isGenerateService, "service", false, isGenerateServiceUsage)
+	flag.BoolVar(&isGenerateService, "s", false, isGenerateServiceUsage+shortHand)
+	flag.BoolVar(&isGenerateClient, "client", false, isGenerateClientUsage)
+	flag.BoolVar(&isGenerateClient, "c", false, isGenerateClientUsage+shortHand)
+
 	flag.BoolVar(&isRemove, "remove", false, isRemoveUsage)
 	flag.BoolVar(&isRemove, "r", false, isRemoveUsage+shortHand)
 	flag.Parse()
@@ -69,17 +74,24 @@ func main() {
 	if fi.IsDir() {
 		dfs(path)
 	} else {
-
+		panic("path not dir")
 	}
 
 	for k, _ := range names {
-		fmt.Print("generate service: ", k, " ...")
 		v := recvs[k]
 		fi := getFunInfo(v.FuncList)
-		if isGenerate {
-			genCode(v.File, k, fi)
+		if isGenerateService {
+			fmt.Print("generate service ", k, " code ...")
+			genServiceCode(v.File, k, fi)
+			fmt.Println("\b\b\bok!")
 		}
-		fmt.Println("\b\b\bok!")
+
+		if isGenerateClient {
+			//fmt.Print("generate service", k, "call ...")
+			genClientCode(v.File, k, fi)
+			//fmt.Println("\b\b\bok!")
+		}
+
 	}
 
 	gofmt(originPath)
@@ -120,7 +132,7 @@ func work(path string) {
 		return
 	}
 
-	if strings.HasSuffix(path, ".begonia.go") {
+	if strings.HasSuffix(path, ".begonia.go") || strings.HasSuffix(path, ".call.go") {
 		if isRemove {
 			remove(path)
 		}
