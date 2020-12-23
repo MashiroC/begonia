@@ -22,7 +22,7 @@ func add(a int) int {
 	return a + 1
 }
 
-func parseFullName(fullName string) (serviceName,dirPath string){
+func parseFullName(fullName string) (serviceName, dirPath string) {
 	serviceName = fullName[strings.LastIndex(fullName, "_")+1:]
 	dirPath = fullName[:strings.LastIndex(fullName, string(os.PathSeparator))]
 	return

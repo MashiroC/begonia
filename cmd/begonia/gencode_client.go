@@ -87,6 +87,10 @@ func getClientTmpl() *template.Template {
 				}
 			}
 
+			if typ == "out" {
+				res += "err error, "
+			}
+
 			if len(res) >= 2 {
 				res = res[:len(res)-2]
 			}
