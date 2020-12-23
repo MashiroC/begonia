@@ -28,7 +28,7 @@ func main() {
 	//fmt.Println(testFunc(c, "Test", "Echo", res...))
 	//QPS(c,"Test","Echo",res...)
 	//QPS(c, "Echo", "SayHello", "shiina")
-	fmt.Println(testFunc(c,"Echo","SayHello","shiina"))
+	fmt.Println(testFunc(c, "Echo", "SayHello", "shiina"))
 }
 
 func QPS(c begonia.Client, service, funName string, param ...interface{}) {

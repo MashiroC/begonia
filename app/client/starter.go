@@ -25,7 +25,7 @@ func BootStartByCenter(optionMap map[string]interface{}) *rClient {
 	var addr string
 	if addrIn, ok := optionMap["managerAddr"]; ok {
 		addr = addrIn.(string)
-	}else{
+	} else {
 		addr = ":12306"
 	}
 

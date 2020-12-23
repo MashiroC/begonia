@@ -52,7 +52,7 @@ func parseObj(pkgName string, node ast.Node) (res bool) {
 			} else {
 				ident = ue.X.(*ast.Ident).Obj.Decl.(*ast.AssignStmt).Rhs[0].(*ast.CallExpr).Fun.(*ast.Ident)
 			}
-			name := pkgName + "." + ident.Name
+			name := pkgName + "_" + ident.Name
 			names[name] = call.Args[0].(*ast.BasicLit).Value
 
 			return true
@@ -79,7 +79,7 @@ func parseStruct(pkgName string, node ast.Node) bool {
 			continue
 		}
 
-		recv = pkgName + "." + recv
+		recv = pkgName + "_" + recv
 
 		if re, ok := recvs[recv]; ok {
 			recvs[recv] = Service{
@@ -92,7 +92,6 @@ func parseStruct(pkgName string, node ast.Node) bool {
 				File:     f,
 			}
 		}
-
 
 	}
 

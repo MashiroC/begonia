@@ -1,6 +1,7 @@
 package begonia
 
 import (
+	"github.com/MashiroC/begonia/app"
 	"github.com/MashiroC/begonia/app/client"
 	"github.com/MashiroC/begonia/app/option"
 )
@@ -26,6 +27,12 @@ func NewClient(optionFunc ...option.WriteFunc) (cli Client) {
 	cli = client.BootStartByCenter(optionMap)
 
 	return
+}
+
+func NewClientWithAst(optionFunc ...option.WriteFunc) (cli Client) {
+	app.ServiceAppMode = app.ServiceAppModeAst
+
+	return NewClient(optionFunc...)
 }
 
 func defaultClientConfig() map[string]interface{} {

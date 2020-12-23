@@ -2,6 +2,8 @@ package main
 
 import (
 	"go/ast"
+	"io/ioutil"
+	"os"
 	"reflect"
 	"strconv"
 	"strings"
@@ -40,9 +42,9 @@ func MakeSchema(funcName, objName string, fl *ast.FieldList) (schema string, typ
 	}
 
 	// 如果函数最后一个是error， avro schema里面就把它去掉
-	if fields != nil && len(fields)>0 && len(fields[len(fields)-1])>38 &&
-		fields[len(fields)-1][:38] == `{"name":"err","type":["string","null"]`{
-		fields=fields[:len(fields)-1]
+	if fields != nil && len(fields) > 0 && len(fields[len(fields)-1]) > 38 &&
+		fields[len(fields)-1][:38] == `{"name":"err","type":["string","null"]` {
+		fields = fields[:len(fields)-1]
 	}
 
 	schema = `
@@ -161,8 +163,34 @@ func fieldKind(expr ast.Expr) (fType string) {
 			fType = `byte`
 		default:
 			// 结构体
-
+			start := fset.Position(in.Obj.Decl.(*ast.TypeSpec).Pos())
+			end := fset.Position(in.Obj.Decl.(*ast.TypeSpec).End())
+			tmpFile, err := os.Open(start.Filename)
+			if err != nil {
+				panic(err)
+			}
+			b, err := ioutil.ReadAll(tmpFile)
+			if err != nil {
+				panic(err)
+			}
+			obj := "type " + string(b[start.Offset:end.Offset])
 			f := in.Obj.Decl.(*ast.TypeSpec).Type.(*ast.StructType).Fields.List
+			key := start.Filename[:strings.LastIndex(start.Filename, string(os.PathSeparator))]
+			if v, ok := objs[key]; ok {
+				var flag bool
+				for _, s := range v {
+					if s == obj {
+						flag = true
+						break
+					}
+				}
+				if !flag {
+					objs[key] = append(v, obj)
+				}
+			} else {
+				objs[key] = []string{obj}
+			}
+
 			fields := make([]string, len(f))
 
 			for i := 0; i < len(f); i++ {

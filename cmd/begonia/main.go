@@ -30,6 +30,7 @@ var (
 	fset  = token.NewFileSet()
 	names = make(map[string]string)
 	recvs = make(map[string]Service)
+	objs  = make(map[string][]string)
 	root  string
 )
 
@@ -80,19 +81,22 @@ func main() {
 	for k, _ := range names {
 		v := recvs[k]
 		fi := getFunInfo(v.FuncList)
+		fmt.Println("generate service", k, "...")
 		if isGenerateService {
-			fmt.Print("generate service ", k, " code ...")
+			fmt.Print("service code ...")
 			genServiceCode(v.File, k, fi)
 			fmt.Println("\b\b\bok!")
 		}
 
 		if isGenerateClient {
-			//fmt.Print("generate service", k, "call ...")
-			genClientCode(v.File, k, fi)
-			//fmt.Println("\b\b\bok!")
+			fmt.Print("client call ...")
+			genClientCode(k, fi)
+			fmt.Println("\b\b\bok!")
 		}
 
 	}
+
+	genEntity(objs)
 
 	gofmt(originPath)
 }
@@ -147,7 +151,7 @@ func work(path string) {
 
 	var pkg string
 	if path != root {
-		pkg = strings.ReplaceAll(strings.Replace(path, root, "", 1)[1:], string(os.PathSeparator), ".")
+		pkg = strings.Replace(path, root, "", 1)[1:]
 	}
 	ast.Inspect(f, func(node ast.Node) (res bool) {
 		ok := parseObj(pkg, node)

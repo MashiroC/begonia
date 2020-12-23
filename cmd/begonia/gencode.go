@@ -1,6 +1,10 @@
 package main
 
-import "html/template"
+import (
+	"html/template"
+	"os"
+	"strings"
+)
 
 func raw(str string) template.HTML {
 	return template.HTML(str)
@@ -16,4 +20,10 @@ func concat(str ...string) string {
 
 func add(a int) int {
 	return a + 1
+}
+
+func parseFullName(fullName string) (serviceName,dirPath string){
+	serviceName = fullName[strings.LastIndex(fullName, "_")+1:]
+	dirPath = fullName[:strings.LastIndex(fullName, string(os.PathSeparator))]
+	return
 }

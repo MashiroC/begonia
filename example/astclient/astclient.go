@@ -1,12 +1,14 @@
 package main
 
+import "fmt"
+
 const (
 	workLimit = 50
 	nodeNums  = 5
 	workNums  = 1000000
 )
 
-func main(){
+func main() {
 	//fmt.Println(SayHello("shiina"))
 	//fmt.Println(Add(1,2))
 	//fmt.Println(Mod(5,2))
@@ -31,7 +33,11 @@ func main(){
 	//					wg.Done()
 	//					ch <- struct{}{}
 	//				}()
-					SayHello("shiina")
+	i1, i2, i3, i4, i5, f1, f2, ok, str, s1, s2, s6, st, m1, m2, m3 := Echo2()
+	fmt.Println(i1, i2, i3, i4, i5, f1, f2, ok)
+	fmt.Println(str)
+	fmt.Println(s1, s2, s6)
+	fmt.Println(st, m1, m2, m3)
 	//			}()
 	//		}
 	//

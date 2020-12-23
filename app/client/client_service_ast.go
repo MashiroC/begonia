@@ -9,7 +9,7 @@ type astService struct {
 	c    *rClient
 }
 
-func newAstService(name string,c *rClient) *astService {
+func newAstService(name string, c *rClient) *astService {
 	return &astService{
 		name: name,
 		c:    c,

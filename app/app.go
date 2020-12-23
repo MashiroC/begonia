@@ -6,7 +6,7 @@ import "github.com/MashiroC/begonia/app/coding"
 var ServiceAppMode = ServiceAppModeReflect
 
 const (
-	ServiceAppModeAst = "ast"
+	ServiceAppModeAst     = "ast"
 	ServiceAppModeReflect = "reflect"
 )
 
