@@ -1,32 +1,23 @@
 package dispatch
 
 import (
+	"github.com/MashiroC/begonia/config"
 	"github.com/MashiroC/begonia/dispatch/conn"
 	"github.com/MashiroC/begonia/dispatch/frame"
 	"github.com/MashiroC/begonia/tool/berr"
 	"github.com/MashiroC/begonia/tool/ids"
+	"github.com/MashiroC/begonia/tool/machine"
 	"log"
 	"reflect"
-	"runtime"
-	"strconv"
 	"time"
 )
 
 // dispatch_default.go something
 
-type GetMachineFunc func(map[string]string) error
-
 // NewByDefaultCluster 在default cluster模式下创建一个dispatch
 func NewLinkedByDefaultCluster() Dispatcher {
 
 	d := &linkDispatch{}
-
-	var f []GetMachineFunc
-	f = append(f, func(m map[string]string) error {
-		m["cpu"] = strconv.Itoa(runtime.GOMAXPROCS(0))
-		return nil
-	})
-	d.MachineInfo = f
 
 	d.msgCh = make(chan recvMsg, 10)
 
@@ -39,10 +30,8 @@ func NewLinkedByDefaultCluster() Dispatcher {
 }
 
 type linkDispatch struct {
-	MachineInfo []GetMachineFunc
 
 	// link模式相关变量
-	config     map[string]interface{}
 	linkAddr   string    // 单连接的地址
 	linkedConn conn.Conn // 连接
 	linkID     string    // 连接的id
@@ -68,23 +57,7 @@ func (d *linkDispatch) Hook(name string, hookFunc interface{}) {
 }
 
 // Link 建立连接，center cluster模式下，会开一条和center的tcp连接
-func (d *linkDispatch) Link(config map[string]interface{}) (err error) {
-
-	var f []GetMachineFunc
-	f = append(f, func(m map[string]string) error {
-		m["cpu"] = strconv.Itoa(runtime.GOMAXPROCS(0))
-		return nil
-	})
-	d.MachineInfo = f
-
-	var addr string
-	if addrIn, ok := config["managerAddr"]; ok {
-		addr = addrIn.(string)
-	}
-	var pingpongtime time.Duration
-	if pptime, ok := config["pingpongTime"]; ok {
-		pingpongtime = pptime.(time.Duration)
-	}
+func (d *linkDispatch) Link(addr string) (err error) {
 
 	d.linkAddr = addr
 
@@ -93,18 +66,15 @@ func (d *linkDispatch) Link(config map[string]interface{}) (err error) {
 		return berr.Warp("dispatch", "link", err)
 	}
 
-	ping := frame.NewPing(pingpongtime)
-	c.Write(byte(ping.Opcode()), ping.Marshal())
-
 	d.linkedConn = c
 
-	go d.work(c, pingpongtime)
+	go d.work(c)
 
 	return
 }
 
 func (d *linkDispatch) ReLink() bool {
-	err := d.Link(d.config)
+	err := d.Link(d.linkAddr)
 	return err == nil
 }
 
@@ -137,14 +107,15 @@ func (d *linkDispatch) Listen(addr string) {
 }
 
 // work 获得一个新的连接之后持续监听连接，然后把消息发送到msgCh里
-func (d *linkDispatch) work(c conn.Conn, pingPongTime time.Duration) {
+func (d *linkDispatch) work(c conn.Conn) {
 
 	id := ids.New()
 
 	d.linkID = id
 	log.Printf("link [%s] success\n", id)
 
-	timer := time.NewTimer(2 * pingPongTime)
+	getpingtime := config.C.Dispatch.GetPingTime
+	timer := time.NewTimer(getpingtime)
 	go isTimeOut(timer, d)
 
 	for {
@@ -171,8 +142,9 @@ func (d *linkDispatch) work(c conn.Conn, pingPongTime time.Duration) {
 				f:      f,
 			}
 		case frame.PingPongCtrlCode:
-			timer.Reset(2 * pingPongTime)
-			info, err := getMachineInfo(d)
+			timer.Stop()
+			timer.Reset(getpingtime)
+			info, err := machine.M.GetMachineInfo()
 			pong := frame.NewPong(info, err)
 
 			err = d.Send(pong)
@@ -191,20 +163,7 @@ func (d *linkDispatch) Close() {
 	d.linkedConn.Close()
 }
 
-func getMachineInfo(d *linkDispatch) (map[string]string, error) {
-	info := make(map[string]string)
-	var err error
-	for _, fun := range d.MachineInfo {
-		if err = fun(info); err != nil {
-			break
-		}
-	}
-	return info, err
-}
 func isTimeOut(timer *time.Timer, d *linkDispatch) {
 	<-timer.C
 	d.Close()
-	//d.closeHookFunc(d.linkID, errors.New("not receive ping"))
-	//fmt.Println("not receive ping")
-	//d.ReLink()
 }

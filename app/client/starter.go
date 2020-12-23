@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/MashiroC/begonia/dispatch"
 	"github.com/MashiroC/begonia/logic"
-	"time"
 )
 
 // starter.go something
@@ -23,12 +22,15 @@ func BootStartByCenter(optionMap map[string]interface{}) *rClient {
 
 	// TODO:给dispatch初始化
 
-	optionMap["pingpongTime"] = 10 * time.Second
+	var addr string
+	if addrIn, ok := optionMap["managerAddr"]; ok {
+		addr = addrIn.(string)
+	}
 
 	var dp dispatch.Dispatcher
 	dp = dispatch.NewLinkedByDefaultCluster()
 
-	if err := dp.Link(optionMap); err != nil {
+	if err := dp.Link(addr); err != nil {
 		panic(err)
 	}
 

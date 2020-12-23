@@ -1,6 +1,7 @@
 package dispatch
 
 import (
+	"github.com/MashiroC/begonia/config"
 	"github.com/MashiroC/begonia/dispatch/conn"
 	"github.com/MashiroC/begonia/dispatch/frame"
 	"github.com/MashiroC/begonia/tool/berr"
@@ -57,7 +58,7 @@ func (d *setDispatch) Hook(name string, hookFunc interface{}) {
 }
 
 // Link 建立连接，center cluster模式下，会开一条和center的tcp连接
-func (d *setDispatch) Link(config map[string]interface{}) (err error) {
+func (d *setDispatch) Link(addr string) (err error) {
 	panic(berr.New("dispatch", "link", "in set mode, you can't use Link()"))
 }
 
@@ -126,9 +127,10 @@ func (d *setDispatch) work(c conn.Conn) {
 	d.connSet[id] = c
 	d.connLock.Unlock()
 
-	timer := time.NewTimer(1 * time.Minute)
-	var pingPongTime time.Duration
+	getpongtime := config.C.Dispatch.GetPongTime
+	timer := time.NewTimer(getpongtime)
 	go receivePong(c, timer)
+	go sendPing(d, config.C.Dispatch.SendPingTime)
 
 	for {
 
@@ -162,11 +164,10 @@ func (d *setDispatch) work(c conn.Conn) {
 			}
 			switch p := f.(type) {
 			case *frame.Ping:
-				pingPongTime = p.PingPongTime
-				timer.Reset(pingPongTime + 5*time.Second)
-				go sendPing(c, pingPongTime)
+				//center暂时无ping
 			case *frame.Pong:
-				timer.Reset(pingPongTime + 5*time.Second)
+				timer.Stop()
+				timer.Reset(getpongtime)
 				d.StoreMachine(p.Machine)
 			}
 		default:
@@ -184,12 +185,12 @@ func (d *setDispatch) Close() {
 	}
 }
 
-func sendPing(c conn.Conn, d time.Duration) {
-	ticker := time.NewTicker(d)
+func sendPing(d *setDispatch, sendpingtime time.Duration) {
+	ticker := time.NewTicker(sendpingtime)
 	ping := frame.NewPing(0)
 	for {
 		<-ticker.C
-		err := c.Write(byte(ping.Opcode()), ping.Marshal())
+		err := d.Send(ping)
 		if err != nil {
 			log.Println("sendPing err", err)
 			return

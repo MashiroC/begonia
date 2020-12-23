@@ -146,7 +146,7 @@ func TestParse(t *testing.T) {
 	fmt.Println(len(res), res)
 
 	m2 := typ.Method(1)
-	rawSchema2, _ := OutSchema(m2)
+	rawSchema2 := OutSchema(m2)
 	schema2 := avro.MustParse(rawSchema2)
 	res2, err := avro.Marshal(schema2, obj)
 	if err != nil {
@@ -193,7 +193,7 @@ func TestReflectPtr(t *testing.T) {
 	m = map[string]interface{}{"Name": "asd", "Age": 123}
 
 	in := reflect.New(pTyp)
-	people:=in.Interface()
+	people := in.Interface()
 	err := mapstructure.Decode(m, &people)
 	if err != nil {
 		panic(err)

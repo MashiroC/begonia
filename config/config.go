@@ -3,6 +3,7 @@ package config
 
 import (
 	"github.com/spf13/viper"
+	"time"
 )
 
 // C 配置的单例
@@ -17,6 +18,9 @@ type envConfig struct {
 
 // DispatchConfig dispatch的配置
 type DispatchConfig struct {
+	GetPingTime  time.Duration
+	GetPongTime  time.Duration
+	SendPingTime time.Duration
 }
 
 // LogicConfig logic层的配置
@@ -52,7 +56,11 @@ func defaultConfig() envConfig {
 		Conn: ConnConfig{
 			ReadTimeout: 10,
 		},
-		Dispatch: DispatchConfig{},
+		Dispatch: DispatchConfig{
+			GetPingTime:  1 * time.Minute,
+			GetPongTime:  55 * time.Second,
+			SendPingTime: 50 * time.Second,
+		},
 		Logic: LogicConfig{
 			RequestTimeOut:             10,
 			AutoReConnection:           true,
