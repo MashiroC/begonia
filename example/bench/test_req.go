@@ -15,7 +15,7 @@ import (
 //type TestReq struct {
 //	ReqId string `json:"reqId"`
 //
-//	Service string `json:"service"`
+//	Service string `json:"server"`
 //
 //	Fun string `json:"fun"`
 //
@@ -92,7 +92,7 @@ func (r *TestReq) Serialize(w io.Writer) error {
 }
 
 func (r *TestReq) Schema() string {
-	return "{\"fields\":[{\"name\":\"reqId\",\"type\":\"string\"},{\"name\":\"service\",\"type\":\"string\"},{\"name\":\"fun\",\"type\":\"string\"},{\"name\":\"params\",\"type\":\"bytes\"}],\"name\":\"begonia.entry.TestReq\",\"type\":\"record\"}"
+	return "{\"fields\":[{\"name\":\"reqId\",\"type\":\"string\"},{\"name\":\"server\",\"type\":\"string\"},{\"name\":\"fun\",\"type\":\"string\"},{\"name\":\"params\",\"type\":\"bytes\"}],\"name\":\"begonia.entry.TestReq\",\"type\":\"record\"}"
 }
 
 func (r *TestReq) SchemaName() string {

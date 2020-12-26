@@ -7,7 +7,7 @@ import (
 	"github.com/MashiroC/begonia/core"
 	"github.com/MashiroC/begonia/dispatch"
 	"github.com/MashiroC/begonia/dispatch/frame"
-	"github.com/MashiroC/begonia/dispatch/proxy"
+	"github.com/MashiroC/begonia/internal/proxy"
 	"github.com/MashiroC/begonia/logic"
 	"log"
 )
@@ -19,7 +19,7 @@ func bootstart(optionMap map[string]interface{}) Center {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	var addr string
-	if addrIn, ok := optionMap["managerAddr"]; ok {
+	if addrIn, ok := optionMap["addr"]; ok {
 		addr = addrIn.(string)
 	}
 
@@ -120,18 +120,14 @@ func bootstart(optionMap map[string]interface{}) Center {
 }
 
 // New 初始化，获得一个service对象，传入一个mode参数，以及一个option的不定参数
-func New(mode string, optionFunc ...option.WriteFunc) (cli Center) {
+func New(optionFunc ...option.WriteFunc) (cli Center) {
 	optionMap := defaultClientConfig()
 
 	for _, f := range optionFunc {
 		f(optionMap)
 	}
 
-	switch mode {
-	case "center":
-		cli = bootstart(optionMap)
-		// TODO:其他的模式和模式出问题的判断
-	}
+	cli = bootstart(optionMap)
 
 	return
 }

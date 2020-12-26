@@ -1,13 +1,13 @@
-package service
+package server
 
 import (
 	"errors"
-	"github.com/MashiroC/begonia/app/coding"
+	"github.com/MashiroC/begonia/internal/coding"
 	"reflect"
 	"sync"
 )
 
-// service_reflect_store.go 存放远程函数的数据结构
+// server_reflect_store.go 存放远程函数的数据结构
 
 // newServiceStore 创建一个新的实例
 func newServiceStore() *serviceStore {
@@ -18,7 +18,7 @@ func newServiceStore() *serviceStore {
 
 // serviceStore 实现的数据结构
 type serviceStore struct {
-	m map[string]map[string]reflectFun // 实际存储的map 两层map service - fun - reflectFun
+	m map[string]map[string]reflectFun // 实际存储的map 两层map server - fun - reflectFun
 	l sync.RWMutex                     // 线程安全的锁
 }
 
@@ -30,7 +30,7 @@ func (s *serviceStore) get(service, funName string) (fun reflectFun, err error) 
 
 	funs, ok := s.m[service]
 	if !ok {
-		err = errors.New("service not found")
+		err = errors.New("server not found")
 		return
 	}
 
@@ -60,9 +60,10 @@ func (s *serviceStore) store(service, funName string, fun reflectFun) {
 
 // reflectFun 存储的使用反射实现的远程函数的信息
 type reflectFun struct {
-	in      coding.Coder
-	out     coding.Coder
-	reSharp []coding.ReSharpFunc
-	obj     interface{}
-	method  reflect.Method
+	in         coding.Coder
+	out        coding.Coder
+	reSharp    []coding.ReSharpFunc
+	obj        interface{}
+	method     reflect.Method
+	hasContext bool
 }

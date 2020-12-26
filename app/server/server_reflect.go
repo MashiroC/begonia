@@ -1,11 +1,11 @@
-package service
+package server
 
-// service_reflect.go 反射实现的api
+// server_reflect.go 反射实现的api
 
 import (
 	"context"
-	"github.com/MashiroC/begonia/app/coding"
 	"github.com/MashiroC/begonia/core"
+	"github.com/MashiroC/begonia/internal/coding"
 	"github.com/MashiroC/begonia/logic"
 	"github.com/MashiroC/begonia/tool/berr"
 	"github.com/MashiroC/begonia/tool/qconv"
@@ -13,7 +13,7 @@ import (
 	"reflect"
 )
 
-// rService 反射的 reflect service api
+// rService 反射的 reflect server api
 type rService struct {
 	lg     *logic.Service
 	ctx    context.Context
@@ -37,11 +37,12 @@ func (r *rService) Register(name string, service interface{}) {
 			panic(err)
 		}
 		r.store.store(name, f.Name, reflectFun{
-			in:      inCoder,
-			out:     outCoder,
-			obj:     service,
-			reSharp: reSharps[i],
-			method:  ms[i],
+			in:         inCoder,
+			out:        outCoder,
+			obj:        service,
+			reSharp:    reSharps[i],
+			method:     ms[i],
+			hasContext: f.HasContext,
 		})
 	}
 
@@ -85,20 +86,25 @@ func (r *rService) handleMsg(msg *logic.Call, wf logic.ResultFunc) {
 	fun, err := r.store.get(msg.Service, msg.Fun)
 	if err != nil {
 		wf.Result(&logic.CallResult{
-			Err: berr.Warp("app.service", "handle get func", err),
+			Err: berr.Warp("app.server", "handle get func", err),
 		})
 		return
 	}
 	data, err := fun.in.Decode(msg.Param)
 	if err != nil {
 		wf.Result(&logic.CallResult{
-			Err: berr.Warp("app.service", "handle", err),
+			Err: berr.Warp("app.server", "handle", err),
 		})
 		return
 	}
 
 	//TODO:这个反射调用后面再想办法改改
 	inVal := []reflect.Value{reflect.ValueOf(fun.obj)}
+	if fun.hasContext {
+		ctx := context.WithValue(r.ctx, "info", map[string]string{"reqID": wf.ReqID, "connID": wf.ConnID})
+		inVal = append(inVal, reflect.ValueOf(ctx))
+	}
+
 	inVal = append(inVal, reflects.ToValue(data.(map[string]interface{}), fun.reSharp)...)
 
 	outVal := fun.method.Func.Call(inVal)

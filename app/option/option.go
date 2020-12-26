@@ -7,18 +7,12 @@ type WriteFunc func(optionMap map[string]interface{})
 // Addr 中心的地址
 func Addr(addr string) WriteFunc {
 	return func(optionMap map[string]interface{}) {
-		optionMap["managerAddr"] = addr
+		optionMap["addr"] = addr
 	}
 }
 
 func P2P() WriteFunc {
 	return func(optionMap map[string]interface{}) {
 		optionMap["dpTyp"] = "p2p"
-	}
-}
-
-func GenCode() WriteFunc {
-	return func(optionMap map[string]interface{}) {
-		optionMap["useGenCode"] = true
 	}
 }

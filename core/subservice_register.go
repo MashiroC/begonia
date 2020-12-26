@@ -10,7 +10,7 @@ func (s *SubService) register(connID string, param ServiceInfo) (err error) {
 func (s *SubService) serviceInfo(serviceName string) (si ServiceInfo, err error) {
 	service, ok := s.services.Get(serviceName)
 	if !ok {
-		err = fmt.Errorf("service [%s] not found", serviceName)
+		err = fmt.Errorf("server [%s] not found", serviceName)
 		return
 	}
 

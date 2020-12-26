@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/MashiroC/begonia/app/coding"
+	"github.com/MashiroC/begonia/internal/coding"
 	"github.com/MashiroC/begonia/tool/qconv"
 	"go/ast"
 	"html/template"
@@ -34,7 +34,7 @@ func genServiceCode(f *ast.File, fullServiceName string, fi []coding.FunInfo) {
 }
 
 func getServiceTmpl() *template.Template {
-	tmpl, err := template.New("service").Funcs(template.FuncMap{
+	tmpl, err := template.New("server").Funcs(template.FuncMap{
 		"raw":    raw,
 		"concat": concat,
 		"add":    add,

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/MashiroC/begonia"
 	"github.com/MashiroC/begonia/app/option"
@@ -44,7 +45,7 @@ func main() {
 	count = 0
 	flag = false
 
-	s := begonia.NewService(mode, option.Addr(":12306"))
+	s := begonia.NewServer(option.Addr(":12306"))
 
 	echoService := &EchoService{}
 	testService := TestService(0)
@@ -62,6 +63,11 @@ func (h *EchoService) SayHello(name string) string {
 	//QPS()
 	//fmt.Println("sayHello")
 	return "Hello 😈" + name
+}
+
+func (h *EchoService) SayHelloWithContext(ctx context.Context, name string) string {
+	fmt.Println(ctx.Value("info"))
+	return "Hello ctx " + name
 }
 
 func (h *EchoService) Add(i1, i2 int) (res int, err error) {

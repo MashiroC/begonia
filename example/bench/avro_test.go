@@ -241,7 +241,7 @@ package bench
 //}
 //
 //type ServiceInfo struct {
-//	Service string    `avro:"service"`
+//	Service string    `avro:"server"`
 //	Funs    []FunInfo `avro:"funs"`
 //}
 //
@@ -273,7 +273,7 @@ package bench
 //		"type": "record",
 //		"name": "ServiceInfoCall",
 //		"fields": [{
-//				"name": "service",
+//				"name": "server",
 //				"type": "string"
 //			},
 //			{
@@ -295,7 +295,7 @@ package bench
 //	}
 //
 //	//obj := map[string]interface{}{
-//	//	"service":"test",
+//	//	"server":"test",
 //	//	"funs":[]map[string]interface{}{{
 //	//		"fun":"test1",
 //	//		"mode":"avro",

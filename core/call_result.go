@@ -2,7 +2,7 @@ package core
 
 import (
 	"github.com/MashiroC/begonia/app"
-	"github.com/MashiroC/begonia/app/coding"
+	"github.com/MashiroC/begonia/internal/coding"
 )
 
 type result struct {

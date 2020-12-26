@@ -5,7 +5,10 @@ import (
 	"context"
 	"github.com/MashiroC/begonia/app"
 	"github.com/MashiroC/begonia/core"
+	"github.com/MashiroC/begonia/internal"
 	"github.com/MashiroC/begonia/logic"
+	"log"
+	"reflect"
 )
 
 // logic_service.go something
@@ -21,9 +24,9 @@ type rClient struct {
 // Service 获取一个服务
 func (r *rClient) Service(serviceName string) (s Service, err error) {
 
-	if app.ServiceAppMode == app.ServiceAppModeAst {
+	if internal.ServiceAppMode == internal.ServiceAppModeAst {
 		s = newAstService(serviceName, r)
-	} else if app.ServiceAppMode == app.ServiceAppModeReflect {
+	} else if internal.ServiceAppMode == internal.ServiceAppModeReflect {
 		res := r.lg.CallSync(core.Call.ServiceInfo(serviceName))
 
 		if res.Err != nil {
@@ -34,6 +37,7 @@ func (r *rClient) Service(serviceName string) (s Service, err error) {
 		fs := core.Result.ServiceInfo(res.Result)
 
 		s = r.newService(serviceName, fs)
+
 	} else {
 		panic("eeeeeeeeeerror!")
 	}
@@ -47,6 +51,8 @@ func (r *rClient) newService(name string, funs []app.FunInfo) Service {
 	for i := 0; i < len(funs); i++ {
 		f[funs[i].Name] = funs[i]
 	}
+
+	log.Printf("client get service [%s] success, func list: %s", name, reflect.ValueOf(f).MapKeys())
 
 	return &rService{
 		name: name,

@@ -2,14 +2,17 @@ package core
 
 import (
 	"fmt"
-	"github.com/MashiroC/begonia/app/coding"
+	"github.com/MashiroC/begonia/internal/coding"
 	"sync"
 )
 
 type registerServiceStore struct {
 	l sync.RWMutex
+
+	// serviceName => service
 	m map[string]*registerService
 
+	// connID => services
 	connIndexes map[string][]string
 	connLock    sync.Mutex
 }
@@ -42,7 +45,7 @@ func (s *registerServiceStore) Add(connID, serviceName string, funs []coding.Fun
 	defer s.connLock.Unlock()
 
 	if _, ok := s.m[serviceName]; ok {
-		err = fmt.Errorf("service [%s] existed", serviceName)
+		err = fmt.Errorf("server [%s] existed", serviceName)
 		return
 	}
 

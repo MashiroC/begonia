@@ -12,12 +12,13 @@ func toAvroSchemaField(t reflect.Type) string {
 
 // FunInfo 函数信息
 type FunInfo struct {
-	Name      string `avro:"name"`
-	Mode      string `avro:"mode"`
-	InSchema  string `avro:"inSchema"`
-	OutSchema string `avro:"outSchema"`
-	ParamTyp  []string
-	ResultTyp []string
+	Name       string `avro:"name"`
+	Mode       string `avro:"mode"`
+	InSchema   string `avro:"inSchema"`
+	OutSchema  string `avro:"outSchema"`
+	ParamTyp   []string
+	ResultTyp  []string
+	HasContext bool
 }
 
 // Parse 将一个结构体的函数信息解析
@@ -38,16 +39,17 @@ func Parse(mode string, in interface{}) (fi []FunInfo, methods []reflect.Method,
 		m := t.Method(i)
 		methods[i] = m
 
-		inS := inReflectSchema(m)
+		inS, hasContext := inReflectSchema(m)
 		outS := outReflectSchema(m)
 
 		reSharps[i] = parseReSharpFunc(m)
 
 		fi[i] = FunInfo{
-			Name:      m.Name,
-			Mode:      mode,
-			InSchema:  inS,
-			OutSchema: outS,
+			Name:       m.Name,
+			Mode:       mode,
+			InSchema:   inS,
+			OutSchema:  outS,
+			HasContext: hasContext,
 		}
 	}
 

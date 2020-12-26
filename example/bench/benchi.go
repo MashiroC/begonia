@@ -21,19 +21,19 @@ var (
 	ReqSchema avro.Schema
 
 	signInfo = map[string]interface{}{
-		"reqId":   "test",
-		"service": "logService",
+		"reqId":  "test",
+		"server": "logService",
 	}
 
 	signParam = map[string]interface{}{
-		"service": "logService",
+		"server": "logService",
 	}
 
 	req = map[string]interface{}{
-		"reqId":   "test",
-		"service": "CoreService",
-		"fun":     "ServiceInfoCall",
-		"params":  []byte{1, 2, 3},
+		"reqId":  "test",
+		"server": "CoreService",
+		"fun":    "ServiceInfoCall",
+		"params": []byte{1, 2, 3},
 	}
 
 	reqNative = TestReq{
@@ -65,7 +65,7 @@ func init() {
 			"type": "string"
 		},
 		{
-			"name": "service",
+			"name": "server",
 			"type": "string"
 		},
 		{
@@ -113,7 +113,7 @@ func linkedinDecode() {
 
 type TestReq struct {
 	ReqId   string `avro:"reqId"`
-	Service string `avro:"service"`
+	Service string `avro:"server"`
 	Fun     string `avro:"fun"`
 	Params  []byte `avro:"params"`
 }

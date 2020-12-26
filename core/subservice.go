@@ -73,6 +73,6 @@ func (s *SubService) GetToID(serviceName string) (connID string, ok bool) {
 
 // HandleConnClose 默认的关闭连接钩子
 func (s *SubService) HandleConnClose(connID string, err error) {
-	log.Printf("conn [%s] closed, unlink service\n", connID)
+	log.Printf("conn [%s] closed, unlink server\n", connID)
 	s.services.Unlink(connID)
 }

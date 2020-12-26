@@ -2,7 +2,7 @@
 package reflects
 
 import (
-	"github.com/MashiroC/begonia/app/coding"
+	"github.com/MashiroC/begonia/internal/coding"
 	"github.com/MashiroC/begonia/tool/qconv"
 	"reflect"
 	"strconv"

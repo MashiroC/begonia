@@ -2,7 +2,7 @@ package main
 
 import (
 	"errors"
-	"github.com/MashiroC/begonia/app/coding"
+	"github.com/MashiroC/begonia/internal/coding"
 	"github.com/hamba/avro"
 	"go/ast"
 )
@@ -10,15 +10,16 @@ import (
 func getFunInfo(decls []*ast.FuncDecl) (res []coding.FunInfo) {
 	res = make([]coding.FunInfo, 0, 1)
 	for _, fd := range decls {
-		inSchema, inTyps := MakeSchema(fd.Name.Name, "In", fd.Type.Params)
-		outSchema, outTyps := MakeSchema(fd.Name.Name, "Out", fd.Type.Results)
+		inSchema, inTyps, hasContext := MakeSchema(fd.Name.Name, "In", fd.Type.Params)
+		outSchema, outTyps, _ := MakeSchema(fd.Name.Name, "Out", fd.Type.Results)
 		res = append(res, coding.FunInfo{
-			Name:      fd.Name.Name,
-			Mode:      "avro",
-			InSchema:  inSchema,
-			OutSchema: outSchema,
-			ParamTyp:  inTyps,
-			ResultTyp: outTyps,
+			Name:       fd.Name.Name,
+			Mode:       "avro",
+			InSchema:   inSchema,
+			OutSchema:  outSchema,
+			ParamTyp:   inTyps,
+			ResultTyp:  outTyps,
+			HasContext: hasContext,
 		})
 		avro.MustParse(inSchema)
 		avro.MustParse(outSchema)
@@ -32,11 +33,10 @@ func parseObj(pkgName string, node ast.Node) (res bool) {
 			res = false
 		}
 	}()
-
 	// 别问我为什么这么写 语法树就是这样的
 	call := node.(*ast.CallExpr)
 	se := call.Fun.(*ast.SelectorExpr).X.(*ast.Ident).Obj.Decl.(*ast.AssignStmt).Rhs[0].(*ast.CallExpr).Fun.(*ast.SelectorExpr)
-	if se.X.(*ast.Ident).Name == "begonia" && se.Sel.Name == "NewService" {
+	if se.X.(*ast.Ident).Name == "begonia" && se.Sel.Name == "NewServer" {
 		// 解析
 		if len(call.Args) == 2 {
 			var ue *ast.UnaryExpr

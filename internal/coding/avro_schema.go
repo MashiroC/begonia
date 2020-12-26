@@ -17,20 +17,30 @@ const (
 // avro_schema.go something
 
 // inReflectSchema 根据反射类型 获得schema
-func inReflectSchema(m reflect.Method) string {
+func inReflectSchema(m reflect.Method) (schema string, hasContext bool) {
 	namespace := "begonia.func." + m.Name
 	name := "In"
 
 	t := m.Type
+
 	num := t.NumIn()
 
-	typ := make([]reflect.Type, 0, num-1)
-	for i := 1; i < num; i++ {
+	start := 1
+	if num > 2 {
+		in := t.In(1)
+		if in.String() == "context.Context" {
+			start += 1
+			hasContext = true
+		}
+	}
+
+	typ := make([]reflect.Type, 0, num-start)
+	for i := start; i < num; i++ {
 		typ = append(typ, t.In(i))
 	}
 
-	res := makeSchema(namespace, name, typ)
-	return res
+	schema = makeSchema(namespace, name, typ)
+	return
 }
 
 // outReflectSchema 根据反射 获得出参schema
@@ -132,7 +142,7 @@ func fieldKind(mode parseMode, t reflect.Type) (fType string, isErr bool) {
 			fType = `["string","null"]`
 			isErr = true
 		} else {
-			panic("avro parse not supported")
+			panic("avro parse not supported type " + t.String())
 		}
 	case reflect.Ptr:
 		if mode == modeSlice {

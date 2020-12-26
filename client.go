@@ -1,9 +1,9 @@
 package begonia
 
 import (
-	"github.com/MashiroC/begonia/app"
 	"github.com/MashiroC/begonia/app/client"
 	"github.com/MashiroC/begonia/app/option"
+	"github.com/MashiroC/begonia/internal"
 )
 
 // Client 客户端的接口
@@ -30,7 +30,7 @@ func NewClient(optionFunc ...option.WriteFunc) (cli Client) {
 }
 
 func NewClientWithAst(optionFunc ...option.WriteFunc) (cli Client) {
-	app.ServiceAppMode = app.ServiceAppModeAst
+	internal.ServiceAppMode = internal.ServiceAppModeAst
 
 	return NewClient(optionFunc...)
 }
@@ -39,6 +39,7 @@ func defaultClientConfig() map[string]interface{} {
 	m := make(map[string]interface{})
 
 	// TODO:加入默认配置
+	m["addr"] = ":12306"
 
 	return m
 }

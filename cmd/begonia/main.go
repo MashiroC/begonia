@@ -41,10 +41,10 @@ type Service struct {
 
 func init() {
 	shortHand := " (shorthand)"
-	isGenerateServiceUsage := "generate service code from begonia"
+	isGenerateServiceUsage := "generate server code from begonia"
 	isGenerateClientUsage := "generate client code from begonia"
 	isRemoveUsage := "remove old begonia generate code"
-	flag.BoolVar(&isGenerateService, "service", false, isGenerateServiceUsage)
+	flag.BoolVar(&isGenerateService, "server", false, isGenerateServiceUsage)
 	flag.BoolVar(&isGenerateService, "s", false, isGenerateServiceUsage+shortHand)
 	flag.BoolVar(&isGenerateClient, "client", false, isGenerateClientUsage)
 	flag.BoolVar(&isGenerateClient, "c", false, isGenerateClientUsage+shortHand)
@@ -81,9 +81,9 @@ func main() {
 	for k, _ := range names {
 		v := recvs[k]
 		fi := getFunInfo(v.FuncList)
-		fmt.Println("generate service", k, "...")
+		fmt.Println("generate server", k, "...")
 		if isGenerateService {
-			fmt.Print("service code ...")
+			fmt.Print("server code ...")
 			genServiceCode(v.File, k, fi)
 			fmt.Println("\b\b\bok!")
 		}

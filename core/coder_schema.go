@@ -11,7 +11,7 @@ const (
     "name":"ServiceInfoCall",
     "fields":[
         {
-            "name":"service",
+            "name":"server",
             "type":"string"
         }
     ]
@@ -23,7 +23,7 @@ const (
 	"type": "record",
 	"name": "ServiceInfoCall",
 	"fields": [{
-			"name": "service",
+			"name": "server",
 			"type": "string"
 		},
 		{

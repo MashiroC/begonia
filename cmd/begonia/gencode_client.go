@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/MashiroC/begonia/app/coding"
+	"github.com/MashiroC/begonia/internal/coding"
 	"html/template"
 	"os"
 	"strings"

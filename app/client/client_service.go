@@ -2,7 +2,7 @@ package client
 
 import (
 	"github.com/MashiroC/begonia/app"
-	"github.com/MashiroC/begonia/app/coding"
+	"github.com/MashiroC/begonia/internal/coding"
 	"github.com/MashiroC/begonia/logic"
 	"github.com/MashiroC/begonia/tool/berr"
 	"github.com/MashiroC/begonia/tool/reflects"

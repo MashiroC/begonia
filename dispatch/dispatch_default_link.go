@@ -36,7 +36,7 @@ func NewLinkedByDefaultCluster() Dispatcher {
 				if config.C.Dispatch.ReConnectionRetryCount <= 0 {
 
 					for !ok {
-						log.Println("connot link to server,retry...")
+						log.Println("cannot link to server,retry...")
 						time.Sleep(time.Duration(config.C.Dispatch.ReConnectionIntervalSecond) * time.Second)
 						ok = d.ReLink()
 					}
@@ -44,7 +44,7 @@ func NewLinkedByDefaultCluster() Dispatcher {
 				} else {
 
 					for i := 0; i < config.C.Dispatch.ReConnectionRetryCount && !ok; i++ {
-						log.Println("connot link to server,retry", i, "limit", config.C.Dispatch.ReConnectionRetryCount)
+						log.Println("cannot link to server,retry", i, "limit", config.C.Dispatch.ReConnectionRetryCount)
 						time.Sleep(time.Duration(config.C.Dispatch.ReConnectionIntervalSecond) * time.Second)
 						ok = d.ReLink()
 					}

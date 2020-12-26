@@ -11,7 +11,7 @@ import (
 
 type TestReq1 struct {
 	ReqId   string `json:"reqId"`
-	Service string `json:"service"`
+	Service string `json:"server"`
 	Fun     string `json:"fun"`
 	Params  []byte `json:"params"`
 }
@@ -19,7 +19,7 @@ type TestReq1 struct {
 // AvroRecord implements the avro.AvroRecord interface.
 func (TestReq1) AvroRecord() avrotypegen.RecordInfo {
 	return avrotypegen.RecordInfo{
-		Schema: `{"fields":[{"name":"reqId","type":"string"},{"name":"service","type":"string"},{"name":"fun","type":"string"},{"name":"params","type":"bytes"}],"name":"begonia.entry.TestReq1","type":"record"}`,
+		Schema: `{"fields":[{"name":"reqId","type":"string"},{"name":"server","type":"string"},{"name":"fun","type":"string"},{"name":"params","type":"bytes"}],"name":"begonia.entry.TestReq1","type":"record"}`,
 		Required: []bool{
 			0: true,
 			1: true,

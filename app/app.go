@@ -1,14 +1,7 @@
 // Package app api层
 package app
 
-import "github.com/MashiroC/begonia/app/coding"
-
-var ServiceAppMode = ServiceAppModeReflect
-
-const (
-	ServiceAppModeAst     = "ast"
-	ServiceAppModeReflect = "reflect"
-)
+import "github.com/MashiroC/begonia/internal/coding"
 
 // FunInfo 远程函数的一个封装
 type FunInfo struct {

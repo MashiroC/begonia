@@ -1,26 +1,26 @@
-package service
+package server
 
-// service_ast.go ast实现的api
+// server_ast.go ast实现的api
 
 import (
 	"context"
-	"github.com/MashiroC/begonia/app/coding"
 	"github.com/MashiroC/begonia/core"
+	"github.com/MashiroC/begonia/internal/coding"
 	"github.com/MashiroC/begonia/logic"
 	"github.com/MashiroC/begonia/tool/berr"
 )
 
-type astDo = func(fun string, param []byte) (result []byte, err error)
+type astDo = func(ctx context.Context, fun string, param []byte) (result []byte, err error)
 
 type CodeGenFunc struct {
 }
 
 type CodeGenService interface {
-	Do(fun string, param []byte) (result []byte, err error)
+	Do(ctx context.Context, fun string, param []byte) (result []byte, err error)
 	FuncList() []coding.FunInfo
 }
 
-// astService ast树代码生成的ast service api
+// astService ast树代码生成的ast server api
 type astService struct {
 	lg     *logic.Service
 	ctx    context.Context
@@ -85,15 +85,17 @@ func (r *astService) handleMsg(msg *logic.Call, wf logic.ResultFunc) {
 	do, err := r.store.get(msg.Service)
 	if err != nil {
 		wf.Result(&logic.CallResult{
-			Err: berr.Warp("app.service", "handle get func", err),
+			Err: berr.Warp("app.server", "handle get func", err),
 		})
 		return
 	}
 
-	data, err := do(msg.Fun, msg.Param)
+	ctx := context.WithValue(r.ctx, "info", map[string]string{"reqID": wf.ReqID, "connID": wf.ConnID})
+
+	data, err := do(ctx, msg.Fun, msg.Param)
 	if err != nil {
 		wf.Result(&logic.CallResult{
-			Err: berr.Warp("app.service", "handle", err),
+			Err: berr.Warp("app.server", "handle", err),
 		})
 		return
 	}

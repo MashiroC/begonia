@@ -1,7 +1,7 @@
 package core
 
 import (
-	"github.com/MashiroC/begonia/app/coding"
+	"github.com/MashiroC/begonia/internal/coding"
 	"github.com/MashiroC/begonia/logic"
 )
 
@@ -32,7 +32,7 @@ func (call) Register(serviceName string, funs []coding.FunInfo) *logic.Call {
 }
 
 type serviceInfoCall struct {
-	Service string `avro:"service"`
+	Service string `avro:"server"`
 }
 
 // ServiceInfo 获得服务信息

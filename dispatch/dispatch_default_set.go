@@ -4,7 +4,7 @@ import (
 	"errors"
 	"github.com/MashiroC/begonia/dispatch/conn"
 	"github.com/MashiroC/begonia/dispatch/frame"
-	"github.com/MashiroC/begonia/dispatch/proxy"
+	"github.com/MashiroC/begonia/internal/proxy"
 	"github.com/MashiroC/begonia/tool/berr"
 	"github.com/MashiroC/begonia/tool/ids"
 	"log"

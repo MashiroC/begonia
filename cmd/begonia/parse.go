@@ -15,7 +15,7 @@ type AstParam struct {
 	Child []*AstParam
 }
 
-func MakeSchema(funcName, objName string, fl *ast.FieldList) (schema string, typs []string) {
+func MakeSchema(funcName, objName string, fl *ast.FieldList) (schema string, typs []string, hasContext bool) {
 
 	var fields []string
 
@@ -25,20 +25,33 @@ func MakeSchema(funcName, objName string, fl *ast.FieldList) (schema string, typ
 		typs = make([]string, 0, len(f))
 		count := 1
 
-		for i := 0; i < len(f); i++ {
-			if len(f[i].Names) == 0 {
-				fields = append(fields, fieldSchema("", "F"+strconv.FormatInt(int64(count), 10), f[i]))
-				typs = append(typs, getTyp(f[i].Type))
-			} else {
-				for _, nativeName := range f[i].Names {
-					fields = append(fields, fieldSchema(nativeName.Name, "F"+strconv.FormatInt(int64(count), 10), f[i]))
-					typs = append(typs, getTyp(f[i].Type))
-					count++
-					//fmt.Println(typs)
+		if len(f) != 0 {
+
+			start := 0
+			// 判断context
+			if se, ok := f[0].Type.(*ast.SelectorExpr); ok {
+				if se.Sel.Name == "Context" && se.X.(*ast.Ident).Name == "context" {
+					hasContext = true
+					start = 1
 				}
 			}
 
+			for i := start; i < len(f); i++ {
+				if len(f[i].Names) == 0 {
+					fields = append(fields, fieldSchema("", "F"+strconv.FormatInt(int64(count), 10), f[i]))
+					typs = append(typs, getTyp(f[i].Type))
+				} else {
+					for _, nativeName := range f[i].Names {
+						fields = append(fields, fieldSchema(nativeName.Name, "F"+strconv.FormatInt(int64(count), 10), f[i]))
+						typs = append(typs, getTyp(f[i].Type))
+						count++
+						//fmt.Println(typs)
+					}
+				}
+
+			}
 		}
+
 	}
 
 	// 如果函数最后一个是error， avro schema里面就把它去掉

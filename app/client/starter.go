@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/MashiroC/begonia/dispatch"
+	"github.com/MashiroC/begonia/internal"
 	"github.com/MashiroC/begonia/logic"
+	"log"
 )
 
 // starter.go something
@@ -13,6 +15,8 @@ import (
 func BootStartByCenter(optionMap map[string]interface{}) *rClient {
 
 	fmt.Println("  ____                              _        \n |  _ \\                            (_)       \n | |_) |  ___   __ _   ___   _ __   _   __ _ \n |  _ <  / _ \\ / _` | / _ \\ | '_ \\ | | / _` |\n | |_) ||  __/| (_| || (_) || | | || || (_| |\n |____/  \\___| \\__, | \\___/ |_| |_||_| \\__,_|\n                __/ |                        \n               |___/                         ")
+
+	log.Printf("begonia client start with [%s] mode\n",internal.ServiceAppMode)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	c := &rClient{
@@ -23,11 +27,13 @@ func BootStartByCenter(optionMap map[string]interface{}) *rClient {
 	// TODO:给dispatch初始化
 
 	var addr string
-	if addrIn, ok := optionMap["managerAddr"]; ok {
+	if addrIn, ok := optionMap["addr"]; ok {
 		addr = addrIn.(string)
 	} else {
-		addr = ":12306"
+		panic("addr must exist")
 	}
+
+	log.Printf("begonia client will link to [%s]", addr)
 
 	var dp dispatch.Dispatcher
 	dp = dispatch.NewLinkedByDefaultCluster()

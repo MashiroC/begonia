@@ -1,12 +1,13 @@
-package service
+package server
 
 import (
 	"context"
 	"fmt"
-	"github.com/MashiroC/begonia/app"
 	"github.com/MashiroC/begonia/core"
 	"github.com/MashiroC/begonia/dispatch"
+	"github.com/MashiroC/begonia/internal"
 	"github.com/MashiroC/begonia/logic"
+	"log"
 )
 
 // starter.go something
@@ -16,21 +17,27 @@ func BootStartByManager(optionMap map[string]interface{}) interface{} {
 
 	fmt.Println("  ____                              _        \n |  _ \\                            (_)       \n | |_) |  ___   __ _   ___   _ __   _   __ _ \n |  _ <  / _ \\ / _` | / _ \\ | '_ \\ | | / _` |\n | |_) ||  __/| (_| || (_) || | | || || (_| |\n |____/  \\___| \\__, | \\___/ |_| |_||_| \\__,_|\n                __/ |                        \n               |___/                         ")
 
+	log.Printf("begonia server start with [%s] mode\n", internal.ServiceAppMode)
+
 	ctx, cancel := context.WithCancel(context.Background())
 	var isLocal bool
 	// 读配置
 	var addr string
-	if addrIn, ok := optionMap["managerAddr"]; ok {
+	if addrIn, ok := optionMap["addr"]; ok {
 		addr = addrIn.(string)
+	} else {
+		panic("addr must exist")
 	}
 
 	// 创建 dispatch
 	var dp dispatch.Dispatcher
 	if dpTyp, ok := optionMap["dpTyp"]; ok && dpTyp == "p2p" {
+		log.Printf("begonia server will listen on [%s]", addr)
 		dp = dispatch.NewSetByDefaultCluster()
 		go dp.Listen(addr)
 		isLocal = true
 	} else {
+		log.Printf("begonia server will link to [%s]", addr)
 		dp = dispatch.NewLinkedByDefaultCluster()
 		if err := dp.Link(addr); err != nil {
 			panic(err)
@@ -60,7 +67,7 @@ func BootStartByManager(optionMap map[string]interface{}) interface{} {
 	// 修改配置之前的一系列调用全部都是按默认配置来的
 
 	// 创建实例
-	if app.ServiceAppMode == "ast" {
+	if internal.ServiceAppMode == "ast" {
 		s := &astService{}
 		s.ctx = ctx
 		s.cancel = cancel
