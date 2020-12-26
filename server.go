@@ -5,14 +5,11 @@ import (
 	"github.com/MashiroC/begonia/app/server"
 )
 
-// Service 服务端的接口
-type Service interface {
-	Register(name string, service interface{})
-	Wait()
-}
+// Server 服务端的接口
+type Server = server.Server
 
 // New 初始化，获得一个service对象，传入一个mode参数，以及一个option的不定参数
-func NewServer(optionFunc ...option.WriteFunc) (s Service) {
+func NewServer(optionFunc ...option.WriteFunc) (s Server) {
 	optionMap := defaultServiceConfig()
 
 	for _, f := range optionFunc {
@@ -20,7 +17,7 @@ func NewServer(optionFunc ...option.WriteFunc) (s Service) {
 	}
 
 	in := server.BootStartByManager(optionMap)
-	return in.(Service)
+	return in
 }
 
 func defaultServiceConfig() map[string]interface{} {

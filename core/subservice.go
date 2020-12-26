@@ -1,6 +1,7 @@
 package core
 
 import (
+	"github.com/MashiroC/begonia/core/register"
 	"log"
 )
 
@@ -14,12 +15,12 @@ var C *SubService
 
 // SubService 子服务
 type SubService struct {
-	services *registerServiceStore
+	services *register.registerServiceStore
 }
 
 // NewSubService 创建一个子服务
 func NewSubService() *SubService {
-	return &SubService{services: newStore()}
+	return &SubService{services: register.newStore()}
 }
 
 // Invoke 执行一个子服务的函数
@@ -37,7 +38,7 @@ func (s *SubService) Invoke(connID, reqID string, fun string, param []byte) (res
 			return
 		}
 		result, err = successCoder.Encode(true)
-	case "ServiceInfo":
+	case "Service":
 		var call serviceInfoCall
 		var si ServiceInfo
 		err = serviceInfoCallCoder.DecodeIn(param, &call)

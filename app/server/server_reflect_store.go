@@ -18,7 +18,7 @@ func newServiceStore() *serviceStore {
 
 // serviceStore 实现的数据结构
 type serviceStore struct {
-	m map[string]map[string]reflectFun // 实际存储的map 两层map server - fun - reflectFun
+	m map[string]map[string]reflectFun // 实际存储的map 两层map Server - fun - reflectFun
 	l sync.RWMutex                     // 线程安全的锁
 }
 
@@ -30,7 +30,7 @@ func (s *serviceStore) get(service, funName string) (fun reflectFun, err error) 
 
 	funs, ok := s.m[service]
 	if !ok {
-		err = errors.New("server not found")
+		err = errors.New("Server not found")
 		return
 	}
 

@@ -63,7 +63,6 @@ func init() {
 		{{range .fi}} 	{{$snDo := concat $sn .Name }}
 			{
 				Name: "{{.Name}}", 
-				Mode: "avro", 
 				InSchema: {{$snDo}}InSchema, 
 				OutSchema: {{$snDo}}OutSchema }, 
 		{{end}}
@@ -75,7 +74,7 @@ func (d {{$recv}}) Do(ctx context.Context, fun string, param []byte) (result []b
 {{range .fi}} 	{{$snDo := concat $sn .Name }}
 	case "{{.Name}}":
 		var in {{$snDo}}In
-		err := {{$snDo}}InCoder.DecodeIn(param, &in)
+		err = {{$snDo}}InCoder.DecodeIn(param, &in)
 		if err != nil {
 			panic(err)
 		}

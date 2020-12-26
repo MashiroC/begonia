@@ -1,8 +1,8 @@
 package main
 
 import (
-	"flag"
 	"fmt"
+	flag "github.com/spf13/pflag"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -24,6 +24,7 @@ var (
 	isGenerateService bool
 	isGenerateClient  bool
 	isRemove          bool
+	targetService     []string
 )
 
 var (
@@ -40,17 +41,11 @@ type Service struct {
 }
 
 func init() {
-	shortHand := " (shorthand)"
-	isGenerateServiceUsage := "generate server code from begonia"
-	isGenerateClientUsage := "generate client code from begonia"
-	isRemoveUsage := "remove old begonia generate code"
-	flag.BoolVar(&isGenerateService, "server", false, isGenerateServiceUsage)
-	flag.BoolVar(&isGenerateService, "s", false, isGenerateServiceUsage+shortHand)
-	flag.BoolVar(&isGenerateClient, "client", false, isGenerateClientUsage)
-	flag.BoolVar(&isGenerateClient, "c", false, isGenerateClientUsage+shortHand)
-
-	flag.BoolVar(&isRemove, "remove", false, isRemoveUsage)
-	flag.BoolVar(&isRemove, "r", false, isRemoveUsage+shortHand)
+	targetServiceUsage := "generate target service (if not exist register code)"
+	flag.BoolVarP(&isGenerateService, "server", "s", false, "generate server code from begonia")
+	flag.BoolVarP(&isGenerateClient, "client", "c", false, "generate client code from begonia")
+	flag.BoolVarP(&isRemove, "remove", "r", false, "remove old begonia generate code")
+	flag.StringSliceVarP(&targetService, "target", "t", []string{}, targetServiceUsage)
 	flag.Parse()
 }
 
@@ -60,6 +55,8 @@ func main() {
 	defer func() {
 		fmt.Println("complete, total:", time.Now().Sub(t))
 	}()
+
+	fmt.Println(targetService)
 
 	originPath := os.Args[len(os.Args)-1]
 	path, err := filepath.Abs(originPath)
@@ -153,8 +150,13 @@ func work(path string) {
 	if path != root {
 		pkg = strings.Replace(path, root, "", 1)[1:]
 	}
+
 	ast.Inspect(f, func(node ast.Node) (res bool) {
-		ok := parseObj(pkg, node)
+		ok := parseTarget(pkg, node)
+		if ok {
+			return true
+		}
+		ok = parseObj(pkg, node)
 		if ok {
 			return true
 		}

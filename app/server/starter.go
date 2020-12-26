@@ -13,11 +13,11 @@ import (
 // starter.go something
 
 // BootStartByManager 根据manager cluster模式启动
-func BootStartByManager(optionMap map[string]interface{}) interface{} {
+func BootStartByManager(optionMap map[string]interface{}) Server {
 
 	fmt.Println("  ____                              _        \n |  _ \\                            (_)       \n | |_) |  ___   __ _   ___   _ __   _   __ _ \n |  _ <  / _ \\ / _` | / _ \\ | '_ \\ | | / _` |\n | |_) ||  __/| (_| || (_) || | | || || (_| |\n |____/  \\___| \\__, | \\___/ |_| |_||_| \\__,_|\n                __/ |                        \n               |___/                         ")
 
-	log.Printf("begonia server start with [%s] mode\n", internal.ServiceAppMode)
+	log.Printf("begonia Server start with [%s] mode\n", internal.ServiceAppMode)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	var isLocal bool
@@ -32,12 +32,12 @@ func BootStartByManager(optionMap map[string]interface{}) interface{} {
 	// 创建 dispatch
 	var dp dispatch.Dispatcher
 	if dpTyp, ok := optionMap["dpTyp"]; ok && dpTyp == "p2p" {
-		log.Printf("begonia server will listen on [%s]", addr)
+		log.Printf("begonia Server will listen on [%s]", addr)
 		dp = dispatch.NewSetByDefaultCluster()
 		go dp.Listen(addr)
 		isLocal = true
 	} else {
-		log.Printf("begonia server will link to [%s]", addr)
+		log.Printf("begonia Server will link to [%s]", addr)
 		dp = dispatch.NewLinkedByDefaultCluster()
 		if err := dp.Link(addr); err != nil {
 			panic(err)

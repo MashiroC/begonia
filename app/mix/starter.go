@@ -1,18 +1,17 @@
-package client
+package mix
 
 import (
 	"context"
 	"fmt"
+	"github.com/MashiroC/begonia/app/client"
 	"github.com/MashiroC/begonia/dispatch"
 	"github.com/MashiroC/begonia/internal"
 	"github.com/MashiroC/begonia/logic"
 	"log"
 )
 
-// starter.go something
-
 // BootStartByCenter 根据center cluster模式启动
-func BootStartByCenter(optionMap map[string]interface{}) *rClient {
+func BootStart(optionMap map[string]interface{}) *MixNode {
 
 	fmt.Println("  ____                              _        \n |  _ \\                            (_)       \n | |_) |  ___   __ _   ___   _ __   _   __ _ \n |  _ <  / _ \\ / _` | / _ \\ | '_ \\ | | / _` |\n | |_) ||  __/| (_| || (_) || | | || || (_| |\n |____/  \\___| \\__, | \\___/ |_| |_||_| \\__,_|\n                __/ |                        \n               |___/                         ")
 
@@ -42,7 +41,8 @@ func BootStartByCenter(optionMap map[string]interface{}) *rClient {
 		panic(err)
 	}
 
-	c.lg = logic.NewClient(dp)
+	lg:=logic.NewService(dp,logic.NewWaitChans())
+	cli:=client.NewClient(&lg.Client)
 
 	dp.Handle("frame", c.lg.DpHandler)
 

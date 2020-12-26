@@ -24,6 +24,11 @@ func add(a int) int {
 
 func parseFullName(fullName string) (serviceName, dirPath string) {
 	serviceName = fullName[strings.LastIndex(fullName, "_")+1:]
-	dirPath = fullName[:strings.LastIndex(fullName, string(os.PathSeparator))]
+	dirPos := strings.LastIndex(fullName, string(os.PathSeparator))
+	if dirPos == -1 {
+		dirPath = "/"
+	} else {
+		dirPath = fullName[:dirPos]
+	}
 	return
 }

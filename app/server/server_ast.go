@@ -20,7 +20,7 @@ type CodeGenService interface {
 	FuncList() []coding.FunInfo
 }
 
-// astService ast树代码生成的ast server api
+// astService ast树代码生成的ast Server api
 type astService struct {
 	lg     *logic.Service
 	ctx    context.Context
@@ -85,7 +85,7 @@ func (r *astService) handleMsg(msg *logic.Call, wf logic.ResultFunc) {
 	do, err := r.store.get(msg.Service)
 	if err != nil {
 		wf.Result(&logic.CallResult{
-			Err: berr.Warp("app.server", "handle get func", err),
+			Err: berr.Warp("app.Server", "handle get func", err),
 		})
 		return
 	}
@@ -95,7 +95,7 @@ func (r *astService) handleMsg(msg *logic.Call, wf logic.ResultFunc) {
 	data, err := do(ctx, msg.Fun, msg.Param)
 	if err != nil {
 		wf.Result(&logic.CallResult{
-			Err: berr.Warp("app.server", "handle", err),
+			Err: berr.Warp("app.Server", "handle", err),
 		})
 		return
 	}

@@ -7,13 +7,7 @@ import (
 )
 
 // Client 客户端的接口
-type Client interface {
-	Service(name string) (client.Service, error)
-	FunSync(serviceName, funName string) (client.RemoteFunSync, error)
-	FunAsync(serviceName, funName string) (client.RemoteFunAsync, error)
-	Wait()
-	Close()
-}
+type Client = client.Client
 
 // NewClient 初始化，获得一个service对象，传入一个mode参数，以及一个option的不定参数
 func NewClient(optionFunc ...option.WriteFunc) (cli Client) {

@@ -9,6 +9,7 @@ import (
 	"github.com/MashiroC/begonia/dispatch/frame"
 	"github.com/MashiroC/begonia/internal/proxy"
 	"github.com/MashiroC/begonia/logic"
+	rcall "github.com/MashiroC/begonia/core/register/call"
 	"log"
 )
 
@@ -112,11 +113,15 @@ func bootstart(optionMap map[string]interface{}) Center {
 		// do some thing
 		// 修改配置之前的一系列调用全部都是按默认配置来的
 	*/
-	return &rCenter{
+	rc:= &rCenter{
 		ctx:    ctx,
 		cancel: cancel,
 		lg:     lg,
 	}
+
+	rcall.BegoniaCli=rc
+
+	return rc
 }
 
 // New 初始化，获得一个service对象，传入一个mode参数，以及一个option的不定参数

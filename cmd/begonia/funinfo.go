@@ -5,6 +5,7 @@ import (
 	"github.com/MashiroC/begonia/internal/coding"
 	"github.com/hamba/avro"
 	"go/ast"
+	"strings"
 )
 
 func getFunInfo(decls []*ast.FuncDecl) (res []coding.FunInfo) {
@@ -14,7 +15,6 @@ func getFunInfo(decls []*ast.FuncDecl) (res []coding.FunInfo) {
 		outSchema, outTyps, _ := MakeSchema(fd.Name.Name, "Out", fd.Type.Results)
 		res = append(res, coding.FunInfo{
 			Name:       fd.Name.Name,
-			Mode:       "avro",
 			InSchema:   inSchema,
 			OutSchema:  outSchema,
 			ParamTyp:   inTyps,
@@ -27,12 +27,37 @@ func getFunInfo(decls []*ast.FuncDecl) (res []coding.FunInfo) {
 	return
 }
 
+func parseTarget(pkgName string, node ast.Node) (res bool) {
+	defer func() {
+		if re := recover(); re != nil {
+			res = false
+		}
+	}()
+
+	targetName := node.(*ast.TypeSpec).Name.Name
+
+	for _, t := range targetService {
+		tmp := strings.Split(t, ":")
+		if len(tmp) != 2 {
+			panic("-t must a:b")
+		}
+		if tmp[0] == targetName {
+			name := pkgName + "_" + targetName
+			names[name] = `"` + tmp[1] + `"`
+			return true
+		}
+	}
+
+	return false
+}
+
 func parseObj(pkgName string, node ast.Node) (res bool) {
 	defer func() {
 		if re := recover(); re != nil {
 			res = false
 		}
 	}()
+
 	// 别问我为什么这么写 语法树就是这样的
 	call := node.(*ast.CallExpr)
 	se := call.Fun.(*ast.SelectorExpr).X.(*ast.Ident).Obj.Decl.(*ast.AssignStmt).Rhs[0].(*ast.CallExpr).Fun.(*ast.SelectorExpr)

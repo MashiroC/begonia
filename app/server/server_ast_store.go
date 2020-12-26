@@ -20,7 +20,7 @@ func (s *astServiceStore) get(service string) (do astDo, err error) {
 	var ok bool
 	do, ok = s.v[service]
 	if !ok {
-		err = errors.New("server not exist")
+		err = errors.New("Server not exist")
 	}
 	return
 }
@@ -29,7 +29,7 @@ func (s *astServiceStore) store(service string, fun astDo) (err error) {
 	s.l.Lock()
 	defer s.l.Unlock()
 	if _, ok := s.v[service]; ok {
-		return errors.New("server exist")
+		return errors.New("Server exist")
 	}
 	s.v[service] = fun
 	return

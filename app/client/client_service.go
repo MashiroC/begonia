@@ -1,7 +1,6 @@
 package client
 
 import (
-	"github.com/MashiroC/begonia/app"
 	"github.com/MashiroC/begonia/internal/coding"
 	"github.com/MashiroC/begonia/logic"
 	"github.com/MashiroC/begonia/tool/berr"
@@ -29,7 +28,7 @@ type AsyncCallback = func(interface{}, error)
 
 type rService struct {
 	name string
-	funs map[string]app.FunInfo
+	funs map[string]Fun
 	c    *rClient
 }
 

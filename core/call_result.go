@@ -2,6 +2,7 @@ package core
 
 import (
 	"github.com/MashiroC/begonia/app"
+	"github.com/MashiroC/begonia/core/register"
 	"github.com/MashiroC/begonia/internal/coding"
 )
 
@@ -12,7 +13,7 @@ type result struct {
 var Result result
 
 // ServiceInfo 服务信息
-func (result) ServiceInfo(b []byte) (f []app.FunInfo) {
+func (result) ServiceInfo(b []byte) (f []register.FunInfo) {
 
 	// TODO: 解码这个类型 构造coder
 	var si ServiceInfo
@@ -21,7 +22,7 @@ func (result) ServiceInfo(b []byte) (f []app.FunInfo) {
 		panic(err)
 	}
 
-	f = make([]app.FunInfo, len(si.Funs))
+	f = make([]register.FunInfo, len(si.Funs))
 
 	for i := 0; i < len(f); i++ {
 
@@ -37,7 +38,7 @@ func (result) ServiceInfo(b []byte) (f []app.FunInfo) {
 			panic(err)
 		}
 
-		f[i] = app.FunInfo{
+		f[i] = register.FunInfo{
 			Name:     rawFun.Name,
 			InCoder:  inCoder,
 			OutCoder: outCoder,

@@ -13,7 +13,7 @@ import (
 	"reflect"
 )
 
-// rService 反射的 reflect server api
+// rService 反射的 reflect Server api
 type rService struct {
 	lg     *logic.Service
 	ctx    context.Context
@@ -86,14 +86,14 @@ func (r *rService) handleMsg(msg *logic.Call, wf logic.ResultFunc) {
 	fun, err := r.store.get(msg.Service, msg.Fun)
 	if err != nil {
 		wf.Result(&logic.CallResult{
-			Err: berr.Warp("app.server", "handle get func", err),
+			Err: berr.Warp("app.Server", "handle get func", err),
 		})
 		return
 	}
 	data, err := fun.in.Decode(msg.Param)
 	if err != nil {
 		wf.Result(&logic.CallResult{
-			Err: berr.Warp("app.server", "handle", err),
+			Err: berr.Warp("app.Server", "handle", err),
 		})
 		return
 	}
