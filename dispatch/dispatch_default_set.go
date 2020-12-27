@@ -6,6 +6,7 @@ import (
 	"github.com/MashiroC/begonia/dispatch/frame"
 	"github.com/MashiroC/begonia/tool/berr"
 	"github.com/MashiroC/begonia/tool/ids"
+	"github.com/MashiroC/begonia/tool/machine"
 	"log"
 	"reflect"
 	"sync"
@@ -19,6 +20,7 @@ func NewSetByDefaultCluster() Dispatcher {
 
 	d := &setDispatch{}
 
+	d.AllMachine = make(map[string]*machine.Machine)
 	d.msgCh = make(chan recvMsg, 10)
 	d.connSet = make(map[string]conn.Conn)
 
@@ -31,7 +33,7 @@ func NewSetByDefaultCluster() Dispatcher {
 }
 
 type setDispatch struct {
-	Machine
+	AllMachine map[string]*machine.Machine
 
 	// set模式相关变量
 	connSet  map[string]conn.Conn // 保存连接的map
@@ -126,11 +128,12 @@ func (d *setDispatch) work(c conn.Conn) {
 	d.connLock.Lock()
 	d.connSet[id] = c
 	d.connLock.Unlock()
+	d.AllMachine[id] = machine.NewMachine()
 
 	getpongtime := config.C.Dispatch.GetPongTime
 	timer := time.NewTimer(getpongtime)
 	go receivePong(c, timer)
-	go sendPing(d, config.C.Dispatch.SendPingTime)
+	go sendPing(d, id, config.C.Dispatch.SendPingTime)
 
 	for {
 
@@ -168,7 +171,8 @@ func (d *setDispatch) work(c conn.Conn) {
 			case *frame.Pong:
 				timer.Stop()
 				timer.Reset(getpongtime)
-				d.StoreMachine(p.Machine)
+				m := d.AllMachine[id]
+				m.StoreMachine(p.Machine)
 			}
 		default:
 			// TODO:现在没有除了普通请求之外的ctrl code 支持
@@ -185,12 +189,12 @@ func (d *setDispatch) Close() {
 	}
 }
 
-func sendPing(d *setDispatch, sendpingtime time.Duration) {
+func sendPing(d *setDispatch, id string, sendpingtime time.Duration) {
 	ticker := time.NewTicker(sendpingtime)
 	ping := frame.NewPing(0)
 	for {
 		<-ticker.C
-		err := d.Send(ping)
+		err := d.SendTo(id, ping)
 		if err != nil {
 			log.Println("sendPing err", err)
 			return

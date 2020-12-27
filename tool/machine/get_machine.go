@@ -4,6 +4,7 @@ import (
 	"log"
 	"runtime"
 	"strconv"
+	"sync"
 )
 
 type GetMachineFunc func(map[string]string) error
@@ -40,4 +41,28 @@ func (m *machineInfo) GetMachineInfo() (map[string]string, error) {
 		}
 	}
 	return info, err
+}
+
+type Machine struct {
+	sync.Mutex
+	Info map[string]string
+}
+
+func NewMachine() *Machine {
+	return &Machine{
+		Info: make(map[string]string),
+	}
+}
+
+func (m *Machine) Get(key string) (value string, has bool) {
+	m.Lock()
+	defer m.Unlock()
+	value, has = m.Info[key]
+	return
+}
+
+func (m *Machine) StoreMachine(info map[string]string) {
+	m.Lock()
+	defer m.Unlock()
+	m.Info = info
 }

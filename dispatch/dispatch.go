@@ -3,7 +3,6 @@ package dispatch
 
 import (
 	"github.com/MashiroC/begonia/dispatch/frame"
-	"sync"
 )
 
 /*
@@ -49,22 +48,4 @@ type Dispatcher interface {
 	// 目前可以hook的：
 	// - close
 	Hook(typ string, hookFunc interface{})
-}
-
-type Machine struct {
-	sync.Mutex
-	Info map[string]string
-}
-
-func (m *Machine) Get(key string) (value string, has bool) {
-	m.Lock()
-	defer m.Unlock()
-	value, has = m.Info[key]
-	return
-}
-
-func (m *Machine) StoreMachine(info map[string]string) {
-	m.Lock()
-	defer m.Unlock()
-	m.Info = info
 }
