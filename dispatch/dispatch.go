@@ -4,7 +4,6 @@ package dispatch
 import (
 	"errors"
 	"github.com/MashiroC/begonia/dispatch/frame"
-	"github.com/MashiroC/begonia/tool/berr"
 	"reflect"
 )
 
@@ -94,8 +93,8 @@ func (d *baseDispatch) Hook(name string, hookFunc interface{}) {
 			d.CloseHookFunc = f
 			return
 		}
-		panic(berr.New("dispatch", "hook", "close func must func(connID string, err error) but "+reflect.TypeOf(hookFunc).String()))
+		panic("close func must func(connID string, err error) but " + reflect.TypeOf(hookFunc).String())
 	default:
-		panic(berr.New("dispatch", "hook", "hook func "+name+"not found"))
+		panic("hook func " + name + " not exist")
 	}
 }

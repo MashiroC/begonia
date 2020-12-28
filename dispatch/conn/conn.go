@@ -26,7 +26,8 @@ const (
 type Conn interface {
 	Write(opcode byte, data []byte) error        // 写数据，线程安全
 	Recv() (opcode byte, data []byte, err error) // 读数据
-	Close()                                      // 关闭连接
+	Addr() string
+	Close() // 关闭连接
 }
 
 // Dial 对一个地址建立一条tcp连接

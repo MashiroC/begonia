@@ -4,11 +4,11 @@ package server
 
 import (
 	"context"
+	"fmt"
 	cRegister "github.com/MashiroC/begonia/core/register"
 	"github.com/MashiroC/begonia/internal/coding"
 	"github.com/MashiroC/begonia/internal/register"
 	"github.com/MashiroC/begonia/logic"
-	"github.com/MashiroC/begonia/tool/berr"
 	"github.com/MashiroC/begonia/tool/qconv"
 	"github.com/MashiroC/begonia/tool/reflects"
 	"reflect"
@@ -58,7 +58,10 @@ func (r *rService) Register(name string, service interface{}) {
 		})
 	}
 
-	r.register.Register(name, registerFs)
+	err := r.register.Register(name, registerFs)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func (r *rService) Wait() {
@@ -69,14 +72,14 @@ func (r *rService) handleMsg(msg *logic.Call, wf logic.ResultFunc) {
 	fun, err := r.store.get(msg.Service, msg.Fun)
 	if err != nil {
 		wf.Result(&logic.CallResult{
-			Err: berr.Warp("app.Server", "handle get func", err),
+			Err: fmt.Errorf("app.Server get func error: %w", err),
 		})
 		return
 	}
 	data, err := fun.in.Decode(msg.Param)
 	if err != nil {
 		wf.Result(&logic.CallResult{
-			Err: berr.Warp("app.Server", "handle", err),
+			Err: fmt.Errorf("app.Server handle error: %w", err),
 		})
 		return
 	}
@@ -93,7 +96,7 @@ func (r *rService) handleMsg(msg *logic.Call, wf logic.ResultFunc) {
 	outVal := fun.method.Func.Call(inVal)
 
 	m := reflects.FromValue(outVal)
-	lastKey := "out" + qconv.I2S(len(outVal))
+	lastKey := "F" + qconv.I2S(len(outVal))
 	v := m[lastKey]
 	if vErr, ok := v.(error); ok {
 		delete(m, lastKey)

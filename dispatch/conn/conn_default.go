@@ -39,6 +39,10 @@ type defaultConn struct {
 	l   sync.Mutex
 }
 
+func (d *defaultConn) Addr() string {
+	return d.nc.RemoteAddr().String()
+}
+
 func (d *defaultConn) Write(opcode byte, data []byte) (err error) {
 	d.l.Lock()
 	defer d.l.Unlock()

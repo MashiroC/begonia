@@ -11,8 +11,6 @@ import (
 	"reflect"
 )
 
-// logic_service.go something
-
 type Client interface {
 	Service(name string) (s Service, err error)
 	FunSync(serviceName, funName string) (rf RemoteFunSync, err error)
@@ -51,8 +49,6 @@ func (r *rClient) Service(serviceName string) (s Service, err error) {
 		s = newAstService(serviceName, r)
 		return
 	}
-
-
 
 	funs := make([]Fun, 0, len(fs))
 

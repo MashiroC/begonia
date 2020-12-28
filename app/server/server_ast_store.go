@@ -1,7 +1,7 @@
 package server
 
 import (
-	"errors"
+	"fmt"
 	"sync"
 )
 
@@ -20,7 +20,7 @@ func (s *astServiceStore) get(service string) (do astDo, err error) {
 	var ok bool
 	do, ok = s.v[service]
 	if !ok {
-		err = errors.New("Server not exist")
+		err = fmt.Errorf("service [%s] not exist", service)
 	}
 	return
 }
@@ -29,7 +29,7 @@ func (s *astServiceStore) store(service string, fun astDo) (err error) {
 	s.l.Lock()
 	defer s.l.Unlock()
 	if _, ok := s.v[service]; ok {
-		return errors.New("Server exist")
+		return fmt.Errorf("service [%s] exist, you cannot store it", service)
 	}
 	s.v[service] = fun
 	return

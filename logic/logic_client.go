@@ -1,9 +1,9 @@
 package logic
 
 import (
+	"fmt"
 	"github.com/MashiroC/begonia/dispatch"
 	"github.com/MashiroC/begonia/dispatch/frame"
-	"github.com/MashiroC/begonia/tool/berr"
 	"log"
 	"reflect"
 )
@@ -35,15 +35,14 @@ func (c *Client) DpHandler(connID string, f frame.Frame) {
 		return
 	}
 
-	panic(berr.NewF("logic", "handle", "msg typ must *frame.Response but %s", reflect.TypeOf(f).String()))
-
+	panic(fmt.Sprintf("logic handle error: msg typ must *frame.Response but %s", reflect.TypeOf(f)))
 }
 
 func (c *Client) HandleResponse(resp *frame.Response) {
 	reqID := resp.ReqID
 	err := c.Callbacks.Callback(reqID, &CallResult{
 		Result: resp.Result,
-		Err:    berr.New("rpc", "call", resp.Err),
+		Err:    fmt.Errorf("rpc call error: %s", resp.Err),
 	})
 
 	if err != nil {

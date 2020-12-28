@@ -1,9 +1,9 @@
 package client
 
 import (
+	"fmt"
 	"github.com/MashiroC/begonia/internal/coding"
 	"github.com/MashiroC/begonia/logic"
-	"github.com/MashiroC/begonia/tool/berr"
 	"github.com/MashiroC/begonia/tool/reflects"
 )
 
@@ -35,7 +35,7 @@ type rService struct {
 func (r *rService) FuncSync(name string) (rf RemoteFunSync, err error) {
 	f, exist := r.funs[name]
 	if !exist {
-		err = berr.NewF("app.client", "get func", "remote func [%s] not exist", name)
+		err = fmt.Errorf("app.client funcSync error: remote func [%s] not exist", name)
 		return
 	}
 
@@ -75,7 +75,7 @@ func (r *rService) FuncAsync(name string) (rf RemoteFunAsync, err error) {
 
 	f, exist := r.funs[name]
 	if !exist {
-		err = berr.NewF("app.client", "get func async", "remote func [%s] not exist", name)
+		err = fmt.Errorf("app,client funcAsync error: remote func [%s] not exist", name)
 		return
 	}
 

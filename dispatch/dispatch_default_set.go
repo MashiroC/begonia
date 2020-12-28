@@ -1,11 +1,10 @@
 package dispatch
 
 import (
-	"errors"
+	"fmt"
 	"github.com/MashiroC/begonia/dispatch/conn"
 	"github.com/MashiroC/begonia/dispatch/frame"
 	"github.com/MashiroC/begonia/internal/proxy"
-	"github.com/MashiroC/begonia/tool/berr"
 	"github.com/MashiroC/begonia/tool/ids"
 	"log"
 	"sync"
@@ -41,16 +40,16 @@ type setDispatch struct {
 
 // Link 建立连接，center cluster模式下，会开一条和center的tcp连接
 func (d *setDispatch) Link(addr string) (err error) {
-	panic(berr.New("dispatch", "link", "in set mode, you can't use Link()"))
+	panic("in set mode, you can't use Link()")
 }
 
 func (d *setDispatch) ReLink() bool {
-	panic(berr.New("dispatch", "link", "in set mode, you can't use ReLink()"))
+	panic("in set mode, you can't use ReLink()")
 }
 
 // Send 发送一个包，在center cluster模式下直接发送到中心，中心进行调度
 func (d *setDispatch) Send(f frame.Frame) (err error) {
-	panic(berr.New("dispatch", "send", "in set mode, you can't use Send(), please use SendTo()"))
+	panic("in set mode, you can't use Send()")
 }
 
 func (d *setDispatch) HandleFrame(connID string, f frame.Frame) {
@@ -73,7 +72,7 @@ func (d *setDispatch) SendTo(connID string, f frame.Frame) (err error) {
 	d.connLock.Unlock()
 
 	if !ok {
-		return berr.NewF("dispatch", "send", "conn [%s] is broked or disconnection", connID)
+		return fmt.Errorf("dispatch send error: conn [%s] is broken or disconnection", connID)
 	}
 
 	err = c.Write(byte(f.Opcode()), f.Marshal())
@@ -110,7 +109,7 @@ func (d *setDispatch) work(c conn.Conn) {
 
 	id := ids.New()
 
-	log.Printf("new conn [%s]\n", id)
+	log.Printf("new conn addr [%s] accept, connID [%s]\n", c.Addr(), id)
 	d.connLock.Lock()
 	d.connSet[id] = c
 	d.connLock.Unlock()
@@ -145,7 +144,7 @@ func (d *setDispatch) work(c conn.Conn) {
 
 		} else {
 			// TODO:现在没有除了普通请求之外的ctrl code 支持
-			panic(berr.NewF("dispatch", "recv", "ctrl code [%s] not support", ctrl))
+			panic(fmt.Sprintf("ctrl code [%s] not support", ctrl))
 		}
 	}
 
@@ -162,7 +161,7 @@ func (d *setDispatch) Handle(typ string, in interface{}) {
 		d.baseDispatch.Handle(typ, in)
 		return
 	}
-	panic(errors.New("dispatch handle error: handle func not match"))
+	panic("handle func not exist")
 }
 
 func (d *setDispatch) Close() {

@@ -45,7 +45,7 @@ func BootStartByManager(optionMap map[string]interface{}) (s Server) {
 		}
 	}
 
-	var waitChans *logic.WaitChans
+	var waitChans *logic.CallbackStore
 	waitChans = logic.NewWaitChans()
 
 	// 创建 logic

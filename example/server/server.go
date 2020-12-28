@@ -40,12 +40,12 @@ func QPS() {
 	}
 }
 
-//go:generate begonia -r -s ../
+//go:generate begonia -s -c -r ../
 func main() {
 	count = 0
 	flag = false
 
-	s := begonia.NewServer(option.P2P(),option.Addr(":12306"))
+	s := begonia.NewServer(option.Addr(":12306"))
 
 	echoService := &EchoService{}
 	testService := TestService(0)

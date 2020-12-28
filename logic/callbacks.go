@@ -2,39 +2,39 @@ package logic
 
 import (
 	"context"
+	"fmt"
 	"github.com/MashiroC/begonia/config"
-	"github.com/MashiroC/begonia/tool/berr"
 	"sync"
 	"time"
 )
 
-// waitchans.go 等待管道
+// callbacks.go 等待管道
 
 // waitCallback 等待的回调函数
 type waitCallback = func(*CallResult)
 
-// WaitChans 等待管道，拥有注册回调、回调的方法
-type WaitChans struct {
+// CallbackStore 回调仓库，拥有注册回调、回调的方法
+type CallbackStore struct {
 	chLock sync.RWMutex                // 锁
 	ch     map[string]chan *CallResult // 存储的map
 }
 
 // NewWaitChans 创建一个实例
-func NewWaitChans() *WaitChans {
-	return &WaitChans{
+func NewWaitChans() *CallbackStore {
+	return &CallbackStore{
 		chLock: sync.RWMutex{},
 		ch:     make(map[string]chan *CallResult),
 	}
 }
 
 // Callback 注册后调后，根据reqID来调用回调
-func (w *WaitChans) Callback(reqID string, cr *CallResult) (err error) {
+func (w *CallbackStore) Callback(reqID string, cr *CallResult) (err error) {
 	w.chLock.RLock()
 	ch, exist := w.ch[reqID]
 	w.chLock.RUnlock()
 
 	if !exist {
-		err = berr.NewF("Callbacks", "callback", "reqID [%s] not found", reqID)
+		err = fmt.Errorf("callbacks callback error: reqID [%s] not exist", reqID)
 		return
 	}
 
@@ -43,7 +43,7 @@ func (w *WaitChans) Callback(reqID string, cr *CallResult) (err error) {
 }
 
 // AddCallback 添加一个回调
-func (w *WaitChans) AddCallback(ctx context.Context, reqID string, callback waitCallback) {
+func (w *CallbackStore) AddCallback(ctx context.Context, reqID string, callback waitCallback) {
 	timeout, _ := context.WithTimeout(ctx, time.Duration(config.C.Logic.RequestTimeOut)*time.Second)
 
 	ch := make(chan *CallResult)
@@ -57,7 +57,7 @@ func (w *WaitChans) AddCallback(ctx context.Context, reqID string, callback wait
 }
 
 // goWait 这个需要开一个新协程 来等待结果或者超时
-func (w *WaitChans) goWait(reqID string, timeout, parent <-chan struct{}, cb waitCallback, ch chan *CallResult) {
+func (w *CallbackStore) goWait(reqID string, timeout, parent <-chan struct{}, cb waitCallback, ch chan *CallResult) {
 
 	var f *CallResult
 	var errStr string
@@ -80,7 +80,7 @@ func (w *WaitChans) goWait(reqID string, timeout, parent <-chan struct{}, cb wai
 	if errStr != "" {
 		f = &CallResult{
 			Result: nil,
-			Err:    berr.New("waitChat", "callback", errStr),
+			Err:    fmt.Errorf("callbacks wait error: %s", errStr),
 		}
 	}
 

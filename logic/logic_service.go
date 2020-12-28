@@ -8,7 +8,7 @@ import (
 // logic_service.go service节点的logic层
 
 // NewService 创建一个实例
-func NewService(dp dispatch.Dispatcher, waitChans *WaitChans) *Service {
+func NewService(dp dispatch.Dispatcher, waitChans *CallbackStore) *Service {
 
 	c := &Service{
 		Client: &Client{

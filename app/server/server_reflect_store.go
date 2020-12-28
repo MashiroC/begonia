@@ -1,7 +1,7 @@
 package server
 
 import (
-	"errors"
+	"fmt"
 	"github.com/MashiroC/begonia/internal/coding"
 	"reflect"
 	"sync"
@@ -30,13 +30,13 @@ func (s *serviceStore) get(service, funName string) (fun reflectFun, err error) 
 
 	funs, ok := s.m[service]
 	if !ok {
-		err = errors.New("Server not found")
+		err = fmt.Errorf("service [%s] not exist", service)
 		return
 	}
 
 	fun, ok = funs[funName]
 	if !ok {
-		err = errors.New("fun not found")
+		err = fmt.Errorf("func [%s] not exist", funName)
 	}
 	return
 }

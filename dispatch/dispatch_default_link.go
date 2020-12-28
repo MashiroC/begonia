@@ -1,10 +1,10 @@
 package dispatch
 
 import (
+	"fmt"
 	"github.com/MashiroC/begonia/config"
 	"github.com/MashiroC/begonia/dispatch/conn"
 	"github.com/MashiroC/begonia/dispatch/frame"
-	"github.com/MashiroC/begonia/tool/berr"
 	"github.com/MashiroC/begonia/tool/ids"
 	"log"
 	"time"
@@ -79,7 +79,7 @@ func (d *linkDispatch) Link(addr string) (err error) {
 
 	c, err := conn.Dial(addr)
 	if err != nil {
-		return berr.Warp("dispatch", "link", err)
+		return fmt.Errorf("dispatch link error: %w", err)
 	}
 
 	d.linkedConn = c
@@ -103,7 +103,7 @@ func (d *linkDispatch) Send(f frame.Frame) (err error) {
 
 func (d *linkDispatch) SendTo(connID string, f frame.Frame) (err error) {
 	if connID != d.linkID {
-		err = berr.New("dispatch", "send", "in linked mode, you can't use SendTo() to another conn, please use Send() or passing manager center connID")
+		err = fmt.Errorf("dispatch send error: in linked mode, you can't use SendTo() to another conn, please use Send() or passing manager center connID")
 		return
 	}
 
@@ -112,7 +112,7 @@ func (d *linkDispatch) SendTo(connID string, f frame.Frame) (err error) {
 }
 
 func (d *linkDispatch) Listen(addr string) {
-	panic(berr.New("dispatch", "listen", "link mode can't use Listen()"))
+	panic("link mode can't use Listen()")
 }
 
 // work 获得一个新的连接之后持续监听连接，然后把消息发送到msgCh里
@@ -121,7 +121,7 @@ func (d *linkDispatch) work(c conn.Conn) {
 	id := ids.New()
 
 	d.linkID = id
-	log.Printf("link [%s] success\n", id)
+	log.Printf("link addr [%s] success, connID [%s]\n", c.Addr(), id)
 
 	for {
 
@@ -149,8 +149,8 @@ func (d *linkDispatch) work(c conn.Conn) {
 			go d.LgHandleFrame(id, f)
 
 		} else {
-			// TODO:现在没有除了普通请求之外的ctrl code 支持
-			panic(berr.NewF("dispatch", "recv", "ctrl code [%s] not support", ctrl))
+			// 现在没有除了普通请求之外的ctrl code 支持
+			panic(fmt.Sprintf("ctrl code [%s] not support", ctrl))
 		}
 	}
 

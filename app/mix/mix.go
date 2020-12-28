@@ -11,7 +11,7 @@ type Mix interface {
 }
 
 type MixNode struct {
-	cli appClient.Client
+	cli    appClient.Client
 	server appServer.Server
 }
 

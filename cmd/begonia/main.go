@@ -104,7 +104,7 @@ func gofmt(path string) {
 	c := exec.Command("go", "fmt", path+"...")
 	err := c.Run()
 	if err != nil {
-		fmt.Println("go fmt error on path: ["+path+"...]")
+		fmt.Println("go fmt error on path: [" + path + "...]")
 	}
 }
 

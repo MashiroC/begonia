@@ -1,3 +1,4 @@
+// Package center 服务中心
 package center
 
 import (
@@ -12,8 +13,7 @@ import (
 	"log"
 )
 
-// starter.go something
-// bootStartByCenter 根据center cluster模式启动
+// bootstart 根据center cluster模式启动
 func bootstart(optionMap map[string]interface{}) server.Server {
 
 	internal.ServiceAppMode = internal.Ast
@@ -70,33 +70,13 @@ func bootstart(optionMap map[string]interface{}) server.Server {
 
 	// ========== END ==========
 
-	// ========== 初始化核心服务 ==========
-
 	log.Println("begonia center started")
 	//TODO: 发一个包，拉取配置
-
-	// ========== END ==========
-	/*
-
-		先不去拉配置 后面再加
-
-		// 假设这个getConfig是sub service的一个远程函数
-		var getConfig = func(...interface{}) (interface{}, error) {
-			return map[string]interface{}{}, nil
-		}
-
-		// 假设m就是拿到的远程配置
-		m, err := getConfig()
-
-		// TODO:根据拿到的远程配置来修改配置
-		// do some thing
-		// 修改配置之前的一系列调用全部都是按默认配置来的
-	*/
 
 	return s
 }
 
-// New 初始化，获得一个service对象，传入一个mode参数，以及一个option的不定参数
+// New 拿到一个server，该server中会初始化center相关的东西
 func New(optionFunc ...option.WriteFunc) (s server.Server) {
 	optionMap := defaultClientConfig()
 

@@ -4,10 +4,10 @@ package server
 
 import (
 	"context"
+	"fmt"
 	coreRegister "github.com/MashiroC/begonia/core/register"
 	"github.com/MashiroC/begonia/internal/register"
 	"github.com/MashiroC/begonia/logic"
-	"github.com/MashiroC/begonia/tool/berr"
 )
 
 type astDo = func(ctx context.Context, fun string, param []byte) (result []byte, err error)
@@ -56,7 +56,7 @@ func (r *astService) handleMsg(msg *logic.Call, wf logic.ResultFunc) {
 	do, err := r.store.get(msg.Service)
 	if err != nil {
 		wf.Result(&logic.CallResult{
-			Err: berr.Warp("app.Server", "handle get func", err),
+			Err: fmt.Errorf("app.Server store get error: %w", err),
 		})
 		return
 	}
@@ -66,7 +66,7 @@ func (r *astService) handleMsg(msg *logic.Call, wf logic.ResultFunc) {
 	data, err := do(ctx, msg.Fun, msg.Param)
 	if err != nil {
 		wf.Result(&logic.CallResult{
-			Err: berr.Warp("app.Server", "handle", err),
+			Err: fmt.Errorf("app.Server handle error: %w", err),
 		})
 		return
 	}
