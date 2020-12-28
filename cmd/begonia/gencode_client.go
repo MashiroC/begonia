@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/MashiroC/begonia/internal/coding"
+	"github.com/MashiroC/begonia/app/coding"
 	"html/template"
 	"os"
 	"strings"
@@ -45,9 +45,10 @@ func makeCall(path string) {
 		panic(err)
 	}
 
-	_, err = os.Stat(path + string(os.PathSeparator) + "call.go")
+	cliPath := path + string(os.PathSeparator) + "cli.begonia.go"
+	_, err = os.Stat(cliPath)
 	if err != nil {
-		callFile, err := os.Create(path + string(os.PathSeparator) + "call.begonia.go")
+		callFile, err := os.Create(cliPath)
 		if err != nil {
 			panic(err)
 		}

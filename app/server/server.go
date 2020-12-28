@@ -2,7 +2,7 @@
 package server
 
 import (
-	"github.com/MashiroC/begonia/internal/coding"
+	"github.com/MashiroC/begonia/app/coding"
 )
 
 var success coding.SuccessCoder

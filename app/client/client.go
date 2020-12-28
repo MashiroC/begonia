@@ -3,8 +3,8 @@ package client
 
 import (
 	"context"
-	"github.com/MashiroC/begonia/internal"
-	"github.com/MashiroC/begonia/internal/coding"
+	"github.com/MashiroC/begonia/app"
+	"github.com/MashiroC/begonia/app/coding"
 	"github.com/MashiroC/begonia/internal/register"
 	"github.com/MashiroC/begonia/logic"
 	"log"
@@ -45,7 +45,7 @@ func (r *rClient) Service(serviceName string) (s Service, err error) {
 		return
 	}
 
-	if internal.ServiceAppMode == internal.Ast {
+	if app.ServiceAppMode == app.Ast {
 		s = newAstService(serviceName, r)
 		return
 	}

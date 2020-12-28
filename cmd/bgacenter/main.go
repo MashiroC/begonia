@@ -3,12 +3,18 @@ package main
 import (
 	"github.com/MashiroC/begonia/app/center"
 	"github.com/MashiroC/begonia/app/option"
+	"os"
 )
 
 func main() {
 
-	addr := ":12306"
-	c := center.New(option.Addr(addr))
+	s := os.Args[len(os.Args)-1]
 
-	c.Wait()
+	if s == "start" {
+		addr := ":12306"
+		c := center.New(option.Addr(addr))
+
+		c.Wait()
+	}
+
 }

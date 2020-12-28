@@ -1,9 +1,9 @@
 package begonia
 
 import (
+	"github.com/MashiroC/begonia/app"
 	"github.com/MashiroC/begonia/app/client"
 	"github.com/MashiroC/begonia/app/option"
-	"github.com/MashiroC/begonia/internal"
 )
 
 // Client 客户端的接口
@@ -24,7 +24,7 @@ func NewClient(optionFunc ...option.WriteFunc) (cli Client) {
 }
 
 func NewClientWithAst(optionFunc ...option.WriteFunc) (cli Client) {
-	internal.ServiceAppMode = internal.Ast
+	app.ServiceAppMode = app.Ast
 
 	return NewClient(optionFunc...)
 }

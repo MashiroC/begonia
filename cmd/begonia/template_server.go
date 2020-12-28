@@ -15,8 +15,8 @@ import (
 	"context"
 	"errors"
 	cRegister "github.com/MashiroC/begonia/core/register"
-	"github.com/MashiroC/begonia/internal"
-	"github.com/MashiroC/begonia/internal/coding"
+	"github.com/MashiroC/begonia/app"
+	"github.com/MashiroC/begonia/app/coding"
 )
 
 {{/* 序列化用的schema和coder 以及服务信息的FuncList */}}
@@ -46,7 +46,7 @@ type {{$snDo}}Out struct {
 {{end}}
 
 func init() {
-	internal.ServiceAppMode = internal.Ast
+	app.ServiceAppMode = app.Ast
 
 	var err error
 {{range .fi}} 	{{$snDo := concat $sn .Name }}

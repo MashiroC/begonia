@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	mode = "center"
+	mode = "bgacenter"
 )
 
 var (
@@ -60,13 +60,16 @@ type EchoService struct {
 }
 
 func (*EchoService) SayHello(name string) string {
-	//QPS()
-	//fmt.Println("sayHello")
+	panic("asd")
 	return "Hello 😈" + name
 }
 
-func (*EchoService) sayHelloWithContext(ctx context.Context, name string) string {
-	fmt.Println(ctx.Value("info"))
+func (*EchoService) SayHelloWithContext(ctx context.Context, name string) string {
+	v := ctx.Value("info")
+	info := v.(map[string]string)
+	fmt.Println(info)
+	fmt.Println(info["reqID"])
+	fmt.Println(info["connID"])
 	return "Hello ctx " + name
 }
 

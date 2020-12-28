@@ -7,8 +7,8 @@
 package register
 
 import (
+	"github.com/MashiroC/begonia/app/coding"
 	"github.com/MashiroC/begonia/core/register"
-	"github.com/MashiroC/begonia/internal/coding"
 )
 
 var (

@@ -5,8 +5,8 @@ package server
 import (
 	"context"
 	"fmt"
+	"github.com/MashiroC/begonia/app/coding"
 	cRegister "github.com/MashiroC/begonia/core/register"
-	"github.com/MashiroC/begonia/internal/coding"
 	"github.com/MashiroC/begonia/internal/register"
 	"github.com/MashiroC/begonia/logic"
 	"github.com/MashiroC/begonia/tool/qconv"
@@ -93,16 +93,10 @@ func (r *rService) handleMsg(msg *logic.Call, wf logic.ResultFunc) {
 
 	inVal = append(inVal, reflects.ToValue(data.(map[string]interface{}), fun.reSharp)...)
 
-	outVal := fun.method.Func.Call(inVal)
-
-	m := reflects.FromValue(outVal)
-	lastKey := "F" + qconv.I2S(len(outVal))
-	v := m[lastKey]
-	if vErr, ok := v.(error); ok {
-		delete(m, lastKey)
-		m["err"] = vErr.Error()
-	} else {
-		m["err"] = nil
+	m, re := callWithRecover(fun.method, inVal)
+	if re != "" {
+		wf.Result(&logic.CallResult{Err: fmt.Errorf("rpc call recover: %s", re)})
+		return
 	}
 
 	b, err := fun.out.Encode(m)
@@ -112,4 +106,25 @@ func (r *rService) handleMsg(msg *logic.Call, wf logic.ResultFunc) {
 	}
 
 	wf.Result(&logic.CallResult{Result: b})
+}
+
+func callWithRecover(fun reflect.Method, inVal []reflect.Value) (m map[string]interface{}, reStr string) {
+	defer func() {
+		if re := recover(); re != nil {
+			reStr = fmt.Sprint(re)
+		}
+	}()
+	outVal := fun.Func.Call(inVal)
+
+	m = reflects.FromValue(outVal)
+	lastKey := "F" + qconv.I2S(len(outVal))
+	v := m[lastKey]
+	if vErr, ok := v.(error); ok {
+		delete(m, lastKey)
+		m["err"] = vErr.Error()
+	} else {
+		m["err"] = nil
+	}
+
+	return
 }

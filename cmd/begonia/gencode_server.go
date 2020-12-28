@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/MashiroC/begonia/internal/coding"
+	"github.com/MashiroC/begonia/app/coding"
 	"github.com/MashiroC/begonia/tool/qconv"
 	"go/ast"
 	"html/template"

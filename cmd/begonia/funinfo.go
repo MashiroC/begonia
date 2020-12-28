@@ -2,7 +2,7 @@ package main
 
 import (
 	"errors"
-	"github.com/MashiroC/begonia/internal/coding"
+	"github.com/MashiroC/begonia/app/coding"
 	"github.com/MashiroC/begonia/tool/qarr"
 	"github.com/hamba/avro"
 	"go/ast"
