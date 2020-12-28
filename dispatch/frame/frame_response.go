@@ -30,10 +30,10 @@ type Response struct {
 // NewResponse 创建一个response
 func NewResponse(reqID string, result []byte, err error) Frame {
 	var errStr string
-	if err==nil{
-		errStr =""
-	}else{
-		errStr=err.Error()
+	if err == nil {
+		errStr = ""
+	} else {
+		errStr = err.Error()
 	}
 	return &Response{
 		ReqID:  reqID,

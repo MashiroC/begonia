@@ -13,7 +13,7 @@ import (
 func TestRequest1(t *testing.T) {
 	d := []byte("test_-reqid")
 	d = append(d, breakByte)
-	d = append(d, []byte("test_-service")...)
+	d = append(d, []byte("test_-server")...)
 	d = append(d, breakByte)
 	d = append(d, []byte("test_-fun")...)
 	d = append(d, breakByte)
@@ -28,7 +28,7 @@ func TestRequest2(t *testing.T) {
 	// 缺少分隔符
 	d := []byte("test_-reqid")
 	d = append(d, breakByte)
-	d = append(d, []byte("test_-service")...)
+	d = append(d, []byte("test_-server")...)
 	d = append(d, []byte("test_-fun")...)
 	d = append(d, []byte("test_-data")...)
 	res, err := unMarshalRequest(d)
@@ -41,7 +41,7 @@ func TestRequest3(t *testing.T) {
 	// 中间参数空
 	d := []byte("test_-reqid")
 	d = append(d, breakByte)
-	d = append(d, []byte("test_-service")...)
+	d = append(d, []byte("test_-server")...)
 	d = append(d, breakByte)
 	d = append(d, breakByte)
 	d = append(d, []byte("test_-data")...)

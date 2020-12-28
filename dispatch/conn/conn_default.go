@@ -39,6 +39,10 @@ type defaultConn struct {
 	l   sync.Mutex
 }
 
+func (d *defaultConn) Addr() string {
+	return d.nc.RemoteAddr().String()
+}
+
 func (d *defaultConn) Write(opcode byte, data []byte) (err error) {
 	d.l.Lock()
 	defer d.l.Unlock()
@@ -149,7 +153,7 @@ func (d *defaultConn) read(len uint) (data []byte, err error) {
 		overSize := make([]byte, int(len)-n)
 		size, err := d.readWithTimeout(overSize)
 		if err != nil {
-			return nil,err
+			return nil, err
 		}
 
 		for i := 0; i < size; i++ {
