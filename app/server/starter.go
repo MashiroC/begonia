@@ -3,9 +3,9 @@ package server
 import (
 	"context"
 	"fmt"
+	"github.com/MashiroC/begonia/app"
 	cRegister "github.com/MashiroC/begonia/core/register"
 	"github.com/MashiroC/begonia/dispatch"
-	"github.com/MashiroC/begonia/internal"
 	"github.com/MashiroC/begonia/internal/register"
 	"github.com/MashiroC/begonia/logic"
 	"log"
@@ -18,7 +18,7 @@ func BootStartByManager(optionMap map[string]interface{}) (s Server) {
 
 	fmt.Println("  ____                              _        \n |  _ \\                            (_)       \n | |_) |  ___   __ _   ___   _ __   _   __ _ \n |  _ <  / _ \\ / _` | / _ \\ | '_ \\ | | / _` |\n | |_) ||  __/| (_| || (_) || | | || || (_| |\n |____/  \\___| \\__, | \\___/ |_| |_||_| \\__,_|\n                __/ |                        \n               |___/                         ")
 
-	log.Printf("begonia Server start with [%s] mode\n", internal.ServiceAppMode)
+	log.Printf("begonia Server start with [%s] mode\n", app.ServiceAppMode)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	var isLocal bool
@@ -30,9 +30,14 @@ func BootStartByManager(optionMap map[string]interface{}) (s Server) {
 		panic("addr must exist")
 	}
 
+	var isP2P bool
+	if dpTyp, ok := optionMap["dpTyp"]; ok && dpTyp == "p2p" {
+		isP2P = true
+	}
+
 	// 创建 dispatch
 	var dp dispatch.Dispatcher
-	if dpTyp, ok := optionMap["dpTyp"]; ok && dpTyp == "p2p" {
+	if isP2P {
 		log.Printf("begonia Server will listen on [%s]", addr)
 		dp = dispatch.NewSetByDefaultCluster()
 		go dp.Listen(addr)
@@ -70,14 +75,15 @@ func BootStartByManager(optionMap map[string]interface{}) (s Server) {
 	coreRegister := cRegister.NewCoreRegister()
 
 	var rg register.Register
-	if dpTyp, ok := optionMap["dpTyp"]; ok && dpTyp == "p2p" {
+	if isP2P {
 		rg = register.NewLocalRegister(coreRegister)
+
 	} else {
 		rg = register.NewRemoteRegister(lg.Client)
 	}
 
 	// 创建实例
-	if internal.ServiceAppMode == internal.Ast {
+	if app.ServiceAppMode == app.Ast {
 		ast := &astService{}
 		ast.ctx = ctx
 		ast.cancel = cancel
@@ -108,9 +114,10 @@ func BootStartByManager(optionMap map[string]interface{}) (s Server) {
 		s = r
 	}
 
-	s.Register("REGISTER", coreRegister)
-
-	optionMap["REGISTER"] = coreRegister
+	if isP2P {
+		s.Register("REGISTER", coreRegister, "Register", "ServiceInfo")
+		optionMap["REGISTER"] = coreRegister
+	}
 
 	return s
 }

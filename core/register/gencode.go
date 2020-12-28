@@ -9,7 +9,7 @@ package register
 import (
 	"context"
 	"errors"
-	"github.com/MashiroC/begonia/internal/coding"
+	"github.com/MashiroC/begonia/app/coding"
 )
 
 var (

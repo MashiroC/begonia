@@ -2,7 +2,7 @@ package server
 
 import (
 	"fmt"
-	"github.com/MashiroC/begonia/internal/coding"
+	"github.com/MashiroC/begonia/app/coding"
 	"reflect"
 	"sync"
 )

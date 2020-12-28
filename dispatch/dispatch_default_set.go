@@ -38,7 +38,7 @@ type setDispatch struct {
 	connLock sync.Mutex           // 锁，保证connSet线程安全
 }
 
-// Link 建立连接，center cluster模式下，会开一条和center的tcp连接
+// Link 建立连接，bgacenter cluster模式下，会开一条和center的tcp连接
 func (d *setDispatch) Link(addr string) (err error) {
 	panic("in set mode, you can't use Link()")
 }

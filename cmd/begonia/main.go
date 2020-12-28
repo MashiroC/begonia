@@ -28,11 +28,12 @@ var (
 )
 
 var (
-	fset  = token.NewFileSet()
-	names = make(map[string]string)
-	recvs = make(map[string]Service)
-	objs  = make(map[string][]string)
-	root  string
+	fset         = token.NewFileSet()
+	names        = make(map[string]string)
+	nameRegister = make(map[string][]string)
+	recvs        = make(map[string]Service)
+	objs         = make(map[string][]string)
+	root         string
 )
 
 type Service struct {
@@ -75,7 +76,7 @@ func main() {
 
 	for k, _ := range names {
 		v := recvs[k]
-		fi := getFunInfo(v.FuncList)
+		fi := getFunInfo(k, v.FuncList)
 		fmt.Println("generate server", k, "...")
 		if isGenerateService {
 			fmt.Print("server code ...")

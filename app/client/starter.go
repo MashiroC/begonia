@@ -3,8 +3,8 @@ package client
 import (
 	"context"
 	"fmt"
+	"github.com/MashiroC/begonia/app"
 	"github.com/MashiroC/begonia/dispatch"
-	"github.com/MashiroC/begonia/internal"
 	"github.com/MashiroC/begonia/internal/register"
 	"github.com/MashiroC/begonia/logic"
 	"log"
@@ -17,7 +17,7 @@ func BootStartByCenter(optionMap map[string]interface{}) *rClient {
 
 	fmt.Println("  ____                              _        \n |  _ \\                            (_)       \n | |_) |  ___   __ _   ___   _ __   _   __ _ \n |  _ <  / _ \\ / _` | / _ \\ | '_ \\ | | / _` |\n | |_) ||  __/| (_| || (_) || | | || || (_| |\n |____/  \\___| \\__, | \\___/ |_| |_||_| \\__,_|\n                __/ |                        \n               |___/                         ")
 
-	log.Printf("begonia client start with [%s] mode\n", internal.ServiceAppMode)
+	log.Printf("begonia client start with [%s] mode\n", app.ServiceAppMode)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	c := &rClient{
@@ -74,7 +74,7 @@ func BootStartByCenter(optionMap map[string]interface{}) *rClient {
 func BootStartWithLogic(optionMap map[string]interface{}, lg *logic.Client) *rClient {
 	fmt.Println("  ____                              _        \n |  _ \\                            (_)       \n | |_) |  ___   __ _   ___   _ __   _   __ _ \n |  _ <  / _ \\ / _` | / _ \\ | '_ \\ | | / _` |\n | |_) ||  __/| (_| || (_) || | | || || (_| |\n |____/  \\___| \\__, | \\___/ |_| |_||_| \\__,_|\n                __/ |                        \n               |___/                         ")
 
-	log.Printf("begonia client start with [%s] mode\n", internal.ServiceAppMode)
+	log.Printf("begonia client start with [%s] mode\n", app.ServiceAppMode)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	c := &rClient{

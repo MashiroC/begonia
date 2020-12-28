@@ -2,9 +2,9 @@ package mix
 
 import (
 	"fmt"
+	"github.com/MashiroC/begonia/app"
 	"github.com/MashiroC/begonia/app/client"
 	"github.com/MashiroC/begonia/app/server"
-	"github.com/MashiroC/begonia/internal"
 	"log"
 )
 
@@ -13,7 +13,7 @@ func BootStart(optionMap map[string]interface{}) *MixNode {
 
 	fmt.Println("  ____                              _        \n |  _ \\                            (_)       \n | |_) |  ___   __ _   ___   _ __   _   __ _ \n |  _ <  / _ \\ / _` | / _ \\ | '_ \\ | | / _` |\n | |_) ||  __/| (_| || (_) || | | || || (_| |\n |____/  \\___| \\__, | \\___/ |_| |_||_| \\__,_|\n                __/ |                        \n               |___/                         ")
 
-	log.Printf("begonia client start with [%s] mode\n", internal.ServiceAppMode)
+	log.Printf("begonia client start with [%s] mode\n", app.ServiceAppMode)
 
 	// TODO:给dispatch初始化
 

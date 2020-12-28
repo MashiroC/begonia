@@ -1,13 +1,13 @@
-// Package center 服务中心
+// Package bgacenter 服务中心
 package center
 
 import (
 	"context"
+	"github.com/MashiroC/begonia/app"
 	"github.com/MashiroC/begonia/app/option"
 	"github.com/MashiroC/begonia/app/server"
 	cRegister "github.com/MashiroC/begonia/core/register"
 	"github.com/MashiroC/begonia/dispatch/frame"
-	"github.com/MashiroC/begonia/internal"
 	"github.com/MashiroC/begonia/internal/proxy"
 	"github.com/MashiroC/begonia/logic"
 	"log"
@@ -16,7 +16,7 @@ import (
 // bootstart 根据center cluster模式启动
 func bootstart(optionMap map[string]interface{}) server.Server {
 
-	internal.ServiceAppMode = internal.Ast
+	app.ServiceAppMode = app.Ast
 
 	s := server.BootStartByManager(optionMap)
 
@@ -66,11 +66,13 @@ func bootstart(optionMap map[string]interface{}) server.Server {
 		return
 	})
 
+	lg.Dp.Hook("close", coreRegister.HandleConnClose)
+
 	lg.Dp.Handle("proxy", p)
 
 	// ========== END ==========
 
-	log.Println("begonia center started")
+	log.Println("begonia bgacenter started")
 	//TODO: 发一个包，拉取配置
 
 	return s

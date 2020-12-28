@@ -2,7 +2,7 @@ package client
 
 import (
 	"fmt"
-	"github.com/MashiroC/begonia/internal/coding"
+	"github.com/MashiroC/begonia/app/coding"
 	"github.com/MashiroC/begonia/logic"
 	"github.com/MashiroC/begonia/tool/reflects"
 )

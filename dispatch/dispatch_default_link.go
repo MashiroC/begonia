@@ -72,7 +72,7 @@ type linkDispatch struct {
 	linkID     string    // 连接的id
 }
 
-// Link 建立连接，center cluster模式下，会开一条和center的tcp连接
+// Link 建立连接，bgacenter cluster模式下，会开一条和center的tcp连接
 func (d *linkDispatch) Link(addr string) (err error) {
 
 	d.linkAddr = addr
@@ -103,7 +103,7 @@ func (d *linkDispatch) Send(f frame.Frame) (err error) {
 
 func (d *linkDispatch) SendTo(connID string, f frame.Frame) (err error) {
 	if connID != d.linkID {
-		err = fmt.Errorf("dispatch send error: in linked mode, you can't use SendTo() to another conn, please use Send() or passing manager center connID")
+		err = fmt.Errorf("dispatch send error: in linked mode, you can't use SendTo() to another conn, please use Send() or passing manager bgacenter connID")
 		return
 	}
 

@@ -2,19 +2,31 @@ package main
 
 import (
 	"errors"
-	"github.com/MashiroC/begonia/internal/coding"
+	"github.com/MashiroC/begonia/app/coding"
+	"github.com/MashiroC/begonia/tool/qarr"
 	"github.com/hamba/avro"
 	"go/ast"
 	"strings"
 )
 
-func getFunInfo(decls []*ast.FuncDecl) (res []coding.FunInfo) {
+func getFunInfo(name string, decls []*ast.FuncDecl) (res []coding.FunInfo) {
 	res = make([]coding.FunInfo, 0, 1)
+	reFun, ok := nameRegister[name]
 	for _, fd := range decls {
-		inSchema, inTyps, hasContext := MakeSchema(fd.Name.Name, "In", fd.Type.Params)
-		outSchema, outTyps, _ := MakeSchema(fd.Name.Name, "Out", fd.Type.Results)
+		if ok {
+			if !qarr.StringsIn(reFun, fd.Name.Name) {
+				continue
+			}
+		}
+
+		funName := fd.Name.Name
+		if funName[0] >= 'a' && funName[0] <= 'z' {
+			continue
+		}
+		inSchema, inTyps, hasContext := MakeSchema(funName, "In", fd.Type.Params)
+		outSchema, outTyps, _ := MakeSchema(funName, "Out", fd.Type.Results)
 		res = append(res, coding.FunInfo{
-			Name:       fd.Name.Name,
+			Name:       funName,
 			InSchema:   inSchema,
 			OutSchema:  outSchema,
 			ParamTyp:   inTyps,
@@ -63,7 +75,7 @@ func parseObj(pkgName string, node ast.Node) (res bool) {
 	se := call.Fun.(*ast.SelectorExpr).X.(*ast.Ident).Obj.Decl.(*ast.AssignStmt).Rhs[0].(*ast.CallExpr).Fun.(*ast.SelectorExpr)
 	if se.X.(*ast.Ident).Name == "begonia" && se.Sel.Name == "NewServer" {
 		// 解析
-		if len(call.Args) == 2 {
+		if len(call.Args) >= 2 {
 			var ue *ast.UnaryExpr
 
 			if tmp, ok := call.Args[1].(*ast.Ident); ok {
@@ -79,6 +91,16 @@ func parseObj(pkgName string, node ast.Node) (res bool) {
 			}
 			name := pkgName + "_" + ident.Name
 			names[name] = call.Args[0].(*ast.BasicLit).Value
+
+			if len(call.Args) > 2 {
+				reFun := make([]string, 0, 1)
+				for i := 2; i < len(call.Args); i++ {
+					tmp := call.Args[i].(*ast.BasicLit).Value
+					tmp = tmp[1 : len(tmp)-1]
+					reFun = append(reFun, tmp)
+				}
+				nameRegister[name] = reFun
+			}
 
 			return true
 		}

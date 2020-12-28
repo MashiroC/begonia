@@ -9,20 +9,15 @@ import (
 func main() {
 	c := begonia.NewClient(option.Addr(":12306"))
 
-	s, err := c.Service("Echo")
-	if err != nil {
-		panic(err)
-	}
+	s, _ := c.Service("Echo")
 
-	testFun, err := s.FuncSync("SayHello")
-	if err != nil {
-		panic(err)
-	}
+	SayHello, _ := s.FuncSync("SayHello")
+	res, _ := SayHello("kieran")
+	fmt.Println(res.(string))
 
-	res, err := testFun("kieran")
-	if err != nil {
-		panic(err)
-	}
+	SayHelloAsync, _ := s.FuncAsync("SayHello")
+	SayHelloAsync(func(res interface{}, err error) {
+		fmt.Println(res, err)
+	}, "kieran")
 
-	fmt.Println(res)
 }
