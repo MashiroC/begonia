@@ -3,9 +3,9 @@ package client
 
 import (
 	"context"
-	"github.com/MashiroC/begonia/core"
 	"github.com/MashiroC/begonia/internal"
 	"github.com/MashiroC/begonia/internal/coding"
+	"github.com/MashiroC/begonia/internal/register"
 	"github.com/MashiroC/begonia/logic"
 	"log"
 	"reflect"
@@ -14,9 +14,9 @@ import (
 // logic_service.go something
 
 type Client interface {
-	Service(name string) (Service, error)
-	FunSync(serviceName, funName string) (RemoteFunSync, error)
-	FunAsync(serviceName, funName string) (RemoteFunAsync, error)
+	Service(name string) (s Service, err error)
+	FunSync(serviceName, funName string) (rf RemoteFunSync, err error)
+	FunAsync(serviceName, funName string) (rf RemoteFunAsync, err error)
 	Wait()
 	Close()
 }
@@ -28,19 +28,13 @@ type Fun struct {
 	OutCoder coding.Coder // 远程函数出参的编码器
 }
 
-func NewClient(lg *logic.Client) *rClient {
-	return &rClient{
-		lg:     lg,
-		ctx:    nil,
-		cancel: nil,
-	}
-}
-
 // rClient 客户端的github.com/MashiroC/begonia实现
 type rClient struct {
-	lg *logic.Client
+	lg     *logic.Client
 	ctx    context.Context
 	cancel context.CancelFunc
+
+	register register.Register
 }
 
 // Service 获取一个服务
@@ -48,23 +42,38 @@ func (r *rClient) Service(serviceName string) (s Service, err error) {
 
 	// TODO:这里要换成注册器
 
-	if internal.ServiceAppMode == internal.ServiceAppModeAst {
-		s = newAstService(serviceName, r)
-	} else if internal.ServiceAppMode == internal.ServiceAppModeReflect {
-		res := r.lg.CallSync(core.Call.ServiceInfo(serviceName))
+	fs, err := r.register.Get(serviceName)
+	if err != nil {
+		return
+	}
 
-		if res.Err != nil {
-			err = res.Err
-			return
+	if internal.ServiceAppMode == internal.Ast {
+		s = newAstService(serviceName, r)
+		return
+	}
+
+
+
+	funs := make([]Fun, 0, len(fs))
+
+	for _, f := range fs {
+		inCoder, err := coding.NewAvro(f.InSchema)
+		if err != nil {
+			return nil, err
 		}
 
-		fs := core.Result.ServiceInfo(res.Result)
-
-		s = r.newService(serviceName, fs)
-
-	} else {
-		panic("eeeeeeeeeerror!")
+		outCoder, err := coding.NewAvro(f.OutSchema)
+		if err != nil {
+			return nil, err
+		}
+		funs = append(funs, Fun{
+			Name:     f.Name,
+			InCoder:  inCoder,
+			OutCoder: outCoder,
+		})
 	}
+
+	s = r.newService(serviceName, funs)
 	return
 }
 

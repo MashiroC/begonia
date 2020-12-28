@@ -42,7 +42,7 @@ type {{$snDo}}Out struct {
 {{end}}
 
 func init() {
-	internal.ServiceAppMode = internal.ServiceAppModeAst
+	internal.ServiceAppMode = internal.Ast
 	
 	bService, err := BegoniaCli.Service("{{.RegisterName}}")
 	if err != nil {

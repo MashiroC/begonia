@@ -17,6 +17,12 @@ type FunInfo struct {
 	OutSchema string
 }
 
+func NewCoreRegister() *CoreRegister {
+	return &CoreRegister{
+		services: newStore(),
+	}
+}
+
 type CoreRegister struct {
 	services *registerServiceStore
 }

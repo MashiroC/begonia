@@ -51,7 +51,7 @@ type Dispatcher interface {
 
 	// Handle 对某些地方添加一个handle func来处理一些情况。
 	// example:
-	// dp.DpHandler("request",func(f *frame.Response) { fmt.Println(f) })
+	// dp.Handle("request",func(f *frame.Response) { fmt.Println(f) })
 	// 目前可以handle的：
 	// - client.handleResponse (response)
 	// - client.handleRequest  (request)

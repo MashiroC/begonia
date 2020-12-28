@@ -4,8 +4,9 @@ package server
 
 import (
 	"context"
-	"github.com/MashiroC/begonia/core"
+	cRegister "github.com/MashiroC/begonia/core/register"
 	"github.com/MashiroC/begonia/internal/coding"
+	"github.com/MashiroC/begonia/internal/register"
 	"github.com/MashiroC/begonia/logic"
 	"github.com/MashiroC/begonia/tool/berr"
 	"github.com/MashiroC/begonia/tool/qconv"
@@ -21,11 +22,16 @@ type rService struct {
 
 	store           *serviceStore
 	isLocalRegister bool
+
+	register register.Register
 }
 
 func (r *rService) Register(name string, service interface{}) {
 
 	fs, ms, reSharps := coding.Parse("avro", service)
+
+	var registerFs []cRegister.FunInfo
+	registerFs = make([]cRegister.FunInfo, 0, len(fs))
 
 	for i, f := range fs {
 		inCoder, err := coding.NewAvro(f.InSchema)
@@ -44,29 +50,15 @@ func (r *rService) Register(name string, service interface{}) {
 			method:     ms[i],
 			hasContext: f.HasContext,
 		})
+
+		registerFs = append(registerFs, cRegister.FunInfo{
+			Name:      f.Name,
+			InSchema:  f.InSchema,
+			OutSchema: f.OutSchema,
+		})
 	}
 
-	if r.isLocalRegister {
-		register := core.Call.Register(name, fs)
-		_, err := core.C.Invoke("", "", register.Fun, register.Param)
-		if err != nil {
-			panic(err)
-		}
-	} else {
-		res := r.lg.CallSync(core.Call.Register(name, fs))
-		// TODO:handler error
-		if res.Err != nil {
-			panic(res.Err)
-		}
-
-		var ok bool
-		_ = success.DecodeIn(res.Result, &ok)
-
-		if ok {
-			return
-		}
-	}
-
+	r.register.Register(name, registerFs)
 }
 
 func (r *rService) Wait() {
@@ -74,15 +66,6 @@ func (r *rService) Wait() {
 }
 
 func (r *rService) handleMsg(msg *logic.Call, wf logic.ResultFunc) {
-
-	if r.isLocalRegister && msg.Service == core.ServiceName && msg.Fun == "ServiceInfo" {
-		res, err := core.C.Invoke("", "", "ServiceInfo", msg.Param)
-		wf.Result(&logic.CallResult{
-			Result: res,
-			Err:    err,
-		})
-	}
-
 	fun, err := r.store.get(msg.Service, msg.Fun)
 	if err != nil {
 		wf.Result(&logic.CallResult{

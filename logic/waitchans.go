@@ -34,7 +34,7 @@ func (w *WaitChans) Callback(reqID string, cr *CallResult) (err error) {
 	w.chLock.RUnlock()
 
 	if !exist {
-		err = berr.NewF("waitChan", "callback", "reqID [%s] not found", reqID)
+		err = berr.NewF("Callbacks", "callback", "reqID [%s] not found", reqID)
 		return
 	}
 

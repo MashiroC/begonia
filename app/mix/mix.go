@@ -11,30 +11,30 @@ type Mix interface {
 }
 
 type MixNode struct {
-	s appServer.Server
+	cli appClient.Client
+	server appServer.Server
 }
 
-func (m *MixNode) Service(name string) (appClient.Service, error) {
-	return m.c.Service(name)
+func (m *MixNode) Service(name string) (s appClient.Service, err error) {
+	panic("implement me")
 }
 
-func (m *MixNode) FunSync(serviceName, funName string) (appClient.RemoteFunSync, error) {
-	return m.c.FunSync(serviceName, funName)
+func (m *MixNode) FunSync(serviceName, funName string) (rf appClient.RemoteFunSync, err error) {
+	panic("implement me")
 }
 
-func (m *MixNode) FunAsync(serviceName, funName string) (appClient.RemoteFunAsync, error) {
-	return m.c.FunAsync(serviceName, funName)
-}
-
-func (m *MixNode) Close() {
-	m.c.Close()
-}
-
-func (m *MixNode) Register(name string, service interface{}) {
-	m.s.Register(name, service)
+func (m *MixNode) FunAsync(serviceName, funName string) (rf appClient.RemoteFunAsync, err error) {
+	panic("implement me")
 }
 
 func (m *MixNode) Wait() {
-	m.s.Wait()
-	m.c.Wait()
+	panic("implement me")
+}
+
+func (m *MixNode) Close() {
+	panic("implement me")
+}
+
+func (m *MixNode) Register(name string, service interface{}) {
+	panic("implement me")
 }

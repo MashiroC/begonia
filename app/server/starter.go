@@ -3,9 +3,10 @@ package server
 import (
 	"context"
 	"fmt"
-	"github.com/MashiroC/begonia/core"
+	cRegister "github.com/MashiroC/begonia/core/register"
 	"github.com/MashiroC/begonia/dispatch"
 	"github.com/MashiroC/begonia/internal"
+	"github.com/MashiroC/begonia/internal/register"
 	"github.com/MashiroC/begonia/logic"
 	"log"
 )
@@ -13,7 +14,7 @@ import (
 // starter.go something
 
 // BootStartByManager 根据manager cluster模式启动
-func BootStartByManager(optionMap map[string]interface{}) Server {
+func BootStartByManager(optionMap map[string]interface{}) (s Server) {
 
 	fmt.Println("  ____                              _        \n |  _ \\                            (_)       \n | |_) |  ___   __ _   ___   _ __   _   __ _ \n |  _ <  / _ \\ / _` | / _ \\ | '_ \\ | | / _` |\n | |_) ||  __/| (_| || (_) || | | || || (_| |\n |____/  \\___| \\__, | \\___/ |_| |_||_| \\__,_|\n                __/ |                        \n               |___/                         ")
 
@@ -66,55 +67,61 @@ func BootStartByManager(optionMap map[string]interface{}) Server {
 	//fmt.Println(m, err)
 	// 修改配置之前的一系列调用全部都是按默认配置来的
 
-	// 创建实例
-	if internal.ServiceAppMode == "ast" {
-		s := &astService{}
-		s.ctx = ctx
-		s.cancel = cancel
+	coreRegister := cRegister.NewCoreRegister()
 
-		s.lg = lg
-		s.lg.HandleRequest = s.handleMsg
-		s.isLocalRegister = isLocal
-
-		// 创建服务存储的数据结构
-		s.store = newAstServiceStore()
-
-		//if isLocal {
-		//	core.C = core.NewSubService()
-		//	s.Register(core.ServiceName, &Core{})
-		//}
-
-		return s
+	var rg register.Register
+	if dpTyp, ok := optionMap["dpTyp"]; ok && dpTyp == "p2p" {
+		rg = register.NewLocalRegister(coreRegister)
 	} else {
-		s := &rService{}
-		s.ctx = ctx
-		s.cancel = cancel
+		rg = register.NewRemoteRegister(lg.Client)
+	}
 
-		s.lg = lg
-		s.lg.HandleRequest = s.handleMsg
-		s.isLocalRegister = isLocal
+	// 创建实例
+	if internal.ServiceAppMode == internal.Ast {
+		ast := &astService{}
+		ast.ctx = ctx
+		ast.cancel = cancel
+
+		ast.lg = lg
+		ast.lg.HandleRequest = ast.handleMsg
 
 		// 创建服务存储的数据结构
-		s.store = newServiceStore()
+		ast.store = newAstServiceStore()
 
-		//if isLocal {
-		//	core.C = core.NewSubService()
-		//	s.Register(core.ServiceName, &Core{})
-		//}
+		ast.register = rg
 
-		return s
+		s = ast
+	} else {
+		r := &rService{}
+		r.ctx = ctx
+		r.cancel = cancel
+
+		r.lg = lg
+		r.lg.HandleRequest = r.handleMsg
+		r.isLocalRegister = isLocal
+
+		// 创建服务存储的数据结构
+		r.store = newServiceStore()
+
+		r.register = rg
+
+		s = r
 	}
 
+	s.Register("REGISTER", coreRegister)
+
+	optionMap["REGISTER"] = coreRegister
+
+	return s
 }
 
-type Core struct {
-}
-
-func (c *Core) ServiceInfo(serviceName string) []byte {
-	s := core.Call.ServiceInfo(serviceName)
-	res, err := core.C.Invoke("", "", s.Fun, s.Param)
-	if err != nil {
-		panic(err)
+func GetLogic(s Server) *logic.Service {
+	switch in := s.(type) {
+	case *astService:
+		return in.lg
+	case *rService:
+		return in.lg
+	default:
+		panic("error")
 	}
-	return res
 }

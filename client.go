@@ -24,7 +24,7 @@ func NewClient(optionFunc ...option.WriteFunc) (cli Client) {
 }
 
 func NewClientWithAst(optionFunc ...option.WriteFunc) (cli Client) {
-	internal.ServiceAppMode = internal.ServiceAppModeAst
+	internal.ServiceAppMode = internal.Ast
 
 	return NewClient(optionFunc...)
 }

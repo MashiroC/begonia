@@ -4,8 +4,8 @@ package server
 
 import (
 	"context"
-	"github.com/MashiroC/begonia/core"
-	"github.com/MashiroC/begonia/internal/coding"
+	coreRegister "github.com/MashiroC/begonia/core/register"
+	"github.com/MashiroC/begonia/internal/register"
 	"github.com/MashiroC/begonia/logic"
 	"github.com/MashiroC/begonia/tool/berr"
 )
@@ -17,7 +17,7 @@ type CodeGenFunc struct {
 
 type CodeGenService interface {
 	Do(ctx context.Context, fun string, param []byte) (result []byte, err error)
-	FuncList() []coding.FunInfo
+	FuncList() []coreRegister.FunInfo
 }
 
 // astService ast树代码生成的ast Server api
@@ -26,8 +26,8 @@ type astService struct {
 	ctx    context.Context
 	cancel context.CancelFunc
 
-	store           *astServiceStore
-	isLocalRegister bool
+	store    *astServiceStore
+	register register.Register
 }
 
 func (r *astService) Register(name string, service interface{}) {
@@ -44,28 +44,7 @@ func (r *astService) Register(name string, service interface{}) {
 
 	fs := cgs.FuncList()
 
-	// register
-	if r.isLocalRegister {
-		register := core.Call.Register(name, fs)
-		_, err := core.C.Invoke("", "", register.Fun, register.Param)
-		if err != nil {
-			panic(err)
-		}
-	} else {
-		res := r.lg.CallSync(core.Call.Register(name, fs))
-		// TODO:handler error
-		if res.Err != nil {
-			panic(res.Err)
-		}
-
-		var ok bool
-		_ = success.DecodeIn(res.Result, &ok)
-
-		if ok {
-			return
-		}
-	}
-
+	r.register.Register(name, fs)
 }
 
 func (r *astService) Wait() {
@@ -73,14 +52,6 @@ func (r *astService) Wait() {
 }
 
 func (r *astService) handleMsg(msg *logic.Call, wf logic.ResultFunc) {
-
-	if r.isLocalRegister && msg.Service == core.ServiceName && msg.Fun == "ServiceInfo" {
-		res, err := core.C.Invoke("", "", "ServiceInfo", msg.Param)
-		wf.Result(&logic.CallResult{
-			Result: res,
-			Err:    err,
-		})
-	}
 
 	do, err := r.store.get(msg.Service)
 	if err != nil {

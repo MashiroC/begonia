@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/MashiroC/begonia/dispatch"
 	"github.com/MashiroC/begonia/internal"
+	"github.com/MashiroC/begonia/internal/register"
 	"github.com/MashiroC/begonia/logic"
 	"log"
 )
@@ -45,6 +46,48 @@ func BootStartByCenter(optionMap map[string]interface{}) *rClient {
 	c.lg = logic.NewClient(dp)
 
 	dp.Handle("frame", c.lg.DpHandler)
+
+	c.register = register.NewRemoteRegister(c.lg)
+
+	//TODO: 发一个包，拉取配置
+
+	/*
+
+		先不去拉配置 后面再加
+
+		// 假设这个getConfig是sub service的一个远程函数
+		var getConfig = func(...interface{}) (interface{}, error) {
+			return map[string]interface{}{}, nil
+		}
+
+		// 假设m就是拿到的远程配置
+		m, err := getConfig()
+
+		// TODO:根据拿到的远程配置来修改配置
+		// do some thing
+		// 修改配置之前的一系列调用全部都是按默认配置来的
+	*/
+
+	return c
+}
+
+func BootStartWithLogic(optionMap map[string]interface{}, lg *logic.Client) *rClient {
+	fmt.Println("  ____                              _        \n |  _ \\                            (_)       \n | |_) |  ___   __ _   ___   _ __   _   __ _ \n |  _ <  / _ \\ / _` | / _ \\ | '_ \\ | | / _` |\n | |_) ||  __/| (_| || (_) || | | || || (_| |\n |____/  \\___| \\__, | \\___/ |_| |_||_| \\__,_|\n                __/ |                        \n               |___/                         ")
+
+	log.Printf("begonia client start with [%s] mode\n", internal.ServiceAppMode)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	c := &rClient{
+		ctx:      ctx,
+		cancel:   cancel,
+		register: register.NewRemoteRegister(lg),
+	}
+
+	// TODO:给dispatch初始化
+
+	c.lg = lg
+
+	c.lg.Handle("dispatch.frame", c.lg.DpHandler)
 
 	//TODO: 发一个包，拉取配置
 

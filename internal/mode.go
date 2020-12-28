@@ -1,8 +1,8 @@
 package internal
 
-var ServiceAppMode = ServiceAppModeReflect
+var ServiceAppMode = Reflect
 
 const (
-	ServiceAppModeAst     = "ast"
-	ServiceAppModeReflect = "reflect"
+	Ast     = "ast"
+	Reflect = "reflect"
 )

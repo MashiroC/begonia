@@ -12,16 +12,16 @@ import (
 
 // Client Client接口的实现结构体
 type Client struct {
-	baseLogic // 组装了基础逻辑结构体
+	BaseLogic // 组装了基础逻辑结构体
 }
 
 // NewClient 创建一个新的 logic层 客户端
 func NewClient(dp dispatch.Dispatcher) *Client {
 
 	c := &Client{
-		baseLogic: baseLogic{
-			dp:       dp,
-			waitChan: NewWaitChans(),
+		BaseLogic: BaseLogic{
+			Dp:        dp,
+			Callbacks: NewWaitChans(),
 		},
 	}
 
@@ -41,7 +41,7 @@ func (c *Client) DpHandler(connID string, f frame.Frame) {
 
 func (c *Client) HandleResponse(resp *frame.Response) {
 	reqID := resp.ReqID
-	err := c.waitChan.Callback(reqID, &CallResult{
+	err := c.Callbacks.Callback(reqID, &CallResult{
 		Result: resp.Result,
 		Err:    berr.New("rpc", "call", resp.Err),
 	})
@@ -53,5 +53,5 @@ func (c *Client) HandleResponse(resp *frame.Response) {
 }
 
 func (c *Client) Close() {
-	c.dp.Close()
+	c.Dp.Close()
 }

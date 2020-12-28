@@ -14,13 +14,13 @@ import (
 // Callback logic层回调函数的alias
 type Callback = func(result *CallResult)
 
-// baseLogic 基础逻辑层的实现结构体
-type baseLogic struct {
-	dp       dispatch.Dispatcher // dispatch层的接口，供logic层向下继续调用
-	waitChan *WaitChans          // 等待管道，可以在这里注册回调，调用回调
+// BaseLogic 基础逻辑层的实现结构体
+type BaseLogic struct {
+	Dp        dispatch.Dispatcher // dispatch层的接口，供logic层向下继续调用
+	Callbacks *WaitChans          // 等待管道，可以在这里注册回调，调用回调
 }
 
-func (c *baseLogic) CallSync(call *Call) *CallResult {
+func (c *BaseLogic) CallSync(call *Call) *CallResult {
 
 	ch := make(chan *CallResult)
 	defer close(ch)
@@ -32,18 +32,18 @@ func (c *baseLogic) CallSync(call *Call) *CallResult {
 	return <-ch
 }
 
-func (c *baseLogic) CallAsync(call *Call, callback Callback) {
+func (c *BaseLogic) CallAsync(call *Call, callback Callback) {
 
 	reqID := ids.New()
 	var f frame.Frame
 	f = frame.NewRequest(reqID, call.Service, call.Fun, call.Param)
 
-	c.waitChan.AddCallback(context.TODO(), reqID, func(cr *CallResult) {
+	c.Callbacks.AddCallback(context.TODO(), reqID, func(cr *CallResult) {
 		callback(cr)
 	})
 
-	if err := c.dp.Send(f); err != nil {
-		err = c.waitChan.Callback(reqID, &CallResult{
+	if err := c.Dp.Send(f); err != nil {
+		err = c.Callbacks.Callback(reqID, &CallResult{
 			Result: nil,
 			Err:    berr.Warp("logic", "call", err),
 		})
@@ -55,7 +55,7 @@ func (c *baseLogic) CallAsync(call *Call, callback Callback) {
 
 }
 
-func (c *baseLogic) Hook(typ string, hookFunc interface{}) {
+func (c *BaseLogic) Hook(typ string, hookFunc interface{}) {
 
 	types := strings.Split(typ, ".")
 
@@ -63,7 +63,7 @@ func (c *baseLogic) Hook(typ string, hookFunc interface{}) {
 
 		switch types[0] {
 		case "dispatch":
-			c.dp.Hook(types[1], hookFunc)
+			c.Dp.Hook(types[1], hookFunc)
 			return
 		}
 
@@ -73,4 +73,22 @@ func (c *baseLogic) Hook(typ string, hookFunc interface{}) {
 
 	panic(berr.NewF("logic", "hook", "func name [%s] not found", typ))
 
+}
+
+func (c *BaseLogic) Handle(typ string, handleFunc interface{}) {
+	types := strings.Split(typ, ".")
+
+	if len(types) == 2 {
+
+		switch types[0] {
+		case "dispatch":
+			c.Dp.Handle(types[1], handleFunc)
+			return
+		}
+
+	} else if len(types) == 1 {
+		// 现在logic还没有需要handle的
+	}
+
+	panic(berr.NewF("logic", "handle", "func typ [%s] not found", typ))
 }

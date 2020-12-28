@@ -56,8 +56,6 @@ func main() {
 		fmt.Println("complete, total:", time.Now().Sub(t))
 	}()
 
-	fmt.Println(targetService)
-
 	originPath := os.Args[len(os.Args)-1]
 	path, err := filepath.Abs(originPath)
 	root = path
@@ -99,10 +97,14 @@ func main() {
 }
 
 func gofmt(path string) {
+	if !strings.HasSuffix(path, string(os.PathSeparator)) {
+		path += string(os.PathSeparator)
+	}
+
 	c := exec.Command("go", "fmt", path+"...")
 	err := c.Run()
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("go fmt error on path: ["+path+"...]")
 	}
 }
 

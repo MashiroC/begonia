@@ -10,5 +10,5 @@ func main() {
 	addr := ":12306"
 	c := center.New(option.Addr(addr))
 
-	c.Run()
+	c.Wait()
 }
