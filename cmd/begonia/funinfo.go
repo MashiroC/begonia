@@ -18,10 +18,15 @@ func getFunInfo(name string, decls []*ast.FuncDecl) (res []coding.FunInfo) {
 				continue
 			}
 		}
-		inSchema, inTyps, hasContext := MakeSchema(fd.Name.Name, "In", fd.Type.Params)
-		outSchema, outTyps, _ := MakeSchema(fd.Name.Name, "Out", fd.Type.Results)
+
+		funName := fd.Name.Name
+		if funName[0] >= 'a' && funName[0] <= 'z' {
+			continue
+		}
+		inSchema, inTyps, hasContext := MakeSchema(funName, "In", fd.Type.Params)
+		outSchema, outTyps, _ := MakeSchema(funName, "Out", fd.Type.Results)
 		res = append(res, coding.FunInfo{
-			Name:       fd.Name.Name,
+			Name:       funName,
 			InSchema:   inSchema,
 			OutSchema:  outSchema,
 			ParamTyp:   inTyps,

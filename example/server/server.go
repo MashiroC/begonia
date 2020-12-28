@@ -50,7 +50,7 @@ func main() {
 	echoService := &EchoService{}
 	testService := TestService(0)
 
-	s.Register("Echo", echoService, "SayHello")
+	s.Register("Echo", echoService)
 	s.Register("Test", &testService)
 
 	s.Wait()
@@ -65,7 +65,7 @@ func (*EchoService) SayHello(name string) string {
 	return "Hello 😈" + name
 }
 
-func (*EchoService) SayHelloWithContext(ctx context.Context, name string) string {
+func (*EchoService) sayHelloWithContext(ctx context.Context, name string) string {
 	fmt.Println(ctx.Value("info"))
 	return "Hello ctx " + name
 }
