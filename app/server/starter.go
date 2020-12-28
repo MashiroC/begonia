@@ -30,9 +30,14 @@ func BootStartByManager(optionMap map[string]interface{}) (s Server) {
 		panic("addr must exist")
 	}
 
+	var isP2P bool
+	if dpTyp, ok := optionMap["dpTyp"]; ok && dpTyp == "p2p" {
+		isP2P = true
+	}
+
 	// 创建 dispatch
 	var dp dispatch.Dispatcher
-	if dpTyp, ok := optionMap["dpTyp"]; ok && dpTyp == "p2p" {
+	if isP2P {
 		log.Printf("begonia Server will listen on [%s]", addr)
 		dp = dispatch.NewSetByDefaultCluster()
 		go dp.Listen(addr)
@@ -70,8 +75,9 @@ func BootStartByManager(optionMap map[string]interface{}) (s Server) {
 	coreRegister := cRegister.NewCoreRegister()
 
 	var rg register.Register
-	if dpTyp, ok := optionMap["dpTyp"]; ok && dpTyp == "p2p" {
+	if isP2P {
 		rg = register.NewLocalRegister(coreRegister)
+
 	} else {
 		rg = register.NewRemoteRegister(lg.Client)
 	}
@@ -108,9 +114,10 @@ func BootStartByManager(optionMap map[string]interface{}) (s Server) {
 		s = r
 	}
 
-	s.Register("REGISTER", coreRegister)
-
-	optionMap["REGISTER"] = coreRegister
+	if isP2P {
+		s.Register("REGISTER", coreRegister, "Register", "ServiceInfo")
+		optionMap["REGISTER"] = coreRegister
+	}
 
 	return s
 }

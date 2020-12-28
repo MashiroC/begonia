@@ -66,6 +66,8 @@ func bootstart(optionMap map[string]interface{}) server.Server {
 		return
 	})
 
+	lg.Dp.Hook("close", coreRegister.HandleConnClose)
+
 	lg.Dp.Handle("proxy", p)
 
 	// ========== END ==========

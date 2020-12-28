@@ -1,6 +1,7 @@
 package logic
 
 import (
+	"errors"
 	"fmt"
 	"github.com/MashiroC/begonia/dispatch"
 	"github.com/MashiroC/begonia/dispatch/frame"
@@ -40,9 +41,14 @@ func (c *Client) DpHandler(connID string, f frame.Frame) {
 
 func (c *Client) HandleResponse(resp *frame.Response) {
 	reqID := resp.ReqID
-	err := c.Callbacks.Callback(reqID, &CallResult{
+
+	var err error
+	if resp.Err != "" {
+		err = errors.New(resp.Err)
+	}
+	err = c.Callbacks.Callback(reqID, &CallResult{
 		Result: resp.Result,
-		Err:    fmt.Errorf("rpc call error: %s", resp.Err),
+		Err:    err,
 	})
 
 	if err != nil {

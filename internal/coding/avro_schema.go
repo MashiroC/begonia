@@ -150,9 +150,10 @@ func fieldKind(mode parseMode, t reflect.Type) (fType string, isErr bool) {
 		}
 		fType, isErr = fieldKind(modeNormal, t.Elem())
 	case reflect.Struct:
-		if mode == modeSlice {
-			panic("slice not supported struct")
-		}
+		//if mode == modeSlice {
+		//	fmt.Println(fieldKind(modeNormal,t.Elem()))
+		//	panic("slice not supported struct")
+		//}
 		n := t.NumField()
 		fields := make([]string, n)
 

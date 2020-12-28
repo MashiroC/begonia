@@ -30,7 +30,7 @@ type astService struct {
 	register register.Register
 }
 
-func (r *astService) Register(name string, service interface{}) {
+func (r *astService) Register(name string, service interface{}, registerFunc ...string) {
 
 	cgs, ok := service.(CodeGenService)
 	if !ok {

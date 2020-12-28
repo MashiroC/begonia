@@ -45,12 +45,12 @@ func main() {
 	count = 0
 	flag = false
 
-	s := begonia.NewServer(option.Addr(":12306"))
+	s := begonia.NewServer(option.P2P(), option.Addr(":12306"))
 
 	echoService := &EchoService{}
 	testService := TestService(0)
 
-	s.Register("Echo", echoService)
+	s.Register("Echo", echoService, "SayHello")
 	s.Register("Test", &testService)
 
 	s.Wait()
@@ -59,29 +59,31 @@ func main() {
 type EchoService struct {
 }
 
-func (h *EchoService) SayHello(name string) string {
+func (*EchoService) SayHello(name string) string {
 	//QPS()
 	//fmt.Println("sayHello")
 	return "Hello 😈" + name
 }
 
-func (h *EchoService) SayHelloWithContext(ctx context.Context, name string) string {
+func (*EchoService) SayHelloWithContext(ctx context.Context, name string) string {
 	fmt.Println(ctx.Value("info"))
 	return "Hello ctx " + name
 }
 
-func (h *EchoService) Add(i1, i2 int) (res int, err error) {
+func (*EchoService) Add(i1, i2 int) (res int, err error) {
 	res = i1 + i2
 	return
 }
 
-func (h *EchoService) Mod(i1, i2 int) (res1 int, res2 int) {
+func (*EchoService) Mod(i1, i2 int) (res1 int, res2 int) {
 	res1 = i1 / i2
 	res2 = i1 % i2
 	return
 }
 
-func (h *EchoService) NULL() {
+func (*EchoService) NULL() {}
+
+func (EchoService) Hello() {
 
 }
 

@@ -26,9 +26,9 @@ type rService struct {
 	register register.Register
 }
 
-func (r *rService) Register(name string, service interface{}) {
+func (r *rService) Register(name string, service interface{}, registerFunc ...string) {
 
-	fs, ms, reSharps := coding.Parse("avro", service)
+	fs, ms, reSharps := coding.Parse("avro", service, registerFunc)
 
 	var registerFs []cRegister.FunInfo
 	registerFs = make([]cRegister.FunInfo, 0, len(fs))
