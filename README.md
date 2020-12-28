@@ -27,7 +27,7 @@
 
 ```bash
 go get -u github.com/MashiroC/begonia
-go get -u github.com/MashiroC/begonia/cmd/center
+go get -u github.com/MashiroC/begonia/cmd/bgacenter
 go get -u github.com/MashiroC/begonia/cmd/begonia
 ```
 
