@@ -38,15 +38,8 @@ type rClient struct {
 // Service 获取一个服务
 func (r *rClient) Service(serviceName string) (s Service, err error) {
 
-	// TODO:这里要换成注册器
-
 	fs, err := r.register.Get(serviceName)
 	if err != nil {
-		return
-	}
-
-	if app.ServiceAppMode == app.Ast {
-		s = newAstService(serviceName, r)
 		return
 	}
 
@@ -69,7 +62,12 @@ func (r *rClient) Service(serviceName string) (s Service, err error) {
 		})
 	}
 
-	s = r.newService(serviceName, funs)
+	if app.ServiceAppMode == app.Ast {
+		s = r.newAstService(serviceName, r)
+	} else {
+		s = r.newService(serviceName, funs)
+	}
+
 	return
 }
 

@@ -12,10 +12,8 @@ func NewService(dp dispatch.Dispatcher, waitChans *CallbackStore) *Service {
 
 	c := &Service{
 		Client: &Client{
-			BaseLogic: BaseLogic{
-				Dp:        dp,
-				Callbacks: waitChans,
-			},
+			Dp:        dp,
+			Callbacks: waitChans,
 		},
 	}
 

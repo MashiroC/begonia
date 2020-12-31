@@ -8,19 +8,19 @@ import (
 // Server 服务端的接口
 type Server = server.Server
 
-// New 初始化，获得一个service对象，传入一个mode参数，以及一个option的不定参数
+// New 初始化
 func NewServer(optionFunc ...option.WriteFunc) (s Server) {
-	optionMap := defaultServiceConfig()
+	optionMap := defaultServerOption()
 
 	for _, f := range optionFunc {
 		f(optionMap)
 	}
 
-	in := server.BootStartByManager(optionMap)
+	in := server.BootStart(optionMap)
 	return in
 }
 
-func defaultServiceConfig() map[string]interface{} {
+func defaultServerOption() map[string]interface{} {
 	m := make(map[string]interface{})
 
 	// TODO:加入配置

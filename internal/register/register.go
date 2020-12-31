@@ -4,11 +4,14 @@ import (
 	"context"
 	cRegister "github.com/MashiroC/begonia/core/register"
 	"github.com/MashiroC/begonia/logic"
-	"sync"
 )
 
 type Register interface {
+
+	// Register 注册一个函数
 	Register(name string, info []cRegister.FunInfo) (err error)
+
+	// Get 获得一个已经注册的函数，如果没有查找到，会返回一个error
 	Get(name string) (fs []cRegister.FunInfo, err error)
 }
 
@@ -21,8 +24,6 @@ func NewLocalRegister(c *cRegister.CoreRegister) Register {
 // localRegister 本地注册器
 type localRegister struct {
 	c *cRegister.CoreRegister
-	l sync.Mutex
-	m map[string][]cRegister.FunInfo
 }
 
 func (r *localRegister) Register(name string, info []cRegister.FunInfo) (err error) {

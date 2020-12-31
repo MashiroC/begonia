@@ -18,7 +18,7 @@ func bootstart(optionMap map[string]interface{}) server.Server {
 
 	app.ServiceAppMode = app.Ast
 
-	s := server.BootStartByManager(optionMap)
+	s := server.BootStart(optionMap)
 
 	coreRegister := optionMap["REGISTER"].(*cRegister.CoreRegister)
 

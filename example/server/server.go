@@ -45,7 +45,7 @@ func main() {
 	count = 0
 	flag = false
 
-	s := begonia.NewServer(option.P2P(), option.Addr(":12306"))
+	s := begonia.NewServer(option.Addr(":12306"))
 
 	echoService := &EchoService{}
 	testService := TestService(0)
@@ -60,8 +60,7 @@ type EchoService struct {
 }
 
 func (*EchoService) SayHello(name string) string {
-	panic("asd")
-	return "Hello 😈" + name
+	return "Hello " + name
 }
 
 func (*EchoService) SayHelloWithContext(ctx context.Context, name string) string {

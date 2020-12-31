@@ -13,12 +13,12 @@ import (
 
 // starter.go something
 
-// BootStartByManager 根据manager cluster模式启动
-func BootStartByManager(optionMap map[string]interface{}) (s Server) {
+// BootStart 根据manager cluster模式启动
+func BootStart(optionMap map[string]interface{}) (s Server) {
 
 	fmt.Println("  ____                              _        \n |  _ \\                            (_)       \n | |_) |  ___   __ _   ___   _ __   _   __ _ \n |  _ <  / _ \\ / _` | / _ \\ | '_ \\ | | / _` |\n | |_) ||  __/| (_| || (_) || | | || || (_| |\n |____/  \\___| \\__, | \\___/ |_| |_||_| \\__,_|\n                __/ |                        \n               |___/                         ")
 
-	log.Printf("begonia Server start with [%s] mode\n", app.ServiceAppMode)
+	log.Printf("begonia Server start with [%s] mode\n", app.ServiceAppMode.String())
 
 	ctx, cancel := context.WithCancel(context.Background())
 	var isLocal bool
@@ -84,7 +84,7 @@ func BootStartByManager(optionMap map[string]interface{}) (s Server) {
 
 	// 创建实例
 	if app.ServiceAppMode == app.Ast {
-		ast := &astService{}
+		ast := &astServer{}
 		ast.ctx = ctx
 		ast.cancel = cancel
 
@@ -98,7 +98,7 @@ func BootStartByManager(optionMap map[string]interface{}) (s Server) {
 
 		s = ast
 	} else {
-		r := &rService{}
+		r := &rServer{}
 		r.ctx = ctx
 		r.cancel = cancel
 
@@ -124,9 +124,9 @@ func BootStartByManager(optionMap map[string]interface{}) (s Server) {
 
 func GetLogic(s Server) *logic.Service {
 	switch in := s.(type) {
-	case *astService:
+	case *astServer:
 		return in.lg
-	case *rService:
+	case *rServer:
 		return in.lg
 	default:
 		panic("error")

@@ -14,8 +14,8 @@ import (
 	"reflect"
 )
 
-// rService 反射的 reflect Server api
-type rService struct {
+// rServer 反射的 reflect Server api
+type rServer struct {
 	lg     *logic.Service
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -26,7 +26,7 @@ type rService struct {
 	register register.Register
 }
 
-func (r *rService) Register(name string, service interface{}, registerFunc ...string) {
+func (r *rServer) Register(name string, service interface{}, registerFunc ...string) {
 
 	fs, ms, reSharps := coding.Parse("avro", service, registerFunc)
 
@@ -64,11 +64,11 @@ func (r *rService) Register(name string, service interface{}, registerFunc ...st
 	}
 }
 
-func (r *rService) Wait() {
+func (r *rServer) Wait() {
 	<-r.ctx.Done()
 }
 
-func (r *rService) handleMsg(msg *logic.Call, wf logic.ResultFunc) {
+func (r *rServer) handleMsg(msg *logic.Call, wf logic.ResultFunc) {
 	fun, err := r.store.get(msg.Service, msg.Fun)
 	if err != nil {
 		wf.Result(&logic.CallResult{

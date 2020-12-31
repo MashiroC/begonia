@@ -10,9 +10,6 @@ import (
 
 // callbacks.go 等待管道
 
-// waitCallback 等待的回调函数
-type waitCallback = func(*CallResult)
-
 // CallbackStore 回调仓库，拥有注册回调、回调的方法
 type CallbackStore struct {
 	chLock sync.RWMutex                // 锁
@@ -43,7 +40,7 @@ func (w *CallbackStore) Callback(reqID string, cr *CallResult) (err error) {
 }
 
 // AddCallback 添加一个回调
-func (w *CallbackStore) AddCallback(ctx context.Context, reqID string, callback waitCallback) {
+func (w *CallbackStore) AddCallback(ctx context.Context, reqID string, callback Callback) {
 	timeout, _ := context.WithTimeout(ctx, time.Duration(config.C.Logic.RequestTimeOut)*time.Second)
 
 	ch := make(chan *CallResult)
@@ -57,7 +54,7 @@ func (w *CallbackStore) AddCallback(ctx context.Context, reqID string, callback 
 }
 
 // goWait 这个需要开一个新协程 来等待结果或者超时
-func (w *CallbackStore) goWait(reqID string, timeout, parent <-chan struct{}, cb waitCallback, ch chan *CallResult) {
+func (w *CallbackStore) goWait(reqID string, timeout, parent <-chan struct{}, cb Callback, ch chan *CallResult) {
 
 	var f *CallResult
 	var errStr string

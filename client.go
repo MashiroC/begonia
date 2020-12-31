@@ -17,7 +17,6 @@ func NewClient(optionFunc ...option.WriteFunc) (cli Client) {
 		f(optionMap)
 	}
 
-	// 默认直接center模式
 	cli = client.BootStartByCenter(optionMap)
 
 	return

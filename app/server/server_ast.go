@@ -12,16 +12,19 @@ import (
 
 type astDo = func(ctx context.Context, fun string, param []byte) (result []byte, err error)
 
-type CodeGenFunc struct {
-}
-
+// CodeGenService 代码生成实现的服务
 type CodeGenService interface {
+
+	// Do 调用服务
 	Do(ctx context.Context, fun string, param []byte) (result []byte, err error)
+
+	// FuncList 返回要注册的函数
 	FuncList() []coreRegister.FunInfo
+
 }
 
-// astService ast树代码生成的ast Server api
-type astService struct {
+// astServer ast树代码生成的ast Server api
+type astServer struct {
 	lg     *logic.Service
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -30,7 +33,7 @@ type astService struct {
 	register register.Register
 }
 
-func (r *astService) Register(name string, service interface{}, registerFunc ...string) {
+func (r *astServer) Register(name string, service interface{}, registerFunc ...string) {
 
 	cgs, ok := service.(CodeGenService)
 	if !ok {
@@ -47,11 +50,11 @@ func (r *astService) Register(name string, service interface{}, registerFunc ...
 	r.register.Register(name, fs)
 }
 
-func (r *astService) Wait() {
+func (r *astServer) Wait() {
 	<-r.ctx.Done()
 }
 
-func (r *astService) handleMsg(msg *logic.Call, wf logic.ResultFunc) {
+func (r *astServer) handleMsg(msg *logic.Call, wf logic.ResultFunc) {
 
 	do, err := r.store.get(msg.Service)
 	if err != nil {

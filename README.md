@@ -35,7 +35,7 @@ go get -u github.com/MashiroC/begonia/cmd/begonia
 
 ### 快速开始
 
-详细的使用文档请点击 [Begonia 使用文档](https://github.com/MashiroC/begonia/blob/master/doc/Begonia_Using_Doc) 。
+详细的使用文档请点击 [Begonia 使用文档](https://github.com/MashiroC/begonia/blob/master/doc/Begonia_Using_Doc.md) 。
 
 框架中的架构、设计细节的设计文档正在编写中。
 

@@ -6,15 +6,15 @@ import (
 )
 
 type Service struct {
-	Name string
-	Mode string
-	Funs []FunInfo
+	Name string    // 服务名
+	Mode string    // 服务的序列化模式，avro / protobuf
+	Funs []FunInfo // 服务的函数
 }
 
 type FunInfo struct {
-	Name      string
-	InSchema  string
-	OutSchema string
+	Name      string // 函数名
+	InSchema  string // 函数入参的avro schema
+	OutSchema string // 函数出参的avro schema
 }
 
 func NewCoreRegister() *CoreRegister {

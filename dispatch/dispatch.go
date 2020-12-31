@@ -56,7 +56,6 @@ type Dispatcher interface {
 	// - client.handleRequest  (request)
 	Handle(typ string, handleFunc interface{})
 
-	//HandleResponse(func(f frame.Frame))
 }
 
 type baseDispatch struct {

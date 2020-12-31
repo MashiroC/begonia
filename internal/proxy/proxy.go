@@ -6,12 +6,14 @@ import (
 
 type HandlerAction = func(connID, redirectConnID string, f frame.Frame)
 
+type CheckFunc = func(connID string, f frame.Frame) (redirectConnID string, ok bool)
+
 func NewHandler() *Handler {
 	return &Handler{}
 }
 
 type Handler struct {
-	Check func(connID string, f frame.Frame) (redirectConnID string, ok bool)
+	Check CheckFunc
 
 	handlerChains []HandlerAction
 }

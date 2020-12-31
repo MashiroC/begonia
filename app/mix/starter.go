@@ -17,7 +17,7 @@ func BootStart(optionMap map[string]interface{}) *MixNode {
 
 	// TODO:给dispatch初始化
 
-	s := server.BootStartByManager(optionMap)
+	s := server.BootStart(optionMap)
 	lg := server.GetLogic(s)
 
 	c := client.BootStartWithLogic(optionMap, lg.Client)
