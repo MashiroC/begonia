@@ -9,32 +9,42 @@ import (
 type parseMode int
 
 const (
-	invalid parseMode = iota
+	_invalid parseMode = iota
 	modeNormal
 	modeSlice
 )
 
 // avro_schema.go something
 
-// InSchema 根据反射类型 获得schema
-func InSchema(m reflect.Method) string {
+// inReflectSchema 根据反射类型 获得schema
+func inReflectSchema(m reflect.Method) (schema string, hasContext bool) {
 	namespace := "begonia.func." + m.Name
 	name := "In"
 
 	t := m.Type
+
 	num := t.NumIn()
 
-	typ := make([]reflect.Type, 0, num-1)
-	for i := 1; i < num; i++ {
+	start := 1
+	if num > 2 {
+		in := t.In(1)
+		if in.String() == "context.Context" {
+			start += 1
+			hasContext = true
+		}
+	}
+
+	typ := make([]reflect.Type, 0, num-start)
+	for i := start; i < num; i++ {
 		typ = append(typ, t.In(i))
 	}
 
-	res := makeSchema(namespace, name, typ)
-	return res
+	schema = makeSchema(namespace, name, typ)
+	return
 }
 
-// OutSchema 根据反射 获得出参schema
-func OutSchema(m reflect.Method) string {
+// outReflectSchema 根据反射 获得出参schema
+func outReflectSchema(m reflect.Method) string {
 	namespace := "begonia.func." + m.Name
 	name := "Out"
 
@@ -53,7 +63,7 @@ func makeSchema(namespace, name string, typ []reflect.Type) string {
 	fields := make([]string, len(typ))
 
 	for i := 0; i < len(typ); i++ {
-		fields[i] = fieldSchema("f"+strconv.FormatInt(int64(i+1), 10), typ[i])
+		fields[i] = fieldSchema("F"+strconv.FormatInt(int64(i+1), 10), typ[i])
 	}
 
 	rawSchema := `
@@ -132,7 +142,7 @@ func fieldKind(mode parseMode, t reflect.Type) (fType string, isErr bool) {
 			fType = `["string","null"]`
 			isErr = true
 		} else {
-			panic("avro parse not supported")
+			panic("avro parse not supported type " + t.String())
 		}
 	case reflect.Ptr:
 		if mode == modeSlice {
@@ -140,9 +150,10 @@ func fieldKind(mode parseMode, t reflect.Type) (fType string, isErr bool) {
 		}
 		fType, isErr = fieldKind(modeNormal, t.Elem())
 	case reflect.Struct:
-		if mode == modeSlice {
-			panic("slice not supported struct")
-		}
+		//if mode == modeSlice {
+		//	fmt.Println(fieldKind(modeNormal,t.Elem()))
+		//	panic("slice not supported struct")
+		//}
 		n := t.NumField()
 		fields := make([]string, n)
 

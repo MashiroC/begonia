@@ -33,20 +33,11 @@ func (c *CallResult) Frame(reqID string) frame.Frame {
 	return frame.NewResponse(reqID, c.Result, c.Err)
 }
 
-// Redirect 结果重定向
-// 在api层需要将收到的请求转发到另一条连接时，传递该变量，logic层会转发请求
-var Redirect = &CallResult{
-	Result: nil,
-	Err:    nil,
-}
-
 // ResultFunc 回传结果的结构体
-// 用于api层接收消息后，需要返回结果时调用其中的Result函数
+// 用于app层接收消息后，需要返回结果时调用其中的Result函数
 type ResultFunc struct {
 
 	// Result 返回结果的函数
-	// 如果传toConnID，result会被转递给toConnID代表的连接
-	// 如果不传，result会被传递给请求的连接
 	Result func(result Calls)
 
 	// ConnID 请求的连接id

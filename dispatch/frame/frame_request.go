@@ -1,9 +1,9 @@
 package frame
 
 import (
-	"github.com/MashiroC/begonia/tool/qconv"
 	"bytes"
 	"errors"
+	"github.com/MashiroC/begonia/tool/qconv"
 )
 
 // frame_request.go something
@@ -16,9 +16,9 @@ const (
 // Request Request的frame实现
 //
 // opcode4 length8 extendLength16
-// req:service fun reqId param
+// req:server fun reqId param
 //     4      4         8       0 || 16   [              length                  ]
-// {opcode}{version}{length}{extendLength}{reqId}0x49{service}0x49{fun}0x49{param}
+// {opcode}{version}{length}{extendLength}{reqId}0x49{server}0x49{fun}0x49{param}
 //
 type Request struct {
 	ReqID   string // 请求id
@@ -57,7 +57,7 @@ func unMarshalRequest(data []byte) (req *Request, err error) {
 
 	serviceByte, err := buf.ReadBytes(breakByte)
 	if err != nil || len(serviceByte) <= 1 {
-		err = errors.New("frame unmarshal error: request service failed")
+		err = errors.New("frame unmarshal error: request server failed")
 		return
 	}
 	req.Service = qconv.Qb2s(serviceByte[:len(serviceByte)-1])
@@ -80,7 +80,7 @@ func unMarshalRequest(data []byte) (req *Request, err error) {
 // Marshal 序列化payload
 //
 //      4      4         8       0 || 16   [              length                  ]
-//	{opcode}{version}{length}{extendLength}{reqId}0x49{service}0x49{fun}0x49{param}
+//	{opcode}{version}{length}{extendLength}{reqId}0x49{server}0x49{fun}0x49{param}
 //
 func (r *Request) Marshal() []byte {
 

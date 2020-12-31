@@ -8,14 +8,12 @@ import (
 // logic_service.go service节点的logic层
 
 // NewService 创建一个实例
-func NewService(dp dispatch.Dispatcher, waitChans *WaitChans) *Service {
+func NewService(dp dispatch.Dispatcher, waitChans *CallbackStore) *Service {
 
 	c := &Service{
-		Client: Client{
-			baseLogic: baseLogic{
-				dp:       dp,
-				waitChan: waitChans,
-			},
+		Client: &Client{
+			Dp:        dp,
+			Callbacks: waitChans,
 		},
 	}
 
@@ -25,7 +23,7 @@ func NewService(dp dispatch.Dispatcher, waitChans *WaitChans) *Service {
 }
 
 type Service struct {
-	Client
+	*Client
 
 	// handle Func
 	HandleRequest func(msg *Call, wf ResultFunc)
@@ -44,7 +42,7 @@ func (s *Service) DpHandler(connID string, f frame.Frame) {
 		wf := ResultFunc{
 			Result: func(result Calls) {
 				resp := result.Frame(msg.ReqID)
-				s.dp.SendTo(connID, resp)
+				s.Dp.SendTo(connID, resp)
 			},
 			ConnID: connID,
 			ReqID:  msg.ReqID,
