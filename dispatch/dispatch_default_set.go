@@ -1,16 +1,14 @@
 package dispatch
 
 import (
-	"github.com/MashiroC/begonia/config"
+	"fmt"
 	"github.com/MashiroC/begonia/dispatch/conn"
 	"github.com/MashiroC/begonia/dispatch/frame"
-	"github.com/MashiroC/begonia/tool/berr"
+	"github.com/MashiroC/begonia/dispatch/heartbeat"
+	"github.com/MashiroC/begonia/internal/proxy"
 	"github.com/MashiroC/begonia/tool/ids"
-	"github.com/MashiroC/begonia/tool/machine"
 	"log"
-	"reflect"
 	"sync"
-	"time"
 )
 
 // dispatch_default.go something
@@ -20,12 +18,10 @@ func NewSetByDefaultCluster() Dispatcher {
 
 	d := &setDispatch{}
 
-	d.AllMachine = make(map[string]*machine.Machine)
-	d.msgCh = make(chan recvMsg, 10)
 	d.connSet = make(map[string]conn.Conn)
 
 	// 默认连接被关闭时只打印log
-	d.closeHookFunc = func(connID string, err error) {
+	d.CloseHookFunc = func(connID string, err error) {
 		log.Printf("connID [%s] has some error: [%s]\n", connID, err)
 	}
 
@@ -33,44 +29,42 @@ func NewSetByDefaultCluster() Dispatcher {
 }
 
 type setDispatch struct {
-	AllMachine map[string]*machine.Machine
+	baseDispatch
+
+	// 代理器，如果一个节点被赋予了代理职责，会在这里检查是否要重定向
+	Proxy *proxy.Handler
 
 	// set模式相关变量
 	connSet  map[string]conn.Conn // 保存连接的map
+	machines map[string]map[string]string
 	connLock sync.Mutex           // 锁，保证connSet线程安全
-
-	msgCh chan recvMsg // 接收消息用的管道
-
-	// hook func
-	closeHookFunc func(connID string, err error) // 关闭连接的hook
 }
 
-// Hook 在这里可以去Hook一些事件。
-func (d *setDispatch) Hook(name string, hookFunc interface{}) {
-	switch name {
-	case "close":
-		if f, ok := hookFunc.(func(connID string, err error)); ok {
-			d.closeHookFunc = f
-			return
-		}
-		panic(berr.New("dispatch", "hook", "close func must func(connID string, err error) but "+reflect.TypeOf(hookFunc).String()))
-	default:
-		panic(berr.New("dispatch", "hook", "hook func "+name+"not found"))
-	}
-}
-
-// Link 建立连接，center cluster模式下，会开一条和center的tcp连接
+// Link 建立连接，bgacenter cluster模式下，会开一条和center的tcp连接
 func (d *setDispatch) Link(addr string) (err error) {
-	panic(berr.New("dispatch", "link", "in set mode, you can't use Link()"))
+	panic("in set mode, you can't use Link()")
 }
 
 func (d *setDispatch) ReLink() bool {
-	panic(berr.New("dispatch", "link", "in set mode, you can't use ReLink()"))
+	panic("in set mode, you can't use ReLink()")
 }
 
 // Send 发送一个包，在center cluster模式下直接发送到中心，中心进行调度
 func (d *setDispatch) Send(f frame.Frame) (err error) {
-	panic(berr.New("dispatch", "send", "in set mode, you can't use Send(), please use SendTo()"))
+	panic("in set mode, you can't use Send()")
+}
+
+func (d *setDispatch) HandleFrame(connID string, f frame.Frame) {
+
+	if d.Proxy != nil {
+		redirectConnID, ok := d.Proxy.Check(connID, f)
+		if ok {
+			d.Proxy.Action(connID, redirectConnID, f)
+			return
+		}
+	}
+
+	d.LgHandleFrame(connID, f)
 }
 
 func (d *setDispatch) SendTo(connID string, f frame.Frame) (err error) {
@@ -80,17 +74,10 @@ func (d *setDispatch) SendTo(connID string, f frame.Frame) (err error) {
 	d.connLock.Unlock()
 
 	if !ok {
-		return berr.NewF("dispatch", "send", "conn [%s] is broked or disconnection", connID)
+		return fmt.Errorf("dispatch send error: conn [%s] is broken or disconnection", connID)
 	}
 
 	err = c.Write(byte(f.Opcode()), f.Marshal())
-	return
-}
-
-func (d *setDispatch) Recv() (connID string, f frame.Frame) {
-	msg := <-d.msgCh
-	connID = msg.connID
-	f = msg.f
 	return
 }
 
@@ -124,23 +111,19 @@ func (d *setDispatch) work(c conn.Conn) {
 
 	id := ids.New()
 
-	log.Printf("new conn [%s]\n", id)
+	log.Printf("new conn addr [%s] accept, connID [%s]\n", c.Addr(), id)
 	d.connLock.Lock()
 	d.connSet[id] = c
 	d.connLock.Unlock()
-	d.AllMachine[id] = machine.NewMachine()
-
-	getpongtime := config.C.Dispatch.GetPongTime
-	timer := time.NewTimer(getpongtime)
-	go receivePong(c, timer)
-	go sendPing(d, id, config.C.Dispatch.SendPingTime)
+	ping := heartbeat.NewPing(7)
+	ping.Start(c)
 
 	for {
 
 		opcode, data, err := c.Recv()
 		if err != nil {
 			c.Close()
-			d.closeHookFunc(id, err)
+			d.CloseHookFunc(id, err)
 			d.connLock.Lock()
 			delete(d.connSet, id)
 			d.connLock.Unlock()
@@ -149,59 +132,51 @@ func (d *setDispatch) work(c conn.Conn) {
 
 		// 解析opcode
 		typ, ctrl := frame.ParseOpcode(int(opcode))
+
 		switch ctrl {
-		case frame.BasicCtrlCode:
+		case frame.CtrlDefaultCode:
 			f, err := frame.UnMarshalBasic(typ, data)
 			if err != nil {
 				panic(err)
 			}
 
-			d.msgCh <- recvMsg{
-				connID: id,
-				f:      f,
-			}
+			go d.HandleFrame(id, f)
+			//d.msgCh <- recvMsg{
+			//	connID: id,
+			//	f:      f,
+			//}
+
 		case frame.PingPongCtrlCode:
-			f, err := frame.UnMarshalPingPong(typ, data)
+			f, err := frame.UnMarshalBasic(typ, data)
 			if err != nil {
 				panic(err)
 			}
-			switch p := f.(type) {
-			case *frame.Ping:
-				//center暂时无ping
-			case *frame.Pong:
-				timer.Stop()
-				timer.Reset(getpongtime)
-				m := d.AllMachine[id]
-				m.StoreMachine(p.Machine)
-			}
-		default:
-			// TODO:现在没有除了普通请求之外的ctrl code 支持
-			panic(berr.NewF("dispatch", "recv", "ctrl code [%s] not support", ctrl))
-		}
+			machine := ping.HandleFrame(f)
+			d.machines[id] = machine
 
+		default:
+			panic(fmt.Sprintf("ctrl code [%s] not support", ctrl))
+		}
 	}
 
+}
+
+func (d *setDispatch) Handle(typ string, in interface{}) {
+	switch typ {
+	case "proxy":
+		if p, ok := in.(*proxy.Handler); ok {
+			d.Proxy = p
+			return
+		}
+	default:
+		d.baseDispatch.Handle(typ, in)
+		return
+	}
+	panic("handle func not exist")
 }
 
 func (d *setDispatch) Close() {
 	for _, v := range d.connSet {
 		v.Close()
 	}
-}
-
-func sendPing(d *setDispatch, id string, sendpingtime time.Duration) {
-	ticker := time.NewTicker(sendpingtime)
-	ping := frame.NewPing(0)
-	for {
-		<-ticker.C
-		err := d.SendTo(id, ping)
-		if err != nil {
-			log.Println("sendPing err", err)
-			return
-		}
-	}
-}
-func receivePong(c conn.Conn, timer *time.Timer) {
-	<-timer.C
-	c.Close()
 }

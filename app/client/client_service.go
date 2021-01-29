@@ -1,10 +1,9 @@
 package client
 
 import (
-	"github.com/MashiroC/begonia/app"
+	"fmt"
 	"github.com/MashiroC/begonia/app/coding"
 	"github.com/MashiroC/begonia/logic"
-	"github.com/MashiroC/begonia/tool/berr"
 	"github.com/MashiroC/begonia/tool/reflects"
 )
 
@@ -29,14 +28,14 @@ type AsyncCallback = func(interface{}, error)
 
 type rService struct {
 	name string
-	funs map[string]app.FunInfo
+	funs map[string]Fun
 	c    *rClient
 }
 
 func (r *rService) FuncSync(name string) (rf RemoteFunSync, err error) {
 	f, exist := r.funs[name]
 	if !exist {
-		err = berr.NewF("app.client", "get func", "remote func [%s] not exist", name)
+		err = fmt.Errorf("app.client funcSync error: remote func [%s] not exist", name)
 		return
 	}
 
@@ -76,14 +75,14 @@ func (r *rService) FuncAsync(name string) (rf RemoteFunAsync, err error) {
 
 	f, exist := r.funs[name]
 	if !exist {
-		err = berr.NewF("app.client", "get func async", "remote func [%s] not exist", name)
+		err = fmt.Errorf("app,client funcAsync error: remote func [%s] not exist", name)
 		return
 	}
 
 	rf = func(callback AsyncCallback, params ...interface{}) {
 
 		// 对入参编码
-		b, err := f.InCoder.Encode(params)
+		b, err := f.InCoder.Encode(coding.ToAvroObj(params))
 		if err != nil {
 			//TODO: 当传入参数和要求类型不符时的错误返回
 			panic(err)

@@ -36,7 +36,7 @@ type EchoService int
 
 func (*EchoService) Echo(i1 int, i2 int8, i3 int16, i4 int32, i5 int64,
 	f1 float32, f2 float64, ok bool, str string,
-	s1 []int, s2 []string, s3 []*string, s6 []byte, st TestStruct, stp *TestStruct,
+	s1 []int, s2 []string, s3 []string, s6 []byte, st TestStruct, stp TestStruct,
 	m1 map[string]string, m2 map[string]int, m3 map[string]TestStruct,
 ) {
 	//st TestStruct, st2 *TestStruct
@@ -131,35 +131,38 @@ func TestParse(t *testing.T) {
 		F17: map[string]int{"welcome": 1},
 		F18: map[string]TestStruct{},
 	}
+	if &obj != nil {
 
+	}
 	s := EchoService(1)
 	e := &s
 	typ := reflect.TypeOf(e)
 	m := typ.Method(0)
 
-	rawSchema := InSchema(m)
+	rawSchema := outReflectSchema(m)
 	schema := avro.MustParse(rawSchema)
-	res, err := avro.Marshal(schema, obj)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(len(res), res)
-
-	m2 := typ.Method(1)
-	rawSchema2 := OutSchema(m2)
-	schema2 := avro.MustParse(rawSchema2)
-	res2, err := avro.Marshal(schema2, obj)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(len(res2), res2)
-
-	var obj2 Input
-	err = avro.Unmarshal(schema2, res2, &obj2)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(obj2)
+	fmt.Println(schema)
+	//res, err := avro.Marshal(schema, obj)
+	//if err != nil {
+	//	panic(err)
+	//}
+	//fmt.Println(len(res), res)
+	//
+	//m2 := typ.Method(1)
+	//rawSchema2 := outReflectSchema(m2)
+	//schema2 := avro.MustParse(rawSchema2)
+	//res2, err := avro.Marshal(schema2, obj)
+	//if err != nil {
+	//	panic(err)
+	//}
+	//fmt.Println(len(res2), res2)
+	//
+	//var obj2 Input
+	//err = avro.Unmarshal(schema2, res2, &obj2)
+	//if err != nil {
+	//	panic(err)
+	//}
+	//fmt.Println(obj2)
 }
 
 func TestAvroSliceParse(t *testing.T) {
@@ -190,7 +193,7 @@ func TestReflectPtr(t *testing.T) {
 	pTyp := reflect.TypeOf(People{})
 
 	var m interface{}
-	m = map[string]interface{}{"Name": "asd", "Age": 123}
+	m = map[string]interface{}{"Typ": "asd", "Age": 123}
 
 	in := reflect.New(pTyp)
 	people := in.Interface()

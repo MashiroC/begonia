@@ -1,80 +1,100 @@
+// Package bgacenter 服务中心
 package center
 
 import (
-	"fmt"
+	"context"
+	"github.com/MashiroC/begonia/app"
 	"github.com/MashiroC/begonia/app/option"
-	"github.com/MashiroC/begonia/core"
-	"github.com/MashiroC/begonia/dispatch"
+	"github.com/MashiroC/begonia/app/server"
+	cRegister "github.com/MashiroC/begonia/core/register"
+	"github.com/MashiroC/begonia/dispatch/frame"
+	"github.com/MashiroC/begonia/internal/proxy"
 	"github.com/MashiroC/begonia/logic"
 	"log"
 )
 
-// starter.go something
-// bootStartByCenter 根据center cluster模式启动
-func bootstart(optionMap map[string]interface{}) Center {
+// bootstart 根据center cluster模式启动
+func bootstart(optionMap map[string]interface{}) server.Server {
 
-	//ctx, cancel := context.WithCancel(context.Background())
-	c := &rCenter{
-		//ctx:    ctx,
-		//cancel: cancel,
-	}
+	app.ServiceAppMode = app.Ast
 
-	var addr string
-	if addrIn, ok := optionMap["managerAddr"]; ok {
-		addr = addrIn.(string)
-	}
+	s := server.BootStart(optionMap)
 
-	var dp dispatch.Dispatcher
-	dp = dispatch.NewSetByDefaultCluster()
-	go dp.Listen(addr)
+	coreRegister := optionMap["REGISTER"].(*cRegister.CoreRegister)
 
-	c.lg = logic.NewMix(dp)
+	// ========== 初始化代理器 ==========
 
-	core.C = core.NewSubService()
+	p := proxy.NewHandler()
 
-	fmt.Println("  ____                              _        \n |  _ \\                            (_)       \n | |_) |  ___   __ _   ___   _ __   _   __ _ \n |  _ <  / _ \\ / _` | / _ \\ | '_ \\ | | / _` |\n | |_) ||  __/| (_| || (_) || | | || || (_| |\n |____/  \\___| \\__, | \\___/ |_| |_||_| \\__,_|\n                __/ |                        \n               |___/                         ")
-	log.Println("begonia center started")
-	//TODO: 发一个包，拉取配置
+	lg := server.GetLogic(s)
 
-	/*
+	p.Check = func(connID string, f frame.Frame) (redirectConnID string, ok bool) {
 
-		先不去拉配置 后面再加
-
-		// 假设这个getConfig是sub service的一个远程函数
-		var getConfig = func(...interface{}) (interface{}, error) {
-			return map[string]interface{}{}, nil
+		// Response不走proxy器
+		if _, okk := f.(*frame.Response); okk {
+			return
 		}
 
-		// 假设m就是拿到的远程配置
-		m, err := getConfig()
+		req := f.(*frame.Request)
 
-		// TODO:根据拿到的远程配置来修改配置
-		// do some thing
-		fmt.Println(m, err)
-		// 修改配置之前的一系列调用全部都是按默认配置来的
-	*/
-	return c
+		if req.Service != "REGISTER" {
+			redirectConnID, ok = coreRegister.GetToID(req.Service)
+			if !ok {
+				panic("unknown bu ok error")
+			}
+		}
+		return
+	}
+
+	p.AddAction(func(connID, redirectConnID string, f frame.Frame) {
+		req := f.(*frame.Request)
+		lg.Callbacks.AddCallback(context.TODO(), req.ReqID, func(result *logic.CallResult) {
+			err := lg.Dp.SendTo(connID, frame.NewResponse(req.ReqID, result.Result, result.Err))
+			// TODO: sendTo如果发送失败，加入到队列，这里先log一下
+			if err != nil {
+				log.Println(err)
+			}
+		})
+	})
+
+	p.AddAction(func(connID, redirectConnID string, f frame.Frame) {
+		err := lg.Dp.SendTo(redirectConnID, f)
+		if err != nil {
+			log.Println(err)
+		}
+		// TODO:handler err not panic
+		return
+	})
+
+	lg.Dp.Hook("close", coreRegister.HandleConnClose)
+
+	lg.Dp.Handle("proxy", p)
+
+	// ========== END ==========
+
+	log.Println("begonia bgacenter started")
+	//TODO: 发一个包，拉取配置
+
+	return s
 }
 
-// New 初始化，获得一个service对象，传入一个mode参数，以及一个option的不定参数
-func New(mode string, optionFunc ...option.WriteFunc) (cli Center) {
+// New 拿到一个server，该server中会初始化center相关的东西
+func New(optionFunc ...option.WriteFunc) (s server.Server) {
 	optionMap := defaultClientConfig()
 
 	for _, f := range optionFunc {
 		f(optionMap)
 	}
 
-	switch mode {
-	case "center":
-		cli = bootstart(optionMap)
-		// TODO:其他的模式和模式出问题的判断
-	}
+	s = bootstart(optionMap)
 
 	return
 }
 
 func defaultClientConfig() map[string]interface{} {
 	m := make(map[string]interface{})
+
+	m["dpTyp"] = "p2p"
 
 	// TODO:加入配置
 

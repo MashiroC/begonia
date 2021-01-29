@@ -93,7 +93,7 @@ func (r *Response) Marshal() []byte {
 // Opcode 组装opcode
 func (r *Response) Opcode() int {
 	if r.opcode == -1 {
-		r.opcode = makeOpcode(responseTypCode, BasicCtrlCode)
+		r.opcode = makeOpcode(responseTypCode)
 	}
 
 	return r.opcode

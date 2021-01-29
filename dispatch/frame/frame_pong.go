@@ -14,11 +14,11 @@ const (
 
 // Pong response的frame实现
 //
-//     4      4         8       0 || 16   [     length      ]
-//	{opcode}{version}{length}{extendLength}{error}0x49{param}
+//     4      4         8       0 || 16   [       length      ]
+//	{opcode}{version}{length}{extendLength}{error}0x00{machine}
 //
 type Pong struct {
-	Machine map[string]string
+	Machine map[string]string // 机器信息
 	Err     string
 
 	v      []byte // 原始payload
@@ -69,6 +69,9 @@ func unMarshalPong(data []byte) (resp *Pong, err error) {
 }
 
 // Marshal 序列化
+//     4        4       8       0 || 16   [       length      ]
+//	{opcode}{version}{length}{extendLength}{error}0x00{machine}
+//
 func (r *Pong) Marshal() []byte {
 	if r.v == nil {
 		buf := make([]byte, 0, 128)
@@ -88,7 +91,7 @@ func (r *Pong) Marshal() []byte {
 // Opcode 组装opcode
 func (r *Pong) Opcode() int {
 	if r.opcode == -1 {
-		r.opcode = makeOpcode(pongTypCode, PingPongCtrlCode)
+		r.opcode = makeOpcode(PingPongCtrlCode)
 	}
 
 	return r.opcode

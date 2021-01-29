@@ -41,17 +41,7 @@ func (c *avroCoder) DecodeIn(bytes []byte, i interface{}) (err error) {
 func ToAvroObj(params []interface{}) interface{} {
 	out := make(map[string]interface{})
 	for i := 0; i < len(params); i++ {
-		//t:=reflect.TypeOf(params[i])
-		//if t.Kind()==reflect.Struct{
-		//	var m map[string]interface{}
-		//	err := mapstructure.Decode(params[i], &m)
-		//	if err!=nil{
-		//		panic(err)
-		//	}
-		//	out["in"+fmt.Sprintf("%d",i)]=m
-		//}else{
-		out["f"+fmt.Sprintf("%d", i+1)] = params[i]
-		//}
+		out["F"+fmt.Sprintf("%d", i+1)] = params[i]
 	}
 	return out
 }
