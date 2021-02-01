@@ -124,7 +124,7 @@ func (d *linkDispatch) work(c conn.Conn) {
 	d.linkID = id
 	log.Printf("link addr [%s] success, connID [%s]\n", c.Addr(), id)
 	pong := heartbeat.NewPong()
-	pong.Start(c)
+	pong.Start(d)
 	for {
 
 		opcode, data, err := c.Recv()

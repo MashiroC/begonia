@@ -2,7 +2,6 @@ package heartbeat
 
 import (
 	"github.com/MashiroC/begonia/config"
-	"github.com/MashiroC/begonia/dispatch/conn"
 	"github.com/MashiroC/begonia/dispatch/frame"
 	"time"
 )
@@ -13,10 +12,11 @@ type Ping struct {
 	SendPingTime time.Duration
 	RecvPongTime time.Duration
 	timer        *time.Timer
+	ConnId       string
 }
 
 // 开始持续对一条连接发ping
-func (p *Ping) Start(c conn.Conn) {
+func (p *Ping) Start(c Heartbeat) {
 	pingFrame := frame.NewPing(p.Code)
 	ticker := time.NewTicker(p.SendPingTime)
 
@@ -28,7 +28,7 @@ func (p *Ping) Start(c conn.Conn) {
 
 	for {
 		<-ticker.C
-		_ = c.Write(byte(pingFrame.Opcode()), pingFrame.Marshal())
+		_ = c.SendTo(p.ConnId, pingFrame)
 		p.timer.Reset(p.RecvPongTime)
 	}
 }
@@ -43,11 +43,12 @@ func (p *Ping) HandleFrame(f frame.Frame) map[string]string {
 	return nil
 }
 
-func NewPing(code byte) *Ping {
+func NewPing(code byte, connId string) *Ping {
 	return &Ping{
 		Code:         code,
 		SendPingTime: config.C.Dispatch.SendPingTime,
 		RecvPongTime: config.C.Dispatch.GetPongTime,
 		timer:        time.NewTimer(0),
+		ConnId:       connId,
 	}
 }

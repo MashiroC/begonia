@@ -2,7 +2,6 @@ package heartbeat
 
 import (
 	"github.com/MashiroC/begonia/config"
-	"github.com/MashiroC/begonia/dispatch/conn"
 	"github.com/MashiroC/begonia/dispatch/frame"
 	"github.com/MashiroC/begonia/tool/machine"
 	"time"
@@ -17,7 +16,7 @@ type Pong struct {
 }
 
 // 一定时间内没收到pong就断开连接
-func (p *Pong) Start(c conn.Conn) {
+func (p *Pong) Start(c Heartbeat) {
 	go func() {
 		<-p.timer.C
 		c.Close()

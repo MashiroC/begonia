@@ -37,6 +37,7 @@ type setDispatch struct {
 	// set模式相关变量
 	connSet  map[string]conn.Conn // 保存连接的map
 	machines map[string]map[string]string
+
 	connLock sync.Mutex           // 锁，保证connSet线程安全
 }
 
@@ -115,8 +116,8 @@ func (d *setDispatch) work(c conn.Conn) {
 	d.connLock.Lock()
 	d.connSet[id] = c
 	d.connLock.Unlock()
-	ping := heartbeat.NewPing(7)
-	ping.Start(c)
+	ping := heartbeat.NewPing(7, id)
+	ping.Start(d)
 
 	for {
 
