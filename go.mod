@@ -11,6 +11,7 @@ require (
 	github.com/mitchellh/mapstructure v1.1.2
 	github.com/modern-go/reflect2 v1.0.1
 	github.com/satori/go.uuid v1.2.0
+	github.com/shirou/gopsutil v3.21.1+incompatible // indirect
 	github.com/spf13/pflag v1.0.3
 	github.com/spf13/viper v1.7.1
 	github.com/stretchr/testify v1.6.1 // indirect

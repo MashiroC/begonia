@@ -155,8 +155,9 @@ func (d *linkDispatch) work(c conn.Conn) {
 				panic(err)
 			}
 
-			pingFrame := pong.HandleFrame(f)
-			_ = d.Send(pingFrame)
+			pongFrame := pong.HandleFrame(f)
+			_ = d.Send(pongFrame)
+
 		default:
 			// 现在没有除了普通请求之外的ctrl code 支持
 			panic(fmt.Sprintf("ctrl code [%s] not support", ctrl))

@@ -38,7 +38,8 @@ type setDispatch struct {
 	connSet  map[string]conn.Conn // 保存连接的map
 	machines map[string]map[string]string
 
-	connLock sync.Mutex           // 锁，保证connSet线程安全
+	connLock     sync.Mutex // 锁，保证connSet线程安全
+	machinesLock sync.Mutex // 保证machines的线程安全
 }
 
 // Link 建立连接，bgacenter cluster模式下，会开一条和center的tcp连接
@@ -153,7 +154,9 @@ func (d *setDispatch) work(c conn.Conn) {
 				panic(err)
 			}
 			machine := ping.HandleFrame(f)
+			d.machinesLock.Lock()
 			d.machines[id] = machine
+			d.machinesLock.Unlock()
 
 		default:
 			panic(fmt.Sprintf("ctrl code [%s] not support", ctrl))
@@ -180,4 +183,11 @@ func (d *setDispatch) Close() {
 	for _, v := range d.connSet {
 		v.Close()
 	}
+}
+
+func (d *setDispatch) Get(connId string) map[string]string {
+	d.machinesLock.Lock()
+	t := d.machines[connId]
+	d.machinesLock.Unlock()
+	return t
 }

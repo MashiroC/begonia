@@ -11,6 +11,7 @@ import (
 type Pong struct {
 	RecvPingTime time.Duration
 	timer        *time.Timer
+	// 收到ping帧后取消计时器
 	ch           chan struct{}
 	machine      *machine.Machine
 }
@@ -37,8 +38,7 @@ func (p *Pong) HandleFrame(f frame.Frame) frame.Frame {
 		pongFrame := frame.NewPong(m, nil)
 		return pongFrame
 	}
-
-	return frame.NewPong(nil, nil)
+	return nil
 }
 
 func NewPong() *Pong {
