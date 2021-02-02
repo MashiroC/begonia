@@ -18,7 +18,6 @@ type Ping struct {
 
 // 开始持续对一条连接发ping
 func (p *Ping) Start(hb Heartbeat) {
-	pingFrame := frame.NewPing(p.Code)
 	ticker := time.NewTicker(p.SendPingTime)
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -26,6 +25,7 @@ func (p *Ping) Start(hb Heartbeat) {
 		for {
 			select {
 			case <-ticker.C:
+				pingFrame := frame.NewPing(p.Code)
 				_ = hb.SendTo(p.ConnId, pingFrame)
 				p.timer.Reset(p.RecvPongTime)
 			case <-ctx.Done():
