@@ -91,7 +91,7 @@ func (r *Pong) Marshal() []byte {
 // Opcode 组装opcode
 func (r *Pong) Opcode() int {
 	if r.opcode == -1 {
-		r.opcode = makeOpcode(PingPongCtrlCode)
+		r.opcode = makeOpcode(pongTypCode, PingPongCtrlCode)
 	}
 
 	return r.opcode

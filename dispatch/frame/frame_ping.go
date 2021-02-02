@@ -64,7 +64,7 @@ func (ping *Ping) Marshal() []byte {
 // Opcode 组装出一个opcode
 func (ping *Ping) Opcode() int {
 	if ping.opcode == -1 {
-		ping.opcode = makeOpcode(PingPongCtrlCode)
+		ping.opcode = makeOpcode(pingTypCode, PingPongCtrlCode)
 	}
 
 	return ping.opcode

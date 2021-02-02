@@ -124,7 +124,8 @@ func (d *linkDispatch) work(c conn.Conn) {
 	d.linkID = id
 	log.Printf("link addr [%s] success, connID [%s]\n", c.Addr(), id)
 	pong := heartbeat.NewPong()
-	pong.Start(d)
+	go pong.Start(d)
+
 	for {
 
 		opcode, data, err := c.Recv()
@@ -150,11 +151,12 @@ func (d *linkDispatch) work(c conn.Conn) {
 			go d.LgHandleFrame(id, f)
 
 		case frame.PingPongCtrlCode:
-			f, err := frame.UnMarshalBasic(typ, data)
+			f, err := frame.UnMarshalPingPong(typ, data)
 			if err != nil {
 				panic(err)
 			}
 
+			//fmt.Println(f)
 			pongFrame := pong.HandleFrame(f)
 			_ = d.Send(pongFrame)
 

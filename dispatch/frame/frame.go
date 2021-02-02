@@ -40,12 +40,12 @@ func ParseOpcode(opcode int) (typCode, ctrlCode int) {
 }
 
 // makeOpcode 使用默认字段构建opcode
-func makeOpcode(typCode int) int {
-	dispatchCode := CtrlDefaultCode // 0 ~ 7
+func makeOpcode(typCode int, ctrlCode int) int {
+	// dispatchCode := CtrlDefaultCode // 0 ~ 7
 
 	version := ProtocolVersion // 0 ~ 15
 
-	return ((typCode<<3)|dispatchCode)<<4 | version
+	return ((typCode<<3)|ctrlCode)<<4 | version
 }
 
 // UnMarshalBasic 根据typCode和序列化的数据，反序列化为frame

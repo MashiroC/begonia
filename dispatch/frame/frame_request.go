@@ -107,7 +107,7 @@ func (r *Request) Marshal() []byte {
 // Opcode 组装出一个opcode
 func (r *Request) Opcode() int {
 	if r.opcode == -1 {
-		r.opcode = makeOpcode(requestTypCode)
+		r.opcode = makeOpcode(requestTypCode, CtrlDefaultCode)
 	}
 
 	return r.opcode

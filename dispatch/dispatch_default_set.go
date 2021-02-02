@@ -19,6 +19,7 @@ func NewSetByDefaultCluster() Dispatcher {
 	d := &setDispatch{}
 
 	d.connSet = make(map[string]conn.Conn)
+	d.machines = make(map[string]map[string]string)
 
 	// 默认连接被关闭时只打印log
 	d.CloseHookFunc = func(connID string, err error) {
@@ -118,7 +119,7 @@ func (d *setDispatch) work(c conn.Conn) {
 	d.connSet[id] = c
 	d.connLock.Unlock()
 	ping := heartbeat.NewPing(7, id)
-	ping.Start(d)
+	go ping.Start(d)
 
 	for {
 
@@ -149,10 +150,12 @@ func (d *setDispatch) work(c conn.Conn) {
 			//}
 
 		case frame.PingPongCtrlCode:
-			f, err := frame.UnMarshalBasic(typ, data)
+			f, err := frame.UnMarshalPingPong(typ, data)
 			if err != nil {
 				panic(err)
 			}
+
+			//fmt.Println(f)
 			machine := ping.HandleFrame(f)
 			d.machinesLock.Lock()
 			d.machines[id] = machine

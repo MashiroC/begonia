@@ -1,6 +1,7 @@
 package heartbeat
 
 import (
+	"context"
 	"github.com/MashiroC/begonia/config"
 	"github.com/MashiroC/begonia/dispatch/frame"
 	"time"
@@ -19,21 +20,28 @@ type Ping struct {
 func (p *Ping) Start(hb Heartbeat) {
 	pingFrame := frame.NewPing(p.Code)
 	ticker := time.NewTicker(p.SendPingTime)
+	ctx, cancel := context.WithCancel(context.Background())
+
+	go func(ctx context.Context) {
+		for {
+			select {
+			case <-ticker.C:
+				_ = hb.SendTo(p.ConnId, pingFrame)
+				p.timer.Reset(p.RecvPongTime)
+			case <-ctx.Done():
+				return
+			}
+		}
+	}(ctx)
 
 	// 判断是否超时
-	go func() {
-		<-p.timer.C
-		hb.Close()
-	}()
-
-	for {
-		<-ticker.C
-		_ = hb.SendTo(p.ConnId, pingFrame)
-		p.timer.Reset(p.RecvPongTime)
-	}
+	<-p.timer.C
+	cancel()
+	hb.Close()
 }
 
 // 获取pong的内容（机器信息），转化为映射
+// 在这里暂停计时器，因为已经没必要了（不是重置）
 func (p *Ping) HandleFrame(f frame.Frame) map[string]string {
 	if pongFrame, ok := f.(*frame.Pong); ok {
 		p.timer.Stop()
@@ -48,7 +56,7 @@ func NewPing(code byte, connId string) *Ping {
 		Code:         code,
 		SendPingTime: config.C.Dispatch.SendPingTime,
 		RecvPongTime: config.C.Dispatch.GetPongTime,
-		timer:        time.NewTimer(0),
+		timer:        time.NewTimer(time.Hour),
 		ConnId:       connId,
 	}
 }

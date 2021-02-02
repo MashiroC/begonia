@@ -60,9 +60,9 @@ func defaultConfig() envConfig {
 			AutoReConnection:           true,
 			ReConnectionIntervalSecond: 2,
 			ReConnectionRetryCount:     5,
-			GetPingTime:                1 * time.Minute,
-			GetPongTime:                55 * time.Second,
-			SendPingTime:               50 * time.Second,
+			GetPingTime:                20 * time.Second,
+			GetPongTime:                15 * time.Second,
+			SendPingTime:               10 * time.Second,
 		},
 		Logic: LogicConfig{
 			RequestTimeOut: 10,

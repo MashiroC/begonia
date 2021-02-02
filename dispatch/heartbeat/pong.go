@@ -1,6 +1,7 @@
 package heartbeat
 
 import (
+	"context"
 	"github.com/MashiroC/begonia/config"
 	"github.com/MashiroC/begonia/dispatch/frame"
 	"github.com/MashiroC/begonia/tool/machine"
@@ -18,16 +19,24 @@ type Pong struct {
 
 // 一定时间内没收到pong就断开连接
 func (p *Pong) Start(hb Heartbeat) {
-	go func() {
-		<-p.timer.C
-		hb.Close()
-	}()
+	ctx, cancel := context.WithCancel(context.Background())
 
-	for {
-		<-p.ch
-		p.timer.Stop()
-		p.timer.Reset(p.RecvPingTime)
-	}
+	go func(ctx context.Context) {
+		for {
+			select {
+			case <-p.ch:
+				p.timer.Stop()
+				p.timer.Reset(p.RecvPingTime)
+			case <-ctx.Done():
+				return
+			}
+		}
+	}(ctx)
+
+	p.timer.Reset(p.RecvPingTime)
+	<-p.timer.C
+	cancel()
+	hb.Close()
 }
 
 // 根据ping帧，返回pong帧
