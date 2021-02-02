@@ -170,3 +170,7 @@ func (d *linkDispatch) work(c conn.Conn) {
 func (d *linkDispatch) Close() {
 	d.linkedConn.Close()
 }
+
+func (d *linkDispatch) Get(id string) interface{} {
+	return nil
+}
