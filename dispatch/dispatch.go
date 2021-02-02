@@ -56,6 +56,10 @@ type Dispatcher interface {
 	// - client.handleRequest  (request)
 	Handle(typ string, handleFunc interface{})
 
+	// 用于获取一些信息，不同模式下获取的信息不同
+	// 目前支持的：
+	// - set：获取机器信息
+	Get(id string) interface{}
 }
 
 type baseDispatch struct {

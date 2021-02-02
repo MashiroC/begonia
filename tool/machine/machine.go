@@ -69,7 +69,8 @@ func NewMachine() *Machine {
 	}
 
 	machine.chain.Sign(NewCpuMonitor())
-
+	machine.chain.Sign(NewMemMonitor())
+	machine.chain.Sign(NewDiskMonitor())
 	return machine
 }
 

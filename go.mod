@@ -3,7 +3,9 @@ module github.com/MashiroC/begonia
 go 1.14
 
 require (
+	github.com/StackExchange/wmi v0.0.0-20190523213315-cbe66965904d // indirect
 	github.com/actgardner/gogen-avro/v7 v7.2.0
+	github.com/go-ole/go-ole v1.2.5 // indirect
 	github.com/golang/protobuf v1.4.3
 	github.com/hamba/avro v1.4.0
 	github.com/heetch/avro v0.2.7
@@ -11,7 +13,7 @@ require (
 	github.com/mitchellh/mapstructure v1.1.2
 	github.com/modern-go/reflect2 v1.0.1
 	github.com/satori/go.uuid v1.2.0
-	github.com/shirou/gopsutil v3.21.1+incompatible // indirect
+	github.com/shirou/gopsutil v3.21.1+incompatible
 	github.com/spf13/pflag v1.0.3
 	github.com/spf13/viper v1.7.1
 	github.com/stretchr/testify v1.6.1 // indirect

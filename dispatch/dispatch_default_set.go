@@ -185,7 +185,7 @@ func (d *setDispatch) Close() {
 	}
 }
 
-func (d *setDispatch) Get(connId string) map[string]string {
+func (d *setDispatch) Get(connId string) interface{} {
 	d.machinesLock.Lock()
 	t := d.machines[connId]
 	d.machinesLock.Unlock()
