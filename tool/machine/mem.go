@@ -10,6 +10,10 @@ type MemMonitor struct {
 	chain.BaseHandler
 }
 
+// 字段名			含义
+// mem_free			内存可用
+// mem_total		内存总大小
+// mem_used_percent	内存使用率（三位小数）
 func GetMemInfo() map[string]string {
 	m := make(map[string]string)
 	memory, _ := mem.VirtualMemory()

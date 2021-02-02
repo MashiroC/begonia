@@ -8,32 +8,32 @@ import (
 
 // 对ping方法的一些封装
 type Ping struct {
-	Code         byte // ping的负载
-	SendPingTime time.Duration
-	RecvPongTime time.Duration
+	Code         byte          // ping的负载，用于标识pong帧需要返回的内容
+	SendPingTime time.Duration // 发送ping帧的时间间隔
+	RecvPongTime time.Duration // 发送ping帧后收到pong的最长时间
 	timer        *time.Timer
 	ConnId       string
 }
 
 // 开始持续对一条连接发ping
-func (p *Ping) Start(c Heartbeat) {
+func (p *Ping) Start(hb Heartbeat) {
 	pingFrame := frame.NewPing(p.Code)
 	ticker := time.NewTicker(p.SendPingTime)
 
 	// 判断是否超时
 	go func() {
 		<-p.timer.C
-		c.Close()
+		hb.Close()
 	}()
 
 	for {
 		<-ticker.C
-		_ = c.SendTo(p.ConnId, pingFrame)
+		_ = hb.SendTo(p.ConnId, pingFrame)
 		p.timer.Reset(p.RecvPongTime)
 	}
 }
 
-// 获取pong的内容，转化为映射
+// 获取pong的内容（机器信息），转化为映射
 func (p *Ping) HandleFrame(f frame.Frame) map[string]string {
 	if pongFrame, ok := f.(*frame.Pong); ok {
 		p.timer.Stop()

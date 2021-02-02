@@ -9,18 +9,18 @@ import (
 
 // 对pong方法的一些封装
 type Pong struct {
-	RecvPingTime time.Duration
+	RecvPingTime time.Duration // 收到ping帧的最长时间间隔
 	timer        *time.Timer
-	// 收到ping帧后取消计时器
-	ch           chan struct{}
-	machine      *machine.Machine
+
+	ch      chan struct{} // 收到ping帧后传递信息，重置计时器
+	machine *machine.Machine
 }
 
 // 一定时间内没收到pong就断开连接
-func (p *Pong) Start(c Heartbeat) {
+func (p *Pong) Start(hb Heartbeat) {
 	go func() {
 		<-p.timer.C
-		c.Close()
+		hb.Close()
 	}()
 
 	for {

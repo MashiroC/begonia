@@ -24,6 +24,9 @@ func (c *CpuMonitor) MonitorUsePercent() {
 	}
 }
 
+// 字段名	  	含义
+// cpu_proc	  	cpu核数
+// cpu_percent	cpu使用率
 func GetCpuInfo() map[string]string {
 	m := make(map[string]string)
 	m["cpu_proc"] = strconv.Itoa(runtime.GOMAXPROCS(0))
