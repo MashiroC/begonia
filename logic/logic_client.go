@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/MashiroC/begonia/dispatch"
 	"github.com/MashiroC/begonia/dispatch/frame"
+	"github.com/MashiroC/begonia/dispatch/heartbeat"
 	"github.com/MashiroC/begonia/tool/ids"
 	"log"
 	"reflect"
@@ -37,9 +38,12 @@ func NewClient(dp dispatch.Dispatcher) *Client {
 
 func (c *Client) DpHandler(connID string, f frame.Frame) {
 
-	if resp, ok := f.(*frame.Response); ok {
+	switch resp := f.(type) {
+	case *frame.Response:
 		c.HandleResponse(resp)
 		return
+	case *frame.Ping:
+		heartbeat.HandlePing(resp)
 	}
 
 	panic(fmt.Sprintf("logic handle error: msg typ must *frame.Response but %s", reflect.TypeOf(f)))

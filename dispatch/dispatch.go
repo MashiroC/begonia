@@ -57,9 +57,9 @@ type Dispatcher interface {
 	Handle(typ string, handleFunc interface{})
 
 	// 用于获取一些信息，不同模式下获取的信息不同
-	// 目前支持的：
-	// - set：获取机器信息
+	// 目前仅支持set模式：
 	Get(id string) interface{}
+	Store(id string, machine map[string]string)
 }
 
 type baseDispatch struct {

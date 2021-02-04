@@ -52,5 +52,7 @@ func (s *Service) DpHandler(connID string, f frame.Frame) {
 
 	case *frame.Response:
 		s.Client.HandleResponse(msg)
+	case *frame.Ping:
+
 	}
 }

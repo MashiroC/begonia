@@ -118,8 +118,8 @@ func (d *setDispatch) work(c conn.Conn) {
 	d.connLock.Lock()
 	d.connSet[id] = c
 	d.connLock.Unlock()
-	ping := heartbeat.NewPing(7, id)
-	go ping.Start(d)
+	ping := heartbeat.NewPing(7, id, d)
+	go ping.Start()
 
 	for {
 
@@ -156,10 +156,7 @@ func (d *setDispatch) work(c conn.Conn) {
 			}
 
 			//fmt.Println(f)
-			machine := ping.HandleFrame(f)
-			d.machinesLock.Lock()
-			d.machines[id] = machine
-			d.machinesLock.Unlock()
+			go d.HandleFrame(id, f)
 
 		default:
 			panic(fmt.Sprintf("ctrl code [%s] not support", ctrl))
@@ -193,4 +190,9 @@ func (d *setDispatch) Get(connId string) interface{} {
 	t := d.machines[connId]
 	d.machinesLock.Unlock()
 	return t
+}
+func (d *setDispatch) Store(id string, machine map[string]string) {
+	d.machinesLock.Lock()
+	d.machines[id] = machine
+	d.machinesLock.Unlock()
 }

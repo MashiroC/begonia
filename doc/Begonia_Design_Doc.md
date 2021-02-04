@@ -8,9 +8,10 @@ Begonia 是一款轻量级的 RPC 框架，目标是提供开箱即用的 RPC �
 
 ### 节点
 
-Begonia 使用经典的 C (`Client`) / S (`Server`) 架构，我们称一个引用了 Begonia sdk 的进程为一个节点，节点分为 `Client` 节点和 `Server` 节点两种。我们建议使用容器来运行 Begonia 的节点，一个由多个 Begonia 节点组成的集群如下图所示：
+Begonia 使用经典的 C (`Client`) / S (`Server`) 架构，我们称一个引用了 Begonia sdk 的进程为一个节点，节点分为 `Client` 节点和 `Server` 节点两种。我们建议使用容器来运行
+Begonia 的节点，一个由多个 Begonia 节点组成的集群如下图所示：
 
-![Begonia 集群网络拓扑](C:\Users\MashiroC\OneDrive\文档\blog\begonia\begonia 集群网络拓扑.png)
+![Begonia 集群网络拓扑](.\pic\begonia 集群网络拓扑.png)
 
 这里除掉服务中心外一共有 6 个节点，这些节点都会向服务中心发起一条 TCP 连接，RPC 的请求和响应帧全部通过这条连接来传输。服务中心在这里起到的是服务发现、内网穿透、负载均衡等作用。
 

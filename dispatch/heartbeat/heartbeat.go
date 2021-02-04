@@ -15,4 +15,9 @@ type Heartbeat interface {
 
 	// Close 释放资源
 	Close()
+
+	//存储机器信息
+	Store(id string, machine map[string]string)
 }
+
+var dispatch Heartbeat

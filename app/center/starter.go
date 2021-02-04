@@ -8,6 +8,7 @@ import (
 	"github.com/MashiroC/begonia/app/server"
 	cRegister "github.com/MashiroC/begonia/core/register"
 	"github.com/MashiroC/begonia/dispatch/frame"
+	"github.com/MashiroC/begonia/dispatch/heartbeat"
 	"github.com/MashiroC/begonia/internal/proxy"
 	"github.com/MashiroC/begonia/logic"
 	"log"
@@ -32,6 +33,12 @@ func bootstart(optionMap map[string]interface{}) server.Server {
 
 		// Response不走proxy器
 		if _, okk := f.(*frame.Response); okk {
+			return
+		}
+
+		// Pong直接处理掉
+		if _, okk := f.(*frame.Pong); okk {
+			heartbeat.HandlePong(f)
 			return
 		}
 

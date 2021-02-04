@@ -123,8 +123,8 @@ func (d *linkDispatch) work(c conn.Conn) {
 
 	d.linkID = id
 	log.Printf("link addr [%s] success, connID [%s]\n", c.Addr(), id)
-	pong := heartbeat.NewPong()
-	go pong.Start(d)
+	pong := heartbeat.NewPong(d)
+	go pong.Start()
 
 	for {
 
@@ -156,9 +156,7 @@ func (d *linkDispatch) work(c conn.Conn) {
 				panic(err)
 			}
 
-			//fmt.Println(f)
-			pongFrame := pong.HandleFrame(f)
-			_ = d.Send(pongFrame)
+			go d.LgHandleFrame(id, f)
 
 		default:
 			// 现在没有除了普通请求之外的ctrl code 支持
@@ -175,4 +173,7 @@ func (d *linkDispatch) Close() {
 
 func (d *linkDispatch) Get(id string) interface{} {
 	return nil
+}
+func (d *linkDispatch) Store(id string, machine map[string]string) {
+	return
 }

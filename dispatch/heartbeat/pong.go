@@ -17,8 +17,10 @@ type Pong struct {
 	machine *machine.Machine
 }
 
+var PongUtil *Pong
+
 // 一定时间内没收到pong就断开连接
-func (p *Pong) Start(hb Heartbeat) {
+func (p *Pong) Start() {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	go func(ctx context.Context) {
@@ -36,25 +38,27 @@ func (p *Pong) Start(hb Heartbeat) {
 	p.timer.Reset(p.RecvPingTime)
 	<-p.timer.C
 	cancel()
-	hb.Close()
+	dispatch.Close()
 }
 
 // 根据ping帧，返回pong帧
-func (p *Pong) HandleFrame(f frame.Frame) frame.Frame {
+func HandlePing(f frame.Frame) {
 	if pingFrame, ok := f.(*frame.Ping); ok {
-		p.ch <- struct{}{}
-		m := p.machine.GetMachineInfo(pingFrame.Code)
+		PongUtil.ch <- struct{}{}
+		m := PongUtil.machine.GetMachineInfo(pingFrame.Code)
 		pongFrame := frame.NewPong(m, nil)
-		return pongFrame
+		dispatch.Send(pongFrame)
 	}
-	return nil
+	return
 }
 
-func NewPong() *Pong {
-	return &Pong{
+func NewPong(hb Heartbeat) *Pong {
+	dispatch = hb
+	PongUtil = &Pong{
 		RecvPingTime: config.C.Dispatch.GetPingTime,
 		timer:        time.NewTimer(0),
 		ch:           make(chan struct{}),
 		machine:      machine.NewMachine(),
 	}
+	return PongUtil
 }
