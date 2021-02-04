@@ -118,8 +118,7 @@ func (d *setDispatch) work(c conn.Conn) {
 	d.connLock.Lock()
 	d.connSet[id] = c
 	d.connLock.Unlock()
-	ping := heartbeat.NewPing(7, id, d)
-	go ping.Start()
+	heartbeat.NewPing(7, id, d)
 
 	for {
 

@@ -20,23 +20,23 @@ type Pong struct {
 var PongUtil *Pong
 
 // 一定时间内没收到pong就断开连接
-func (p *Pong) Start() {
+func startPong() {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	go func(ctx context.Context) {
 		for {
 			select {
-			case <-p.ch:
-				p.timer.Stop()
-				p.timer.Reset(p.RecvPingTime)
+			case <-PongUtil.ch:
+				PongUtil.timer.Stop()
+				PongUtil.timer.Reset(PongUtil.RecvPingTime)
 			case <-ctx.Done():
 				return
 			}
 		}
 	}(ctx)
 
-	p.timer.Reset(p.RecvPingTime)
-	<-p.timer.C
+	PongUtil.timer.Reset(PongUtil.RecvPingTime)
+	<-PongUtil.timer.C
 	cancel()
 	dispatch.Close()
 }
@@ -52,7 +52,7 @@ func HandlePing(f frame.Frame) {
 	return
 }
 
-func NewPong(hb Heartbeat) *Pong {
+func NewPong(hb Heartbeat) {
 	dispatch = hb
 	PongUtil = &Pong{
 		RecvPingTime: config.C.Dispatch.GetPingTime,
@@ -60,5 +60,5 @@ func NewPong(hb Heartbeat) *Pong {
 		ch:           make(chan struct{}),
 		machine:      machine.NewMachine(),
 	}
-	return PongUtil
+	go startPong()
 }

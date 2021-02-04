@@ -19,17 +19,17 @@ type Ping struct {
 var PingUtil *Ping
 
 // 开始持续对一条连接发ping
-func (p *Ping) Start() {
-	ticker := time.NewTicker(p.SendPingTime)
+func startPing() {
+	ticker := time.NewTicker(PingUtil.SendPingTime)
 	ctx, cancel := context.WithCancel(context.Background())
 
 	go func(ctx context.Context) {
 		for {
 			select {
 			case <-ticker.C:
-				pingFrame := frame.NewPing(p.Code)
-				_ = dispatch.SendTo(p.ConnId, pingFrame)
-				p.timer.Reset(p.RecvPongTime)
+				pingFrame := frame.NewPing(PingUtil.Code)
+				_ = dispatch.SendTo(PingUtil.ConnId, pingFrame)
+				PingUtil.timer.Reset(PingUtil.RecvPongTime)
 			case <-ctx.Done():
 				return
 			}
@@ -37,7 +37,7 @@ func (p *Ping) Start() {
 	}(ctx)
 
 	// 判断是否超时
-	<-p.timer.C
+	<-PingUtil.timer.C
 	cancel()
 	dispatch.Close()
 }
@@ -52,7 +52,7 @@ func HandlePong(f frame.Frame) {
 	return
 }
 
-func NewPing(code byte, connId string, hb Heartbeat) *Ping {
+func NewPing(code byte, connId string, hb Heartbeat) {
 	dispatch = hb
 	PingUtil = &Ping{
 		Code:         code,
@@ -61,5 +61,5 @@ func NewPing(code byte, connId string, hb Heartbeat) *Ping {
 		timer:        time.NewTimer(time.Hour),
 		ConnId:       connId,
 	}
-	return PingUtil
+	go startPing()
 }
