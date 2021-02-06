@@ -20,9 +20,9 @@ func NewSetByDefaultCluster() Dispatcher {
 	d.connSet = make(map[string]conn.Conn)
 
 	// 默认连接被关闭时只打印log
-	d.CloseHookFunc = func(connID string, err error) {
+	d.Hook("close", func(connID string, err error) {
 		log.Printf("connID [%s] has some error: [%s]\n", connID, err)
-	}
+	})
 
 	return d
 }
@@ -103,7 +103,7 @@ func (d *setDispatch) work(c conn.Conn) {
 		opcode, payload, err := c.Recv()
 		if err != nil {
 			c.Close()
-			d.CloseHookFunc(id, err)
+			d.DoCloseHook(id, err)
 			d.connLock.Lock()
 			delete(d.connSet, id)
 			d.connLock.Unlock()

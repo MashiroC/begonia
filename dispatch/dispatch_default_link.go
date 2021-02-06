@@ -19,14 +19,13 @@ func NewLinkedByDefaultCluster() Dispatcher {
 
 	// 判断是否需要在断开连接情况下重连，hook了dispatch层的close函数
 	if !config.C.Dispatch.AutoReConnection {
-		// 不配置自动重连时 默认连接被关闭时只打印log
-		// TODO:hook变链式执行
-		d.CloseHookFunc = func(connID string, err error) {
-			log.Printf("connID [%s] has some error: [%s]\n", connID, err)
-		}
+		// 不配置自动重连时 默认连接被关闭时panic
+		d.Hook("close", func(connID string, err error) {
+			panic("conn close")
+		})
 	} else {
 
-		d.CloseHookFunc = func(connID string, err error) {
+		d.Hook("close", func(connID string, err error) {
 
 			// 用一个协程跑 避免阻塞
 			go func() {
@@ -55,7 +54,7 @@ func NewLinkedByDefaultCluster() Dispatcher {
 				}
 			}()
 
-		}
+		})
 
 	}
 
@@ -127,7 +126,7 @@ func (d *linkDispatch) work(c conn.Conn) {
 		opcode, payload, err := c.Recv()
 		if err != nil {
 			c.Close()
-			d.CloseHookFunc(id, err)
+			d.DoCloseHook(id, err)
 			break
 		}
 
