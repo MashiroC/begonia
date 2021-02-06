@@ -30,9 +30,6 @@ func NewSetByDefaultCluster() Dispatcher {
 type setDispatch struct {
 	baseDispatch
 
-	// 代理器，如果一个节点被赋予了代理职责，会在这里检查是否要重定向
-	Proxy *proxy.Handler
-
 	// set模式相关变量
 	connSet  map[string]conn.Conn // 保存连接的map
 	connLock sync.Mutex           // 锁，保证connSet线程安全
@@ -50,19 +47,6 @@ func (d *setDispatch) ReLink() bool {
 // Send 发送一个包，在center cluster模式下直接发送到中心，中心进行调度
 func (d *setDispatch) Send(f frame.Frame) (err error) {
 	panic("in set mode, you can't use Send()")
-}
-
-func (d *setDispatch) HandleFrame(connID string, f frame.Frame) {
-
-	if d.Proxy != nil {
-		redirectConnID, ok := d.Proxy.Check(connID, f)
-		if ok {
-			d.Proxy.Action(connID, redirectConnID, f)
-			return
-		}
-	}
-
-	d.LgHandleFrame(connID, f)
 }
 
 func (d *setDispatch) SendTo(connID string, f frame.Frame) (err error) {
@@ -116,7 +100,7 @@ func (d *setDispatch) work(c conn.Conn) {
 
 	for {
 
-		opcode, data, err := c.Recv()
+		opcode, payload, err := c.Recv()
 		if err != nil {
 			c.Close()
 			d.CloseHookFunc(id, err)
@@ -126,26 +110,7 @@ func (d *setDispatch) work(c conn.Conn) {
 			break
 		}
 
-		// 解析opcode
-		typ, ctrl := frame.ParseOpcode(int(opcode))
-
-		if ctrl == frame.CtrlDefaultCode {
-
-			f, err := frame.UnMarshal(typ, data)
-			if err != nil {
-				panic(err)
-			}
-
-			go d.HandleFrame(id, f)
-			//d.msgCh <- recvMsg{
-			//	connID: id,
-			//	f:      f,
-			//}
-
-		} else {
-			// TODO:现在没有除了普通请求之外的ctrl code 支持
-			panic(fmt.Sprintf("ctrl code [%s] not support", ctrl))
-		}
+		d.rt.Do(id, opcode, payload)
 	}
 
 }
@@ -154,7 +119,7 @@ func (d *setDispatch) Handle(typ string, in interface{}) {
 	switch typ {
 	case "proxy":
 		if p, ok := in.(*proxy.Handler); ok {
-			d.Proxy = p
+			d.rt.Proxy = p
 			return
 		}
 	default:

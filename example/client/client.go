@@ -7,8 +7,6 @@ import (
 )
 
 func main() {
-	begonia.NewClient()
-	begonia.NewServer()
 	c := begonia.NewClient(option.Addr(":12306"))
 
 	s, _ := c.Service("Echo")
