@@ -4,6 +4,7 @@ package dispatch
 import (
 	"errors"
 	"github.com/MashiroC/begonia/dispatch/frame"
+	"github.com/MashiroC/begonia/dispatch/router"
 	"reflect"
 )
 
@@ -52,30 +53,35 @@ type Dispatcher interface {
 	// example:
 	// dp.Handle("request",func(f *frame.Response) { fmt.Println(f) })
 	// 目前可以handle的：
-	// - client.handleResponse (response)
-	// - client.handleRequest  (request)
+	// - frame
+	// - proxy
+	// - ctrl
 	Handle(typ string, handleFunc interface{})
-
 }
 
 type baseDispatch struct {
 
-	// handle func
-	LgHandleFrame func(connID string, f frame.Frame)
-
 	// hook func
-	CloseHookFunc func(connID string, err error) // 关闭连接的hook
-}
+	CloseHookFuncList []func(connID string, err error) // 关闭连接的hook
 
-func (d *baseDispatch) HandleFrame(connID string, f frame.Frame) {
-	d.LgHandleFrame(connID, f)
+	rt *router.Router
 }
 
 func (d *baseDispatch) Handle(typ string, in interface{}) {
 	switch typ {
 	case "frame":
 		if fun, ok := in.(func(connID string, f frame.Frame)); ok {
-			d.LgHandleFrame = fun
+			if d.rt == nil {
+				d.rt = router.New(fun)
+			} else {
+				d.rt.LgHandleFrame = fun
+			}
+			return
+		}
+	case "ctrl":
+		if fun, ok := in.(func() (code int, fun func(connID string, data []byte))); ok {
+			code, f := fun()
+			d.rt.AddCtrlHandle(code, f)
 			return
 		}
 	default:
@@ -89,11 +95,19 @@ func (d *baseDispatch) Hook(name string, hookFunc interface{}) {
 	switch name {
 	case "close":
 		if f, ok := hookFunc.(func(connID string, err error)); ok {
-			d.CloseHookFunc = f
+			d.CloseHookFuncList = append(d.CloseHookFuncList, f)
 			return
 		}
 		panic("close func must func(connID string, err error) but " + reflect.TypeOf(hookFunc).String())
 	default:
 		panic("hook func " + name + " not exist")
+	}
+}
+
+func (d *baseDispatch) DoCloseHook(connID string, err error) {
+	if d.CloseHookFuncList != nil {
+		for _, f := range d.CloseHookFuncList {
+			f(connID, err)
+		}
 	}
 }

@@ -77,7 +77,6 @@ func BootStart(optionMap map[string]interface{}) (s Server) {
 	var rg register.Register
 	if isP2P {
 		rg = register.NewLocalRegister(coreRegister)
-
 	} else {
 		rg = register.NewRemoteRegister(lg.Client)
 	}
