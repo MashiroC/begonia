@@ -101,16 +101,11 @@ func (d *setDispatch) work(c conn.Conn) {
 	d.connLock.Unlock()
 
 	sendFunc := func(f frame.Frame) error {
-		log.Println("@ping", id, f)
 		err := d.SendTo(id, f)
 		return err
 	}
 	closeFunc := func() {
 		c.Close()
-		d.DoCloseHook(id, heartbeat.PongTimeout)
-		d.connLock.Lock()
-		delete(d.connSet, id)
-		d.connLock.Unlock()
 	}
 	ping := heartbeat.NewPing(7, closeFunc, sendFunc)
 	ctx, cancel := context.WithCancel(context.Background())
@@ -122,7 +117,7 @@ func (d *setDispatch) work(c conn.Conn) {
 			log.Println(err)
 			return
 		}
-		
+
 		ping.Handle(f)
 	})
 

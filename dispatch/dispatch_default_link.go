@@ -124,7 +124,6 @@ func (d *linkDispatch) work(c conn.Conn) {
 
 	closeFunc := func() {
 		c.Close()
-		//d.DoCloseHook(id, heartbeat.PingTimeout)
 	}
 	pong := heartbeat.NewPong(closeFunc, d.Send)
 	ctx, cancel := context.WithCancel(context.Background())
