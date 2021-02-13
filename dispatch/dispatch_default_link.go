@@ -1,7 +1,6 @@
 package dispatch
 
 import (
-	"context"
 	"fmt"
 	"github.com/MashiroC/begonia/config"
 	"github.com/MashiroC/begonia/dispatch/conn"
@@ -19,6 +18,29 @@ func NewLinkedByDefaultCluster() Dispatcher {
 
 	d := &linkDispatch{}
 
+	// 启动心跳包
+	h := heartbeat.NewHeart()
+
+	//注册
+	d.Handle("ctrl", heartbeat.Handler(h))
+
+	// 在启动时hook，接收一条连接的ping包
+	d.Hook("start", func(connID string) {
+		closeFunc := func() {
+			d.linkedConn.Close()
+		}
+		sendFunc := func (connID string, f frame.Frame) error{
+			return d.SendTo(connID, f)
+		}
+
+		d.cancel = h.Register("pong", connID, closeFunc, sendFunc)
+	})
+
+	// 在重连之前hook，关闭之前的心跳包的goroutine
+	d.Hook("close", func(connID string, err error) {
+		d.cancel()
+	})
+
 	// 判断是否需要在断开连接情况下重连，hook了dispatch层的close函数
 	if !config.C.Dispatch.AutoReConnection {
 		// 不配置自动重连时 默认连接被关闭时panic
@@ -28,7 +50,7 @@ func NewLinkedByDefaultCluster() Dispatcher {
 	} else {
 
 		d.Hook("close", func(connID string, err error) {
-
+			fmt.Println(err)
 			// 用一个协程跑 避免阻塞
 			go func() {
 				ok := false
@@ -69,6 +91,8 @@ type linkDispatch struct {
 	linkAddr   string    // 单连接的地址
 	linkedConn conn.Conn // 连接
 	linkID     string    // 连接的id
+
+	cancel func() // 关闭心跳包的一些goroutine
 }
 
 // Link 建立连接，bgacenter cluster模式下，会开一条和center的tcp连接
@@ -122,22 +146,7 @@ func (d *linkDispatch) work(c conn.Conn) {
 	d.linkID = id
 	log.Printf("link addr [%s] success, connID [%s]\n", c.Addr(), id)
 
-	closeFunc := func() {
-		c.Close()
-		//d.DoCloseHook(id, heartbeat.PingTimeout)
-	}
-	pong := heartbeat.NewPong(closeFunc, d.Send)
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	go pong.Start(ctx)
-	d.rt.AddCtrlHandle(7, func(connID string, data []byte) {
-		f, err := frame.UnMarshalPingPong(frame.PingTypCode, data)
-		if err != nil {
-			log.Println(err)
-			return
-		}
-		pong.Handle(f)
-	})
+	d.DoStartHook(id) // 变量初始化完成，这里去hook一些东西
 
 	for {
 

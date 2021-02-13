@@ -48,7 +48,7 @@ func unMarshalPong(data []byte) (resp *Pong, err error) {
 
 	respErrByte, err := buf.ReadBytes(breakByte)
 	if err != nil {
-		err = errors.New("frame unmarshal error: response error failed")
+		err = errors.New("frame unmarshal error: pong error failed")
 		return
 	}
 	resp.Err = qconv.Qb2s(respErrByte[:len(respErrByte)-1])

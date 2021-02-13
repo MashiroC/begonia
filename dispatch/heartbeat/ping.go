@@ -16,8 +16,8 @@ type Ping struct {
 	timer        *time.Timer
 	ConnId       string
 
-	Close func()                  // 关闭连接，以及hook的方法
-	Send  func(frame.Frame) error // 发送帧
+	Close func()                                   // 关闭连接，以及hook的方法
+	Send  func(connID string, f frame.Frame) error // 发送帧
 }
 
 // 开始持续对一条连接发ping
@@ -30,7 +30,7 @@ func (p *Ping) Start(c context.Context) {
 			select {
 			case <-ticker.C:
 				pingFrame := frame.NewPing(p.Code)
-				_ = p.Send(pingFrame)
+				_ = p.Send(p.ConnId, pingFrame)
 				p.timer.Reset(p.RecvPongTime)
 
 			case <-ctx.Done():
@@ -60,7 +60,11 @@ func (p *Ping) Handle(f frame.Frame) {
 	return
 }
 
-func NewPing(code byte, close func(), send func(frame.Frame) error) *Ping {
+func (p *Ping) RecvType() int {
+	return frame.PongTypCode
+}
+
+func NewPing(code byte, connID string, close func(), send func(string, frame.Frame) error) *Ping {
 	return &Ping{
 		Code:         code,
 		SendPingTime: config.C.Dispatch.SendPingTime,
@@ -68,5 +72,7 @@ func NewPing(code byte, close func(), send func(frame.Frame) error) *Ping {
 		timer:        time.NewTimer(time.Hour),
 		Close:        close,
 		Send:         send,
+		ConnId:       connID,
 	}
 }
+

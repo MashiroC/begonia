@@ -1,7 +1,6 @@
 package dispatch
 
 import (
-	"context"
 	"fmt"
 	"github.com/MashiroC/begonia/dispatch/conn"
 	"github.com/MashiroC/begonia/dispatch/frame"
@@ -26,6 +25,39 @@ func NewSetByDefaultCluster() Dispatcher {
 		log.Printf("connID [%s] has some error: [%s]\n", connID, err)
 	})
 
+	h := heartbeat.NewHeart()
+
+	d.Hook("start", func(connID string) {
+		closeFunc := func() {
+			d.connLock.Lock()
+			c := d.connSet[connID]
+			d.connLock.Unlock()
+
+			if c != nil {
+				c.Close()
+			}
+		}
+		sendFunc := func(connID string, f frame.Frame) error {
+			return d.SendTo(connID, f)
+		}
+
+		h.Register("ping", connID, closeFunc, sendFunc)
+	})
+
+	d.Hook("close", func(connID string, err error) {
+		d.cancelLock.Lock()
+		cancel, ok := d.cancelSet[connID]
+		d.cancelLock.Unlock()
+		if !ok || cancel == nil {
+			log.Println("close hook error: cancel func not exit")
+			return
+		}
+
+		cancel()
+	})
+
+	d.Handle("ctrl", heartbeat.Handler(h))
+
 	return d
 }
 
@@ -33,8 +65,11 @@ type setDispatch struct {
 	baseDispatch
 
 	// set模式相关变量
-	connSet  map[string]conn.Conn // 保存连接的map
-	connLock sync.Mutex           // 锁，保证connSet线程安全
+	connSet   map[string]conn.Conn // 保存连接的map
+	cancelSet map[string]func()    // 保存取消goroutine的函数
+
+	connLock   sync.Mutex // 锁，保证connSet线程安全
+	cancelLock sync.Mutex // 保证并发安全
 }
 
 // Link 建立连接，bgacenter cluster模式下，会开一条和center的tcp连接
@@ -100,31 +135,7 @@ func (d *setDispatch) work(c conn.Conn) {
 	d.connSet[id] = c
 	d.connLock.Unlock()
 
-	sendFunc := func(f frame.Frame) error {
-		log.Println("@ping", id, f)
-		err := d.SendTo(id, f)
-		return err
-	}
-	closeFunc := func() {
-		c.Close()
-		d.DoCloseHook(id, heartbeat.PongTimeout)
-		d.connLock.Lock()
-		delete(d.connSet, id)
-		d.connLock.Unlock()
-	}
-	ping := heartbeat.NewPing(7, closeFunc, sendFunc)
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	go ping.Start(ctx)
-	d.rt.AddCtrlHandle(7, func(connID string, data []byte) {
-		f, err := frame.UnMarshalPingPong(frame.PongTypCode, data)
-		if err != nil {
-			log.Println(err)
-			return
-		}
-		
-		ping.Handle(f)
-	})
+	d.DoStartHook(id)
 
 	for {
 

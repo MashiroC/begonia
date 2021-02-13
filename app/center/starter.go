@@ -8,7 +8,6 @@ import (
 	"github.com/MashiroC/begonia/app/server"
 	cRegister "github.com/MashiroC/begonia/core/register"
 	"github.com/MashiroC/begonia/dispatch/frame"
-	"github.com/MashiroC/begonia/dispatch/router/case"
 	"github.com/MashiroC/begonia/internal/proxy"
 	"github.com/MashiroC/begonia/logic"
 	"log"
@@ -70,8 +69,6 @@ func bootstart(optionMap map[string]interface{}) server.Server {
 	lg.Dp.Hook("close", coreRegister.HandleConnClose)
 
 	lg.Dp.Handle("proxy", p)
-
-	lg.Dp.Handle("ctrl", _case.Case(lg.Dp))
 	// ========== END ==========
 
 	log.Println("begonia bgacenter started")

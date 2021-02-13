@@ -2,9 +2,11 @@ package heartbeat
 
 import (
 	"context"
+	"fmt"
 	"github.com/MashiroC/begonia/config"
 	"github.com/MashiroC/begonia/dispatch/frame"
 	"github.com/MashiroC/begonia/tool/machine"
+	"log"
 	"time"
 )
 
@@ -16,8 +18,9 @@ type Pong struct {
 	ch      chan struct{} // 收到ping帧后传递信息，重置计时器
 	machine *machine.Machine
 
-	Close func()                  // 关闭连接，以及hook的方法
-	Send  func(frame.Frame) error // 发送帧
+	connID string
+	Close  func()                                   // 关闭连接，以及hook的方法
+	Send   func(connID string, f frame.Frame) error // 发送帧
 }
 
 // 一定时间内没收到pong就断开连接
@@ -39,6 +42,7 @@ func (p *Pong) Start(c context.Context) {
 	p.timer.Reset(p.RecvPingTime)
 	select {
 	case <-p.timer.C:
+		fmt.Println("ping timeout")
 		break
 	case <-c.Done():
 		break
@@ -53,12 +57,19 @@ func (p *Pong) Handle(f frame.Frame) {
 		p.ch <- struct{}{}
 		m := p.machine.GetMachineInfo(pingFrame.Code)
 		pongFrame := frame.NewPong(m, nil)
-		_ = p.Send(pongFrame)
+		err := p.Send(p.connID, pongFrame)
+		if err != nil {
+			log.Println(err)
+		}
 	}
 	return
 }
 
-func NewPong(close func(), send func(frame.Frame) error) *Pong {
+func (p *Pong) RecvType() int {
+	return frame.PingTypCode
+}
+
+func NewPong(connID string, close func(), send func(connID string, f frame.Frame) error) *Pong {
 	return &Pong{
 		RecvPingTime: config.C.Dispatch.GetPingTime,
 		timer:        time.NewTimer(config.C.Dispatch.GetPingTime),
@@ -66,5 +77,6 @@ func NewPong(close func(), send func(frame.Frame) error) *Pong {
 		machine:      machine.NewMachine(),
 		Close:        close,
 		Send:         send,
+		connID:       connID,
 	}
 }
