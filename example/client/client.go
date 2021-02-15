@@ -4,12 +4,10 @@ import (
 	"fmt"
 	"github.com/MashiroC/begonia"
 	"github.com/MashiroC/begonia/app/option"
-	"time"
 )
 
 func main() {
 	c := begonia.NewClient(option.Addr(":12306"))
-	time.Sleep(time.Hour)
 	s, _ := c.Service("Echo")
 
 	SayHello, _ := s.FuncSync("SayHello")
