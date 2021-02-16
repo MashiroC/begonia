@@ -21,9 +21,10 @@ type pool struct {
 	poolSize     int // 连接池当前拥有的连接数
 
 	ttl       time.Duration // 当连接池现有连接数超过核心连接数时，多余连接能存活的最大时间
-	canDial   bool
-	wait      bool
-	waitCh    chan struct{}
+	canDial   bool			// 当连接不够时，是否通过dial获取连接
+	wait      bool          // 当连接数超过maxPoolSize时，是否需要排队
+	waitCh    chan struct{} // 通过channel实现排队
+	signal    chan struct{}
 	data      *queue.Queue
 	connSet   idleList
 	connLock  sync.Mutex
@@ -47,7 +48,9 @@ func (p *pool) Write(opcode byte, data []byte) (err error) {
 }
 
 func (p *pool) Recv() (opcode byte, data []byte, err error) {
-	for p.data.IsEmpty() {
+	// 当没有接收到数据时，进入阻塞状态
+	if p.data.IsEmpty() {
+		<-p.signal
 	}
 
 	ele := p.data.PopBack()
@@ -67,6 +70,7 @@ func (p *pool) Close() {
 	}
 }
 
+// Upgrade 将一条普通连接升级为连接池
 func Upgrade(conn Conn) (Conn, error) {
 	dc, ok := conn.(*defaultConn)
 	if !ok {
@@ -75,8 +79,9 @@ func Upgrade(conn Conn) (Conn, error) {
 	}
 
 	p := &pool{
-		data: queue.New(),
-		// TODO
+		signal:    make(chan struct{}),
+		data:      queue.New(),
+		localAddr: dc.nc.LocalAddr().String(),
 	}
 
 	p.poolSize++
@@ -86,6 +91,7 @@ func Upgrade(conn Conn) (Conn, error) {
 	return p, nil
 }
 
+// Join 将一条普通连接加入到连接池
 func Join(dst Conn, conn Conn) (c Conn, err error) {
 	dc, ok := conn.(*defaultConn)
 	if !ok {
@@ -106,7 +112,8 @@ func Join(dst Conn, conn Conn) (c Conn, err error) {
 	return p, nil
 }
 
-func (p *pool) dial() (conn Conn, err error){
+// dial 通过dial建立一条连接，并向accept方发送一个请求升级连接的报文
+func (p *pool) dial() (conn Conn, err error) {
 	remoteAddr := p.Addr()
 	if remoteAddr == "" {
 		return
@@ -126,6 +133,7 @@ func (p *pool) dial() (conn Conn, err error){
 
 func (p *pool) get() (c *poolConn, err error) {
 	n := p.poolSize - p.corePoolSize
+	// 当连接池现有连接数大于corePoolSize时，检测多余的连接是否超过最大生存时间
 	for i := 0; i < n && p.connSet.len != 0; i++ {
 		pc := p.connSet.back
 		if time.Now().Sub(pc.t) < p.ttl {
@@ -136,10 +144,13 @@ func (p *pool) get() (c *poolConn, err error) {
 		p.poolSize--
 	}
 
+	// 如果设置了排队等待，当空闲连接不够时
+	// 会进入排队状态
 	if p.wait {
 		<-p.waitCh
 	}
 
+	// 从连接池获取一条连接
 	pc := p.connSet.back
 	if pc != nil {
 		p.connSet.popBack()
@@ -147,8 +158,15 @@ func (p *pool) get() (c *poolConn, err error) {
 		return
 	}
 
-	if !p.wait && p.poolSize >= p.maxPoolSize || !p.canDial{
+	// 如果连接池中没有空闲连接
+	// 当连接数大于maxPoolSize，且不支持排队等待，抛出异常
+	if !p.wait && p.poolSize >= p.maxPoolSize {
 		return nil, errors.New("get conn error: connection pool exhausted")
+	}
+
+	// 如果不支持dial的方式获取连接，抛出异常
+	if !p.canDial {
+		return nil, errors.New("get conn error: connection pool exhausted and can't dial up")
 	}
 
 	conn, err := p.dial()
@@ -189,6 +207,10 @@ func (p *pool) recv(c *defaultConn) {
 	for {
 		opcode, data, err := c.Recv()
 		tmp := &info{opcode: opcode, data: data, err: err}
+
+		if p.data.IsEmpty() {
+			p.signal <- struct{}{}
+		}
 		// 把数据压入队列
 		p.data.Push(tmp)
 		if err != nil {
@@ -246,6 +268,7 @@ func (l *idleList) popBack() {
 	pc.next, pc.prev = nil, nil
 }
 
+// makeOpcode 组装用于升级连接的opcode
 func makeOpcode() int {
 	dispatchCode := frame.CtrlConnCode // 0 ~ 7
 
