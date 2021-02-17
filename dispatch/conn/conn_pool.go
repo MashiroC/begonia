@@ -16,24 +16,25 @@ type info struct {
 }
 
 type pool struct {
-	maxPoolSize  int // 连接池拥有的最大连接数
-	corePoolSize int // 连接池至少持有的连接数
-	poolSize     int // 连接池当前拥有的连接数
+	maxPoolSize  int           // 连接池拥有的最大连接数
+	corePoolSize int           // 连接池至少持有的连接数
+	poolSize     int           // 连接池当前拥有的连接数
+	canDial      bool          // 当连接不够时，是否通过dial获取连接
+	wait         bool          // 当连接数超过maxPoolSize时，是否需要排队
+	waitCh       chan struct{} // 通过channel实现排队
+	signal       chan struct{} // 通知Recv解除阻塞状态的信号
+	ttl          time.Duration // 当连接池现有连接数超过核心连接数时，多余连接能存活的最大时间
 
-	ttl       time.Duration // 当连接池现有连接数超过核心连接数时，多余连接能存活的最大时间
-	canDial   bool			// 当连接不够时，是否通过dial获取连接
-	wait      bool          // 当连接数超过maxPoolSize时，是否需要排队
-	waitCh    chan struct{} // 通过channel实现排队
-	signal    chan struct{}
-	data      *queue.Queue
-	connSet   idleList
-	connLock  sync.Mutex
-	localAddr string
+	connSet    idleList
+	data       *queue.Queue
+	dataLock   sync.Mutex
+	mu         sync.Mutex
+	localAddr  string
+	remoteAddr string
 }
 
 func (p *pool) Addr() string {
-	pc := p.connSet.back.c
-	return pc.Addr()
+	return p.remoteAddr
 }
 
 func (p *pool) Write(opcode byte, data []byte) (err error) {
@@ -48,22 +49,38 @@ func (p *pool) Write(opcode byte, data []byte) (err error) {
 }
 
 func (p *pool) Recv() (opcode byte, data []byte, err error) {
+
+begin:
+	p.dataLock.Lock()
+
 	// 当没有接收到数据时，进入阻塞状态
 	if p.data.IsEmpty() {
+		p.dataLock.Unlock()
 		<-p.signal
+		p.dataLock.Lock()
 	}
 
 	ele := p.data.PopBack()
-	info := ele.(info)
+	p.dataLock.Unlock()
+
+	info, ok := ele.(*info)
+	if !ok {
+		goto begin
+	}
+
 	return info.opcode, info.data, info.err
 }
 
 func (p *pool) Close() {
+	p.mu.Lock()
+
 	p.poolSize = 0
-	pc := p.connSet.front
 	p.connSet.len = 0
+	pc := p.connSet.front
 	p.connSet.front, p.connSet.back = nil, nil
 	close(p.waitCh)
+
+	p.mu.Unlock()
 
 	for ; pc != nil; pc = pc.next {
 		pc.c.Close()
@@ -78,10 +95,12 @@ func Upgrade(conn Conn) (Conn, error) {
 		return dc, errors.New("upgrade connection error: conn is already upgraded")
 	}
 
+	// TODO: 加载配置
 	p := &pool{
-		signal:    make(chan struct{}),
-		data:      queue.New(),
-		localAddr: dc.nc.LocalAddr().String(),
+		signal:     make(chan struct{}),
+		data:       queue.New(),
+		localAddr:  dc.nc.LocalAddr().String(),
+		remoteAddr: dc.nc.RemoteAddr().String(),
 	}
 
 	p.poolSize++
@@ -102,11 +121,12 @@ func Join(dst Conn, conn Conn) (c Conn, err error) {
 	if !ok {
 		dst, _ = Upgrade(dst)
 		p = dst.(*pool)
-		return
 	}
 
 	p.put(&poolConn{c: dc, t: time.Now()})
+	p.mu.Lock()
 	p.poolSize++
+	p.mu.Unlock()
 	go p.recv(dc)
 
 	return p, nil
@@ -116,7 +136,7 @@ func Join(dst Conn, conn Conn) (c Conn, err error) {
 func (p *pool) dial() (conn Conn, err error) {
 	remoteAddr := p.Addr()
 	if remoteAddr == "" {
-		return
+		return nil, errors.New("dial up connection error: remote address doesn't exist")
 	}
 
 	conn, err = Dial(remoteAddr)
@@ -132,8 +152,18 @@ func (p *pool) dial() (conn Conn, err error) {
 }
 
 func (p *pool) get() (c *poolConn, err error) {
-	n := p.poolSize - p.corePoolSize
+
+	// 如果设置了排队等待，当空闲连接不够时
+	// 会进入排队状态
+	// waitCh的buffer等于maxPoolSize
+	if p.wait {
+		<-p.waitCh
+	}
+
+	p.mu.Lock()
+	defer p.mu.Unlock()
 	// 当连接池现有连接数大于corePoolSize时，检测多余的连接是否超过最大生存时间
+	n := p.poolSize - p.corePoolSize
 	for i := 0; i < n && p.connSet.len != 0; i++ {
 		pc := p.connSet.back
 		if time.Now().Sub(pc.t) < p.ttl {
@@ -142,12 +172,6 @@ func (p *pool) get() (c *poolConn, err error) {
 		pc.c.Close()
 		p.connSet.popBack()
 		p.poolSize--
-	}
-
-	// 如果设置了排队等待，当空闲连接不够时
-	// 会进入排队状态
-	if p.wait {
-		<-p.waitCh
 	}
 
 	// 从连接池获取一条连接
@@ -186,8 +210,9 @@ func (p *pool) get() (c *poolConn, err error) {
 
 func (p *pool) put(pc *poolConn) {
 	pc.t = time.Now()
-	p.connSet.pushFront(pc)
 
+	p.mu.Lock()
+	p.connSet.pushFront(pc)
 	if p.connSet.len > p.corePoolSize {
 		pc = p.connSet.back
 		pc.c.Close()
@@ -196,6 +221,7 @@ func (p *pool) put(pc *poolConn) {
 	} else {
 		pc = nil
 	}
+	p.mu.Unlock()
 
 	if p.wait {
 		p.waitCh <- struct{}{}
@@ -207,15 +233,18 @@ func (p *pool) recv(c *defaultConn) {
 	for {
 		opcode, data, err := c.Recv()
 		tmp := &info{opcode: opcode, data: data, err: err}
-
-		if p.data.IsEmpty() {
-			p.signal <- struct{}{}
-		}
-		// 把数据压入队列
-		p.data.Push(tmp)
 		if err != nil {
 			c.Close()
 			break
+		}
+
+		p.dataLock.Lock()
+		isWaiting := p.data.IsEmpty()
+		p.data.Push(tmp)
+		p.dataLock.Unlock()
+
+		if isWaiting {
+			p.signal <- struct{}{}
 		}
 	}
 }

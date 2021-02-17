@@ -2,10 +2,12 @@ package queue
 
 import (
 	"container/list"
+	"sync"
 )
 
 type Queue struct {
 	l *list.List
+	Lock sync.Mutex
 }
 
 func New() *Queue {
