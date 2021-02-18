@@ -39,7 +39,7 @@ func (r *Router) Do(connID string, opcode byte, payload []byte) {
 
 	if ctrl == frame.CtrlDefaultCode {
 
-		f, err := frame.UnMarshal(typ, payload)
+		f, err := frame.UnMarshalBasic(typ, payload)
 		if err != nil {
 			panic(err)
 		}

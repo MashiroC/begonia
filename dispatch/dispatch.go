@@ -67,10 +67,13 @@ type baseDispatch struct {
 	// hook func
 	CloseHookFuncList []func(connID string, err error) // 关闭连接的hook
 
+	StartHookFuncList []func(connID string) // 启动连接的hook
+
 	rt *router.Router
 }
 
 func (d *baseDispatch) Handle(typ string, in interface{}) {
+
 	switch typ {
 	case "frame":
 		if fun, ok := in.(func(connID string, f frame.Frame)); ok {
@@ -102,6 +105,12 @@ func (d *baseDispatch) Hook(name string, hookFunc interface{}) {
 			return
 		}
 		panic("close func must func(connID string, err error) but " + reflect.TypeOf(hookFunc).String())
+	case "start":
+		if f, ok := hookFunc.(func(connID string)); ok {
+			d.StartHookFuncList = append(d.StartHookFuncList, f)
+			return
+		}
+		panic("start func must func(connID string) but " + reflect.TypeOf(hookFunc).String())
 	default:
 		panic("hook func " + name + " not exist")
 	}
@@ -111,6 +120,14 @@ func (d *baseDispatch) DoCloseHook(connID string, err error) {
 	if d.CloseHookFuncList != nil {
 		for _, f := range d.CloseHookFuncList {
 			f(connID, err)
+		}
+	}
+}
+
+func (d *baseDispatch) DoStartHook(connID string) {
+	if d.StartHookFuncList != nil {
+		for _, f := range d.StartHookFuncList {
+			f(connID)
 		}
 	}
 }

@@ -3,6 +3,7 @@ package config
 
 import (
 	"github.com/spf13/viper"
+	"time"
 )
 
 // C 配置的单例
@@ -20,6 +21,10 @@ type DispatchConfig struct {
 	AutoReConnection           bool // 断开连接时是否自动重新连接
 	ReConnectionIntervalSecond int  // 断连时重新连接的间隔时间
 	ReConnectionRetryCount     int  // 重试次数
+
+	GetPingTime  time.Duration
+	GetPongTime  time.Duration
+	SendPingTime time.Duration
 }
 
 // LogicConfig logic层的配置
@@ -55,6 +60,9 @@ func defaultConfig() envConfig {
 			AutoReConnection:           true,
 			ReConnectionIntervalSecond: 2,
 			ReConnectionRetryCount:     5,
+			GetPingTime:                20 * time.Second,
+			GetPongTime:                9 * time.Second,
+			SendPingTime:               10 * time.Second,
 		},
 		Logic: LogicConfig{
 			RequestTimeOut: 10,
