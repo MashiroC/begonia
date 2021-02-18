@@ -51,8 +51,8 @@ func makeOpcode(typCode int) int {
 	return ((typCode<<3)|dispatchCode)<<4 | version
 }
 
-// UnMarshalBasic 根据typCode和序列化的数据，反序列化为frame
-func UnMarshalBasic(typCode int, data []byte) (f Frame, err error) {
+// Unmarshal 根据typCode和序列化的数据，反序列化为frame
+func Unmarshal(typCode int, data []byte) (f Frame, err error) {
 	switch typCode {
 	case requestTypCode:
 		f, err = unMarshalRequest(data)

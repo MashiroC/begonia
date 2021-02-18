@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/MashiroC/begonia/dispatch/frame"
+	"github.com/MashiroC/begonia/dispatch/router"
 	"log"
 	"sync"
 )
@@ -65,7 +66,7 @@ func (h *Heart) Register(typ string, connID string, close closeFunc, send sendFu
 
 // 处理某个连接的心跳帧
 // 收到帧时handle
-func (h *Heart) Handle(connID string, data []byte) {
+func (h *Heart) Handle(connID string, typ int, data []byte) {
 	h.Lock()
 	beat, ok := h.beats[connID]
 	h.Unlock()
@@ -74,8 +75,13 @@ func (h *Heart) Handle(connID string, data []byte) {
 		return
 	}
 
+	if beat.RecvType()!=typ{
+		//TODO:不相符的pingpong包
+		return
+	}
+
 	// 反序列化出一个心跳帧
-	f, err := frame.UnMarshalPingPong(beat.RecvType(), data)
+	f, err := frame.UnMarshalPingPong(typ, data)
 	if err != nil {
 		log.Println(err)
 		return
@@ -91,14 +97,11 @@ func NewHeart() *Heart {
 	}
 }
 
-type handleFunc = func(connID string, data []byte)
-
 // 在dispatch启动时住处handle
-func Handler(h *Heart) (f func() (code int, fun handleFunc)) {
-	return func() (code int, fun handleFunc) {
-		return frame.PingPongCtrlCode, func(connID string, data []byte) {
-			h.Handle(connID, data)
+func Handler(h *Heart) (f func() (code int, fun router.CtrlHandleFunc)) {
+	return func() (code int, fun router.CtrlHandleFunc) {
+		return frame.PingPongCtrlCode, func(connID string, typ int, data []byte) {
+			h.Handle(connID, typ, data)
 		}
 	}
 }
-
