@@ -134,3 +134,38 @@ func (d *setDispatch) Close() {
 		v.Close()
 	}
 }
+
+func (d *setDispatch) Upgrade(connID string, addr string) (err error) {
+	d.connLock.Lock()
+	defer d.connLock.Unlock()
+
+	src := d.getConnID(addr)
+
+	pool, ok := d.connSet[connID]
+	if !ok {
+		return fmt.Errorf("upgrade conn error: conn [%s] is broken or disconnection", connID)
+	}
+
+	c, ok := d.connSet[src]
+	if !ok {
+		return fmt.Errorf("upgrade conn error: conn [%s] is broken or disconnection", src)
+	}
+
+	pool, err = conn.Join(pool, c)
+	if err != nil {
+		return
+	}
+
+	d.connSet[connID] = pool
+	return
+}
+
+func (d *setDispatch) getConnID(addr string) (connID string) {
+	for id, c := range d.connSet {
+		if c.Addr() == addr {
+			connID = id
+			break
+		}
+	}
+	return
+}
