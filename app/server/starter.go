@@ -6,6 +6,7 @@ import (
 	"github.com/MashiroC/begonia/app"
 	cRegister "github.com/MashiroC/begonia/core/register"
 	"github.com/MashiroC/begonia/dispatch"
+	"github.com/MashiroC/begonia/dispatch/router/conn"
 	"github.com/MashiroC/begonia/internal/register"
 	"github.com/MashiroC/begonia/logic"
 	"log"
@@ -56,6 +57,7 @@ func BootStart(optionMap map[string]interface{}) (s Server) {
 	// 创建 logic
 	var lg *logic.Service
 	lg = logic.NewService(dp, waitChans)
+	lg.Dp.Handle("ctrl", conn.Pool(lg.Dp))
 
 	//TODO: 发一个包，拉取配置
 

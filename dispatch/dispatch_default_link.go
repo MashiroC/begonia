@@ -113,6 +113,19 @@ func (d *linkDispatch) Listen(addr string) {
 	panic("link mode can't use Listen()")
 }
 
+func (d *linkDispatch) Upgrade(connID string, addr string) (err error){
+	if connID != d.linkID {
+		err = fmt.Errorf("upgrade conn error: in link mode, you can't upgrade another conn")
+		return
+	}
+
+	c := d.linkedConn
+	d.linkedConn, err = conn.Upgrade(c)
+
+	return nil
+}
+
+
 // work 获得一个新的连接之后持续监听连接，然后把消息发送到msgCh里
 func (d *linkDispatch) work(c conn.Conn) {
 

@@ -57,6 +57,9 @@ type Dispatcher interface {
 	// - proxy
 	// - ctrl
 	Handle(typ string, handleFunc interface{})
+
+	// Upgrade 将连接进行升级
+	Upgrade(connID string, addr string) error
 }
 
 type baseDispatch struct {
