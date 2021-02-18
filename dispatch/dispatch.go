@@ -57,6 +57,9 @@ type Dispatcher interface {
 	// - proxy
 	// - ctrl
 	Handle(typ string, handleFunc interface{})
+
+	// Upgrade 将连接进行升级
+	Upgrade(connID string, addr string) error
 }
 
 type baseDispatch struct {
@@ -70,17 +73,15 @@ type baseDispatch struct {
 }
 
 func (d *baseDispatch) Handle(typ string, in interface{}) {
-	if d.rt == nil {
-		d.rt = router.New(nil)
-	}
+
 	switch typ {
 	case "frame":
 		if fun, ok := in.(func(connID string, f frame.Frame)); ok {
-			//if d.rt == nil {
-			//	d.rt = router.New(fun)
-			//} else {
-			//}
-			d.rt.LgHandleFrame = fun
+			if d.rt == nil {
+				d.rt = router.New(fun)
+			} else {
+				d.rt.LgHandleFrame = fun
+			}
 			return
 		}
 	case "ctrl":

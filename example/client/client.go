@@ -8,7 +8,8 @@ import (
 
 func main() {
 	c := begonia.NewClient(option.Addr(":12306"))
-	s, _ := c.Service("Echo")
+
+  s, _ := c.Service("Echo")
 
 	SayHello, _ := s.FuncSync("SayHello")
 	res, _ := SayHello("kieran")

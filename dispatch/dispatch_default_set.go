@@ -66,9 +66,9 @@ type setDispatch struct {
 
 	// set模式相关变量
 	connSet   map[string]conn.Conn // 保存连接的map
-	cancelSet map[string]func()    // 保存取消goroutine的函数
-
 	connLock   sync.Mutex // 锁，保证connSet线程安全
+  
+	cancelSet map[string]func()    // 保存取消goroutine的函数
 	cancelLock sync.Mutex // 保证并发安全
 }
 
@@ -171,4 +171,39 @@ func (d *setDispatch) Close() {
 	for _, v := range d.connSet {
 		v.Close()
 	}
+}
+
+func (d *setDispatch) Upgrade(connID string, addr string) (err error) {
+	d.connLock.Lock()
+	defer d.connLock.Unlock()
+
+	src := d.getConnID(addr)
+
+	pool, ok := d.connSet[connID]
+	if !ok {
+		return fmt.Errorf("upgrade conn error: conn [%s] is broken or disconnection", connID)
+	}
+
+	c, ok := d.connSet[src]
+	if !ok {
+		return fmt.Errorf("upgrade conn error: conn [%s] is broken or disconnection", src)
+	}
+
+	pool, err = conn.Join(pool, c)
+	if err != nil {
+		return
+	}
+
+	d.connSet[connID] = pool
+	return
+}
+
+func (d *setDispatch) getConnID(addr string) (connID string) {
+	for id, c := range d.connSet {
+		if c.Addr() == addr {
+			connID = id
+			break
+		}
+	}
+	return
 }

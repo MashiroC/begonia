@@ -69,6 +69,8 @@ func bootstart(optionMap map[string]interface{}) server.Server {
 	lg.Dp.Hook("close", coreRegister.HandleConnClose)
 
 	lg.Dp.Handle("proxy", p)
+
+
 	// ========== END ==========
 
 	log.Println("begonia bgacenter started")
