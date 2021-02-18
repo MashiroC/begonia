@@ -2,6 +2,7 @@ package conn
 
 import (
 	"errors"
+	"fmt"
 	"github.com/MashiroC/begonia/dispatch/frame"
 	"github.com/MashiroC/begonia/tool/qconv"
 	"github.com/MashiroC/begonia/tool/queue"
@@ -25,7 +26,7 @@ type pool struct {
 	signal       chan struct{} // 通知Recv解除阻塞状态的信号
 	ttl          time.Duration // 当连接池现有连接数超过核心连接数时，多余连接能存活的最大时间
 
-	connSet    idleList
+	connSet    *idleList
 	data       *queue.Queue
 	dataLock   sync.Mutex
 	mu         sync.Mutex
@@ -73,7 +74,6 @@ begin:
 
 func (p *pool) Close() {
 	p.mu.Lock()
-
 	p.poolSize = 0
 	p.connSet.len = 0
 	pc := p.connSet.front
@@ -95,12 +95,18 @@ func Upgrade(conn Conn) (Conn, error) {
 		return dc, errors.New("upgrade connection error: conn is already upgraded")
 	}
 
-	// TODO: 加载配置
+	// TODO: 加载配置,waitCh的最大连接数
 	p := &pool{
-		signal:     make(chan struct{}),
-		data:       queue.New(),
-		localAddr:  dc.nc.LocalAddr().String(),
-		remoteAddr: dc.nc.RemoteAddr().String(),
+		connSet:      &idleList{},
+		signal:       make(chan struct{}),
+		data:         queue.New(),
+		maxPoolSize:  10,
+		corePoolSize: 0,
+		wait:         true,
+		waitCh: make(chan struct{},10),
+		ttl:          10 * time.Minute,
+		localAddr:    dc.nc.LocalAddr().String(),
+		remoteAddr:   dc.nc.RemoteAddr().String(),
 	}
 
 	p.poolSize++
@@ -111,10 +117,10 @@ func Upgrade(conn Conn) (Conn, error) {
 }
 
 // Join 将一条普通连接加入到连接池
-func Join(dst Conn, conn Conn) (c Conn, err error) {
+func Join(dst Conn, conn Conn) (err error) {
 	dc, ok := conn.(*defaultConn)
 	if !ok {
-		return dc, errors.New("join conn to pool error: conn is already a pool")
+		return errors.New("join conn to pool error: conn is already a pool")
 	}
 
 	p, ok := dst.(*pool)
@@ -125,11 +131,11 @@ func Join(dst Conn, conn Conn) (c Conn, err error) {
 
 	p.put(&poolConn{c: dc, t: time.Now()})
 	p.mu.Lock()
-	p.poolSize++
+	p.poolSize += 1
 	p.mu.Unlock()
 	go p.recv(dc)
 
-	return p, nil
+	return
 }
 
 // dial 通过dial建立一条连接，并向accept方发送一个请求升级连接的报文
@@ -152,7 +158,6 @@ func (p *pool) dial() (conn Conn, err error) {
 }
 
 func (p *pool) get() (c *poolConn, err error) {
-
 	// 如果设置了排队等待，当空闲连接不够时
 	// 会进入排队状态
 	// waitCh的buffer等于maxPoolSize
@@ -210,17 +215,16 @@ func (p *pool) get() (c *poolConn, err error) {
 
 func (p *pool) put(pc *poolConn) {
 	pc.t = time.Now()
-
 	p.mu.Lock()
 	p.connSet.pushFront(pc)
-	if p.connSet.len > p.corePoolSize {
-		pc = p.connSet.back
-		pc.c.Close()
-		p.poolSize--
-		p.connSet.popBack()
-	} else {
-		pc = nil
-	}
+	//if p.connSet.len > p.corePoolSize {
+	//	pc = p.connSet.back
+	//	pc.c.Close()
+	//	p.poolSize--
+	//	p.connSet.popBack()
+	//} else {
+	//	pc = nil
+	//}
 	p.mu.Unlock()
 
 	if p.wait {
@@ -228,10 +232,17 @@ func (p *pool) put(pc *poolConn) {
 	}
 }
 
-func (p *pool) recv(c *defaultConn) {
+var num int
+var numLock sync.Mutex
 
+func (p *pool) recv(c *defaultConn) {
+	numLock.Lock()
+	pos := num + 1
+	num++
+	numLock.Unlock()
 	for {
 		opcode, data, err := c.Recv()
+		fmt.Println("conn", pos, "recv")
 		tmp := &info{opcode: opcode, data: data, err: err}
 		if err != nil {
 			c.Close()
@@ -247,54 +258,6 @@ func (p *pool) recv(c *defaultConn) {
 			p.signal <- struct{}{}
 		}
 	}
-}
-
-type idleList struct {
-	len         int
-	front, back *poolConn
-}
-
-type poolConn struct {
-	c          *defaultConn
-	t          time.Time
-	next, prev *poolConn
-}
-
-func (l *idleList) pushFront(pc *poolConn) {
-	pc.next = l.front
-	pc.prev = nil
-	if l.len == 0 {
-		l.back = pc
-	} else {
-		l.front.prev = pc
-	}
-	l.front = pc
-	l.len++
-	return
-}
-
-func (l *idleList) popFront() {
-	pc := l.front
-	l.len--
-	if l.len == 0 {
-		l.front, l.back = nil, nil
-	} else {
-		pc.next.prev = nil
-		l.front = pc.next
-	}
-	pc.next, pc.prev = nil, nil
-}
-
-func (l *idleList) popBack() {
-	pc := l.back
-	l.len--
-	if l.len == 0 {
-		l.front, l.back = nil, nil
-	} else {
-		pc.prev.next = nil
-		l.back = pc.prev
-	}
-	pc.next, pc.prev = nil, nil
 }
 
 // makeOpcode 组装用于升级连接的opcode
