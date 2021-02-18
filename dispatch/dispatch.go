@@ -74,18 +74,17 @@ type baseDispatch struct {
 
 func (d *baseDispatch) Handle(typ string, in interface{}) {
 
+	if d.rt == nil {
+		d.rt = router.New()
+	}
 	switch typ {
 	case "frame":
 		if fun, ok := in.(func(connID string, f frame.Frame)); ok {
-			if d.rt == nil {
-				d.rt = router.New(fun)
-			} else {
-				d.rt.LgHandleFrame = fun
-			}
+			d.rt.LgHandleFrame = fun
 			return
 		}
 	case "ctrl":
-		if fun, ok := in.(func() (code int, fun func(connID string, data []byte))); ok {
+		if fun, ok := in.(func() (code int, fun router.CtrlHandleFunc)); ok {
 			code, f := fun()
 			d.rt.AddCtrlHandle(code, f)
 			return
