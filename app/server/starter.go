@@ -16,9 +16,11 @@ import (
 
 // BootStart 根据manager cluster模式启动
 func BootStart(optionMap map[string]interface{}) (s Server) {
-
-	fmt.Println("  ____                              _        \n |  _ \\                            (_)       \n | |_) |  ___   __ _   ___   _ __   _   __ _ \n |  _ <  / _ \\ / _` | / _ \\ | '_ \\ | | / _` |\n | |_) ||  __/| (_| || (_) || | | || || (_| |\n |____/  \\___| \\__, | \\___/ |_| |_||_| \\__,_|\n                __/ |                        \n               |___/                         ")
-
+	// 启动log日志服务时，不用打印
+	_, ok := optionMap["log"]
+	if !ok {
+		fmt.Println("  ____                              _        \n |  _ \\                            (_)       \n | |_) |  ___   __ _   ___   _ __   _   __ _ \n |  _ <  / _ \\ / _` | / _ \\ | '_ \\ | | / _` |\n | |_) ||  __/| (_| || (_) || | | || || (_| |\n |____/  \\___| \\__, | \\___/ |_| |_||_| \\__,_|\n                __/ |                        \n               |___/                         ")
+	}
 	log.Printf("begonia Server start with [%s] mode\n", app.ServiceAppMode.String())
 
 	ctx, cancel := context.WithCancel(context.Background())

@@ -9,7 +9,6 @@ type Server interface {
 
 	// Wait 阻塞等待
 	Wait()
-
 }
 
 // logic_service.go something
