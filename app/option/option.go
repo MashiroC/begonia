@@ -16,10 +16,3 @@ func P2P() WriteFunc {
 		optionMap["dpTyp"] = "p2p"
 	}
 }
-
-// 日志服务
-func LogService() WriteFunc {
-	return func(optionMap map[string]interface{}) {
-		optionMap["log"] = true
-	}
-}

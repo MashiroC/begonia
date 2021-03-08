@@ -5,6 +5,7 @@ go 1.14
 require (
 	github.com/StackExchange/wmi v0.0.0-20190523213315-cbe66965904d // indirect
 	github.com/go-ole/go-ole v1.2.5 // indirect
+	github.com/gookit/color v1.3.8
 	github.com/hamba/avro v1.4.0
 	github.com/kr/pretty v0.2.0 // indirect
 	github.com/mitchellh/mapstructure v1.1.2
@@ -13,7 +14,6 @@ require (
 	github.com/shirou/gopsutil v3.21.1+incompatible
 	github.com/spf13/pflag v1.0.3
 	github.com/spf13/viper v1.7.1
-	golang.org/x/net v0.0.0-20201110031124-69a78807bb2b // indirect
 	golang.org/x/sys v0.0.0-20201119102817-f84b799fce68 // indirect
 	golang.org/x/text v0.3.4 // indirect
 	gopkg.in/yaml.v2 v2.2.7 // indirect

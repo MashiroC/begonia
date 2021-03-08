@@ -1,6 +1,8 @@
 package register
 
-import "log"
+import (
+	"log"
+)
 
 func (r *CoreRegister) GetToID(serviceName string) (connID string, ok bool) {
 	service, ok := r.services.Get(serviceName)

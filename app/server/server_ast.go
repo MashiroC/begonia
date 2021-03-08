@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	coreRegister "github.com/MashiroC/begonia/core/register"
+	"github.com/MashiroC/begonia/internal/logger"
 	"github.com/MashiroC/begonia/internal/register"
 	"github.com/MashiroC/begonia/logic"
 )
@@ -30,6 +31,9 @@ type astServer struct {
 
 	store    *astServiceStore
 	register register.Register
+
+	isLog      bool                       // 是否注册中心服务
+	logService logger.LoggerService // 日志中心服务
 }
 
 func (r *astServer) Register(name string, service interface{}, registerFunc ...string) {
@@ -47,10 +51,20 @@ func (r *astServer) Register(name string, service interface{}, registerFunc ...s
 	fs := cgs.FuncList()
 
 	r.register.Register(name, fs)
+	// 注册进日志服务中心
+	if r.isLog {
+		r.logService.RegisterLogService(name)
+		r.logService.Write(name,[]byte(name + "注册成功"))
+	}
 }
 
 func (r *astServer) Wait() {
 	<-r.ctx.Done()
+}
+
+// 是否注册日志服务
+func (r *astServer) SetLoggerService() {
+	r.isLog = true
 }
 
 func (r *astServer) handleMsg(msg *logic.Call, wf logic.ResultFunc) {

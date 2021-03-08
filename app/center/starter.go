@@ -4,7 +4,6 @@ package center
 import (
 	"context"
 	"github.com/MashiroC/begonia/app"
-	"github.com/MashiroC/begonia/app/begonialog"
 	"github.com/MashiroC/begonia/app/option"
 	"github.com/MashiroC/begonia/app/server"
 	cRegister "github.com/MashiroC/begonia/core/register"
@@ -22,6 +21,7 @@ func bootstart(optionMap map[string]interface{}) server.Server {
 	s := server.BootStart(optionMap)
 
 	coreRegister := optionMap["REGISTER"].(*cRegister.CoreRegister)
+	//logService:=optionMap["LogService"].(*centerlog.CenterLogService)
 
 	// ========== 初始化代理器 ==========
 
@@ -38,7 +38,7 @@ func bootstart(optionMap map[string]interface{}) server.Server {
 
 		req := f.(*frame.Request)
 
-		if req.Service != "REGISTER" {
+		if req.Service != "REGISTER"&&req.Service!="LogService"{
 			redirectConnID, ok = coreRegister.GetToID(req.Service)
 			if !ok {
 				panic("unknown bu ok error")
@@ -72,7 +72,7 @@ func bootstart(optionMap map[string]interface{}) server.Server {
 	lg.Dp.Handle("proxy", p)
 
 	// ========== END ==========
-
+	//logService.L.Log.Print("test")
 	log.Println("begonia bgacenter started")
 	//TODO: 发一个包，拉取配置
 
@@ -88,8 +88,6 @@ func New(optionFunc ...option.WriteFunc) (s server.Server) {
 	}
 
 	s = bootstart(optionMap)
-	// 日志服务
-	begonialog.StartLogService(optionMap["addr"].(string))
 	return
 }
 

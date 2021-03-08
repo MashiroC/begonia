@@ -7,6 +7,9 @@ type Server interface {
 	// Register 注册服务
 	Register(name string, service interface{}, registerFunc ...string)
 
+	// SetLoggerService 注册日志服务
+	SetLoggerService()
+
 	// Wait 阻塞等待
 	Wait()
 }

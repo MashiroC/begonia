@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/MashiroC/begonia/app/coding"
 	cRegister "github.com/MashiroC/begonia/core/register"
+	"github.com/MashiroC/begonia/internal/logger"
 	"github.com/MashiroC/begonia/internal/register"
 	"github.com/MashiroC/begonia/logic"
 	"github.com/MashiroC/begonia/tool/qconv"
@@ -24,6 +25,9 @@ type rServer struct {
 	isLocalRegister bool
 
 	register register.Register
+
+	isLog      bool                 // 是否注册中心服务
+	logService logger.LoggerService // 日志服务
 }
 
 func (r *rServer) Register(name string, service interface{}, registerFunc ...string) {
@@ -62,10 +66,20 @@ func (r *rServer) Register(name string, service interface{}, registerFunc ...str
 	if err != nil {
 		panic(err)
 	}
+	if r.isLog {
+		// 注册进日志服务
+		r.logService.RegisterLogService(name)
+		r.logService.Write(name,[]byte(name + "注册成功"))
+	}
 }
 
 func (r *rServer) Wait() {
 	<-r.ctx.Done()
+}
+
+// 是否注册日志服务
+func (r *rServer) SetLoggerService() {
+	r.isLog = true
 }
 
 func (r *rServer) handleMsg(msg *logic.Call, wf logic.ResultFunc) {

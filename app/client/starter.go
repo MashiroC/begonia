@@ -10,7 +10,7 @@ import (
 	"log"
 )
 
-// starter.go something
+// log_service.go something
 
 // BootStartByCenter 根据center cluster模式启动
 func BootStartByCenter(optionMap map[string]interface{}) *rClient {

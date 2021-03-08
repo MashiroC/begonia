@@ -31,7 +31,6 @@ func (r *CoreRegister) Register(ctx context.Context, si Service) (err error) {
 	v := ctx.Value("info")
 	info := v.(map[string]string)
 	connID := info["connID"]
-
 	err = r.services.Add(connID, si.Name, si.Funs)
 	return err
 }

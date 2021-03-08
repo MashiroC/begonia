@@ -4,23 +4,23 @@ import (
 	"context"
 	"fmt"
 	"github.com/MashiroC/begonia/app"
+	centerlog "github.com/MashiroC/begonia/core/begonialog"
 	cRegister "github.com/MashiroC/begonia/core/register"
 	"github.com/MashiroC/begonia/dispatch"
 	"github.com/MashiroC/begonia/dispatch/router/conn"
+	"github.com/MashiroC/begonia/internal/logger"
 	"github.com/MashiroC/begonia/internal/register"
 	"github.com/MashiroC/begonia/logic"
 	"log"
 )
 
-// starter.go something
+// log_service.go something
 
 // BootStart 根据manager cluster模式启动
 func BootStart(optionMap map[string]interface{}) (s Server) {
-	// 启动log日志服务时，不用打印
-	_, ok := optionMap["log"]
-	if !ok {
-		fmt.Println("  ____                              _        \n |  _ \\                            (_)       \n | |_) |  ___   __ _   ___   _ __   _   __ _ \n |  _ <  / _ \\ / _` | / _ \\ | '_ \\ | | / _` |\n | |_) ||  __/| (_| || (_) || | | || || (_| |\n |____/  \\___| \\__, | \\___/ |_| |_||_| \\__,_|\n                __/ |                        \n               |___/                         ")
-	}
+
+	fmt.Println("  ____                              _        \n |  _ \\                            (_)       \n | |_) |  ___   __ _   ___   _ __   _   __ _ \n |  _ <  / _ \\ / _` | / _ \\ | '_ \\ | | / _` |\n | |_) ||  __/| (_| || (_) || | | || || (_| |\n |____/  \\___| \\__, | \\___/ |_| |_||_| \\__,_|\n                __/ |                        \n               |___/                         ")
+
 	log.Printf("begonia Server start with [%s] mode\n", app.ServiceAppMode.String())
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -77,12 +77,17 @@ func BootStart(optionMap map[string]interface{}) (s Server) {
 	// 修改配置之前的一系列调用全部都是按默认配置来的
 
 	coreRegister := cRegister.NewCoreRegister()
+	logService:=centerlog.NewCenterLogService()
 
 	var rg register.Register
+	var ls logger.LoggerService
 	if isP2P {
 		rg = register.NewLocalRegister(coreRegister)
+		// 创建一个日志服务
+		ls = logger.NewLocalLoggerService(logService)
 	} else {
 		rg = register.NewRemoteRegister(lg.Client)
+		ls=logger.NewRemoteLoggerService(lg.Client)
 	}
 
 	// 创建实例
@@ -98,6 +103,7 @@ func BootStart(optionMap map[string]interface{}) (s Server) {
 		ast.store = newAstServiceStore()
 
 		ast.register = rg
+		ast.logService = ls
 
 		s = ast
 	} else {
@@ -111,7 +117,7 @@ func BootStart(optionMap map[string]interface{}) (s Server) {
 
 		// 创建服务存储的数据结构
 		r.store = newServiceStore()
-
+		r.logService = ls
 		r.register = rg
 
 		s = r
@@ -120,6 +126,8 @@ func BootStart(optionMap map[string]interface{}) (s Server) {
 	if isP2P {
 		s.Register("REGISTER", coreRegister, "Register", "ServiceInfo")
 		optionMap["REGISTER"] = coreRegister
+		s.Register("LogService", logService,"RegisterLogService","Write")
+		optionMap["LogService"] = logService
 	}
 
 	return s
