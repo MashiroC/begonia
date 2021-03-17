@@ -5,6 +5,7 @@ import (
 	"github.com/MashiroC/begonia/config"
 	"github.com/MashiroC/begonia/dispatch/conn"
 	"github.com/MashiroC/begonia/dispatch/frame"
+	"github.com/MashiroC/begonia/dispatch/heartbeat"
 	"github.com/MashiroC/begonia/tool/ids"
 	"log"
 	"time"
@@ -17,6 +18,29 @@ func NewLinkedByDefaultCluster() Dispatcher {
 
 	d := &linkDispatch{}
 
+	// 启动心跳包
+	h := heartbeat.NewHeart()
+
+	//注册
+	d.Handle("ctrl", heartbeat.Handler(h))
+
+	// 在启动时hook，接收一条连接的ping包
+	d.Hook("start", func(connID string) {
+		closeFunc := func() {
+			d.linkedConn.Close()
+		}
+		sendFunc := func(connID string, f frame.Frame) error {
+			return d.SendTo(connID, f)
+		}
+
+		d.cancel = h.Register("pong", connID, closeFunc, sendFunc)
+	})
+
+	// 在重连之前hook，关闭之前的心跳包的goroutine
+	d.Hook("close", func(connID string, err error) {
+		d.cancel()
+	})
+
 	// 判断是否需要在断开连接情况下重连，hook了dispatch层的close函数
 	if !config.C.Dispatch.AutoReConnection {
 		// 不配置自动重连时 默认连接被关闭时panic
@@ -26,7 +50,6 @@ func NewLinkedByDefaultCluster() Dispatcher {
 	} else {
 
 		d.Hook("close", func(connID string, err error) {
-
 			// 用一个协程跑 避免阻塞
 			go func() {
 				ok := false
@@ -53,7 +76,6 @@ func NewLinkedByDefaultCluster() Dispatcher {
 
 				}
 			}()
-
 		})
 
 	}
@@ -68,6 +90,8 @@ type linkDispatch struct {
 	linkAddr   string    // 单连接的地址
 	linkedConn conn.Conn // 连接
 	linkID     string    // 连接的id
+
+	cancel func() // 关闭心跳包的一些goroutine
 }
 
 // Link 建立连接，bgacenter cluster模式下，会开一条和center的tcp连接
@@ -113,7 +137,7 @@ func (d *linkDispatch) Listen(addr string) {
 	panic("link mode can't use Listen()")
 }
 
-func (d *linkDispatch) Upgrade(connID string, addr string) (err error){
+func (d *linkDispatch) Upgrade(connID string, addr string) (err error) {
 	if connID != d.linkID {
 		err = fmt.Errorf("upgrade conn error: in link mode, you can't upgrade another conn")
 		return
@@ -125,7 +149,6 @@ func (d *linkDispatch) Upgrade(connID string, addr string) (err error){
 	return nil
 }
 
-
 // work 获得一个新的连接之后持续监听连接，然后把消息发送到msgCh里
 func (d *linkDispatch) work(c conn.Conn) {
 
@@ -133,6 +156,8 @@ func (d *linkDispatch) work(c conn.Conn) {
 
 	d.linkID = id
 	log.Printf("link addr [%s] success, connID [%s]\n", c.Addr(), id)
+
+	d.DoStartHook(id) // 变量初始化完成，这里去hook一些东西
 
 	for {
 
@@ -145,7 +170,6 @@ func (d *linkDispatch) work(c conn.Conn) {
 
 		d.rt.Do(id, opcode, payload)
 	}
-
 }
 
 func (d *linkDispatch) Close() {

@@ -7,6 +7,8 @@ import (
 	"log"
 )
 
+type CtrlHandleFunc = func(connID string, typ int, data []byte)
+
 type Router struct {
 	// handle func
 	LgHandleFrame func(connID string, f frame.Frame)
@@ -14,20 +16,20 @@ type Router struct {
 	// 代理器，如果一个节点被赋予了代理职责，会在这里检查是否要重定向
 	Proxy *proxy.Handler
 
-	ctrlRoute []func(connID string, payload []byte)
+	ctrlRoute []CtrlHandleFunc
 }
 
-func New(LgHandleFrame func(connID string, f frame.Frame)) *Router {
-	return &Router{LgHandleFrame: LgHandleFrame}
+func New() *Router {
+	return &Router{}
 }
 
-func (r *Router) AddCtrlHandle(code int, f func(connID string, data []byte)) {
+func (r *Router) AddCtrlHandle(code int, f CtrlHandleFunc) {
 	if code > 7 || code < 0 {
 		panic("router add error: ctrl code must < 7 but " + qconv.I2S(code))
 	}
 
 	if r.ctrlRoute == nil {
-		r.ctrlRoute = make([]func(connID string, payload []byte), 8)
+		r.ctrlRoute = make([]CtrlHandleFunc, 8)
 	}
 
 	r.ctrlRoute[code] = f
@@ -39,7 +41,7 @@ func (r *Router) Do(connID string, opcode byte, payload []byte) {
 
 	if ctrl == frame.CtrlDefaultCode {
 
-		f, err := frame.UnMarshal(typ, payload)
+		f, err := frame.Unmarshal(typ, payload)
 		if err != nil {
 			panic(err)
 		}
@@ -67,6 +69,6 @@ func (r *Router) Do(connID string, opcode byte, payload []byte) {
 			return
 		}
 
-		f(connID, payload)
+		f(connID, typ, payload)
 	}
 }

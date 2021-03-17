@@ -151,7 +151,7 @@ func (d *setDispatch) Upgrade(connID string, addr string) (err error) {
 		return fmt.Errorf("upgrade conn error: conn [%s] is broken or disconnection", src)
 	}
 
-	 conn.Join(pool, c)
+	err = conn.Join(pool, c)
 	if err != nil {
 		return
 	}

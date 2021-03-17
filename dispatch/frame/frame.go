@@ -8,7 +8,10 @@ const (
 	// CtrlDefaultCode 默认的ctrl code
 	CtrlDefaultCode = 0
 
-	// CtrlConnCode 将连接升级为连接池的code
+	// PingPongCtrlCode ping-pong的ctrl code
+	PingPongCtrlCode = 7 // 0b0111
+
+  // CtrlConnCode 将连接升级为连接池的code
 	CtrlConnCode = 1
 
 	// ProtocolVersion 默认的版本
@@ -48,13 +51,33 @@ func makeOpcode(typCode int) int {
 	return ((typCode<<3)|dispatchCode)<<4 | version
 }
 
-// UnMarshal 根据typCode和序列化的数据，反序列化为frame
-func UnMarshal(typCode int, data []byte) (f Frame, err error) {
+// Unmarshal 根据typCode和序列化的数据，反序列化为frame
+func Unmarshal(typCode int, data []byte) (f Frame, err error) {
 	switch typCode {
 	case requestTypCode:
 		f, err = unMarshalRequest(data)
 	case responseTypCode:
 		f, err = unMarshalResponse(data)
+	default:
+		panic(typCode)
+	}
+	return
+}
+
+func makePingPongOpcode(typCode int) int {
+	ctrlCode := PingPongCtrlCode // 0 ~ 7
+
+	version := ProtocolVersion // 0 ~ 15
+
+	return ((typCode<<3)|ctrlCode)<<4 | version
+}
+
+func UnMarshalPingPong(typCode int, data []byte) (f Frame, err error) {
+	switch typCode {
+	case PingTypCode:
+		f, err = unMarshalPing(data)
+	case PongTypCode:
+		f, err = unMarshalPong(data)
 	default:
 		panic(typCode)
 	}
