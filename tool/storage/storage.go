@@ -37,7 +37,7 @@ func NewList(key string) {
 	listL.Lock()
 	defer listL.Unlock()
 
-	list[key] = make([]interface{},0, 4)
+	list[key] = make([]interface{}, 0, 4)
 }
 
 // DelteList 从List中删除一个key

@@ -40,7 +40,7 @@ func QPS() {
 	}
 }
 
-//go:generate begonia -s -c -r ../
+//go:generate begonia -c -s -r .
 func main() {
 	count = 0
 	flag = false

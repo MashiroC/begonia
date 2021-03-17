@@ -2,7 +2,6 @@ package heartbeat
 
 import (
 	"context"
-	"fmt"
 	"github.com/MashiroC/begonia/config"
 	"github.com/MashiroC/begonia/dispatch/frame"
 	"github.com/MashiroC/begonia/tool/machine"
@@ -42,7 +41,6 @@ func (p *Pong) Start(c context.Context) {
 	p.timer.Reset(p.RecvPingTime)
 	select {
 	case <-p.timer.C:
-		fmt.Println("ping timeout")
 		break
 	case <-c.Done():
 		break

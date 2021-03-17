@@ -19,10 +19,10 @@ type DiskMonitor struct {
 func GetDiskInfo() map[string]string {
 	m := make(map[string]string)
 	u, _ := disk.Usage("/")
-	m["disk_used"] = strconv.FormatUint(u.Used / 1024 / 1024, 10)
-	m["disk_free"] = strconv.FormatUint(u.Free / 1024 / 1024, 10)
+	m["disk_used"] = strconv.FormatUint(u.Used/1024/1024, 10)
+	m["disk_free"] = strconv.FormatUint(u.Free/1024/1024, 10)
 	m["disk_used_percent"] = strconv.FormatFloat(u.UsedPercent, 'f', 3, 64)
-	m["disk_total"] = strconv.FormatUint(u.Total / 1024 / 1024, 10)
+	m["disk_total"] = strconv.FormatUint(u.Total/1024/1024, 10)
 	return m
 }
 
@@ -30,7 +30,7 @@ func NewDiskMonitor() *DiskMonitor {
 	cm := &DiskMonitor{}
 
 	cm.SetHandleFunc(func(req *chain.Request) {
-		if req.Code & 0b100 == 0 {
+		if req.Code&0b100 == 0 {
 			return
 		}
 

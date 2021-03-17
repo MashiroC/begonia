@@ -11,8 +11,8 @@ import (
 
 type CpuMonitor struct {
 	chain.BaseHandler
-	sync.RWMutex // 保证percent的并发安全
-	percent float64 // cpu使用率
+	sync.RWMutex         // 保证percent的并发安全
+	percent      float64 // cpu使用率
 }
 
 func (c *CpuMonitor) MonitorUsePercent() {

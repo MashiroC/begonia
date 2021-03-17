@@ -6,7 +6,7 @@ import (
 )
 
 type Queue struct {
-	l *list.List
+	l    *list.List
 	Lock sync.Mutex
 }
 
@@ -50,7 +50,7 @@ func (q *Queue) IsEmpty() bool {
 	return e == nil
 }
 
-func (q *Queue) Len() int{
+func (q *Queue) Len() int {
 	l := q.l.Len()
 	return l
 }

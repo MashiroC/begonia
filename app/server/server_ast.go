@@ -20,7 +20,6 @@ type CodeGenService interface {
 
 	// FuncList 返回要注册的函数
 	FuncList() []coreRegister.FunInfo
-
 }
 
 // astServer ast树代码生成的ast Server api

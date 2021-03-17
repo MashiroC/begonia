@@ -103,7 +103,7 @@ func Upgrade(conn Conn) (Conn, error) {
 		maxPoolSize:  10,
 		corePoolSize: 0,
 		wait:         true,
-		waitCh: make(chan struct{},10),
+		waitCh:       make(chan struct{}, 10),
 		ttl:          10 * time.Minute,
 		localAddr:    dc.nc.LocalAddr().String(),
 		remoteAddr:   dc.nc.RemoteAddr().String(),

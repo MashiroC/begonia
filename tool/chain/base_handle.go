@@ -5,7 +5,7 @@ type BaseHandler struct {
 	handle      func(*Request)
 }
 
-func (bh *BaseHandler) Handle(req *Request)  {
+func (bh *BaseHandler) Handle(req *Request) {
 	bh.handle(req)
 }
 
@@ -26,5 +26,3 @@ func NewBaseHandler(handle func(*Request)) *BaseHandler {
 		handle: handle,
 	}
 }
-
-

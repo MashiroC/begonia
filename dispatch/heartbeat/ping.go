@@ -31,6 +31,7 @@ func (p *Ping) Start(c context.Context) {
 			case <-ticker.C:
 				pingFrame := frame.NewPing(p.Code)
 				_ = p.Send(p.ConnId, pingFrame)
+				p.timer.Stop()
 				p.timer.Reset(p.RecvPongTime)
 
 			case <-ctx.Done():
@@ -75,4 +76,3 @@ func NewPing(code byte, connID string, close func(), send func(string, frame.Fra
 		ConnId:       connID,
 	}
 }
-

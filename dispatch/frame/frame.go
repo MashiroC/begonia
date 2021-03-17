@@ -11,7 +11,7 @@ const (
 	// PingPongCtrlCode ping-pong的ctrl code
 	PingPongCtrlCode = 7 // 0b0111
 
-  // CtrlConnCode 将连接升级为连接池的code
+	// CtrlConnCode 将连接升级为连接池的code
 	CtrlConnCode = 1
 
 	// ProtocolVersion 默认的版本

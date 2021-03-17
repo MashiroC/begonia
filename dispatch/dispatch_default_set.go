@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/MashiroC/begonia/dispatch/conn"
 	"github.com/MashiroC/begonia/dispatch/frame"
+	"github.com/MashiroC/begonia/dispatch/heartbeat"
 	"github.com/MashiroC/begonia/internal/proxy"
 	"github.com/MashiroC/begonia/tool/ids"
 	"log"
@@ -24,6 +25,39 @@ func NewSetByDefaultCluster() Dispatcher {
 		log.Printf("connID [%s] has some error: [%s]\n", connID, err)
 	})
 
+	h := heartbeat.NewHeart()
+
+	d.Hook("start", func(connID string) {
+		closeFunc := func() {
+			d.connLock.Lock()
+			c := d.connSet[connID]
+			d.connLock.Unlock()
+
+			if c != nil {
+				c.Close()
+			}
+		}
+		sendFunc := func(connID string, f frame.Frame) error {
+			return d.SendTo(connID, f)
+		}
+
+		h.Register("ping", connID, closeFunc, sendFunc)
+	})
+
+	d.Hook("close", func(connID string, err error) {
+		d.cancelLock.Lock()
+		cancel, ok := d.cancelSet[connID]
+		d.cancelLock.Unlock()
+		if !ok || cancel == nil {
+			log.Println("close hook error: cancel func not exit")
+			return
+		}
+
+		cancel()
+	})
+
+	d.Handle("ctrl", heartbeat.Handler(h))
+
 	return d
 }
 
@@ -33,6 +67,9 @@ type setDispatch struct {
 	// set模式相关变量
 	connSet  map[string]conn.Conn // 保存连接的map
 	connLock sync.Mutex           // 锁，保证connSet线程安全
+
+	cancelSet  map[string]func() // 保存取消goroutine的函数
+	cancelLock sync.Mutex        // 保证并发安全
 }
 
 // Link 建立连接，bgacenter cluster模式下，会开一条和center的tcp连接
@@ -97,6 +134,8 @@ func (d *setDispatch) work(c conn.Conn) {
 	d.connLock.Lock()
 	d.connSet[id] = c
 	d.connLock.Unlock()
+
+	d.DoStartHook(id) // 变量初始化完成，这里去hook一些东西
 
 	for {
 

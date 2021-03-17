@@ -49,7 +49,7 @@ type Machine struct {
 func (machine *Machine) GetMachineInfo(code byte) map[string]string {
 	info := make(map[string]string)
 	req := &chain.Request{
-		Code:   code,
+		Code: code,
 		ResFun: func(i interface{}) {
 			if m, ok := i.(map[string]string); ok {
 				for k, v := range m {
@@ -73,5 +73,3 @@ func NewMachine() *Machine {
 	machine.chain.Sign(NewDiskMonitor())
 	return machine
 }
-
-

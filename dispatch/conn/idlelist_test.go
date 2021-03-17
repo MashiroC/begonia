@@ -7,14 +7,14 @@ import (
 )
 
 func TestIdle(t *testing.T) {
-	list:=&idleList{
+	list := &idleList{
 		len:   0,
 		front: nil,
 		back:  nil,
 	}
-	for i:=0;i<5;i++{
+	for i := 0; i < 5; i++ {
 		list.pushFront(&poolConn{
-			t:    time.Now(),
+			t: time.Now(),
 		})
 	}
 

@@ -75,7 +75,7 @@ func (h *Heart) Handle(connID string, typ int, data []byte) {
 		return
 	}
 
-	if beat.RecvType()!=typ{
+	if beat.RecvType() != typ {
 		//TODO:不相符的pingpong包
 		return
 	}

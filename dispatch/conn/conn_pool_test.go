@@ -15,7 +15,7 @@ const (
 func poolRecv(c Conn) {
 	var num = 0
 	for {
-		_,_, err := c.Recv()
+		_, _, err := c.Recv()
 		if err != nil {
 			panic(err)
 		}
