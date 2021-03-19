@@ -10,7 +10,7 @@ Begonia 是一款轻量级的 RPC 框架，目标是提供开箱即用的 RPC �
 
 Begonia 使用经典的 C (`Client`) / S (`Server`) 架构，我们称一个引用了 Begonia sdk 的进程为一个节点，节点分为 `Client` 节点和 `Server` 节点两种。我们建议使用容器来运行 Begonia 的节点，一个由多个 Begonia 节点组成的集群如下图所示：
 
-![Begonia 集群网络拓扑](C:\Users\MashiroC\OneDrive\文档\blog\begonia\begonia 集群网络拓扑.png)
+![Begonia 集群网络拓扑]（./pic/begonia 集群网络拓扑.)
 
 这里除掉服务中心外一共有 6 个节点，这些节点都会向服务中心发起一条 TCP 连接，RPC 的请求和响应帧全部通过这条连接来传输。服务中心在这里起到的是服务发现、内网穿透、负载均衡等作用。
 
@@ -22,7 +22,7 @@ Begonia 使用经典的 C (`Client`) / S (`Server`) 架构，我们称一个引�
 
 如果我们现在拥有一个 `Server` 节点，注册一个`Echo`服务，服务中有一个函数`SayHello()`，并且拥有一个 `Client` 节点，请求调用`Echo.SayHello`，流程如下：
 
-![Begonia 流程图](.\pic\Begonia 流程图.png)
+![Begonia 流程图](./pic/Begonia 流程图.png)
 
 服务中心、客户端、服务端初始化之后便开始监听，其中服务中心会在开始监听前注册一个服务`REGISTER`用来提供服务发现能力。服务端注册服务通过一个 RPC 调用`Register.Register()`来将服务的相关信息注册到注册中心。客户端通过一个 RPC 调用`Register.ServiceInfo()`来获取服务的相关信息，最后生成匿名函数供用户调用。
 
@@ -32,7 +32,7 @@ Begonia 使用经典的 C (`Client`) / S (`Server`) 架构，我们称一个引�
 
 Begonia 从代码层面抽象成了三层，这三层分别提供不同的能力。
 
-![Begonia 代码架构](.\pic\Begonia 架构.png)
+![Begonia 代码架构](./pic/Begonia 架构.png)
 
 **App (Application) 层**
 
