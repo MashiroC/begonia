@@ -5,11 +5,6 @@ import (
 	"time"
 )
 
-/*
- @Author: as
- @Date: Creat in 18:01 2021/3/22
- @Description: begonia
-*/
 const WaitTime = time.Second * 10
 
 // 储存的实体

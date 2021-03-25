@@ -5,12 +5,6 @@ import (
 	"testing"
 )
 
-/*
- @Author: as
- @Date: Creat in 16:42 2021/3/25
- @Description: begonia
-*/
-
 func TestName(t *testing.T) {
 
 	msg := NewMsg()
