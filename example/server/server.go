@@ -45,8 +45,7 @@ func main() {
 	count = 0
 	flag = false
 
-	s := begonia.NewServer(option.Addr(":12306"))
-	s.SetLoggerService()
+	s := begonia.NewServer(option.Addr(":12306"),option.SetLogService())
 	echoService := &EchoService{}
 	testService := TestService(0)
 

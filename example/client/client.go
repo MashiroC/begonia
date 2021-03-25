@@ -20,7 +20,7 @@ func main() {
 	//	fmt.Println(res, err)
 	//}, "kieran")
 
-	logService,_:=c.Service("LogService")
+	logService, _ := c.Service("LogService")
 	sync, _ := logService.FuncSync("GetAllLog")
 	res, _ := sync()
 	fmt.Println(string(res.([]byte)))

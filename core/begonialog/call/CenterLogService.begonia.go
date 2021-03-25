@@ -4,7 +4,7 @@
 // source: begonialog\begonialog.go
 // begonia client file
 
-package logger
+package call
 
 import (
 	"github.com/MashiroC/begonia/app"
@@ -63,18 +63,15 @@ type _CenterLogServiceServiceSaveIn struct {
 type _CenterLogServiceServiceSaveOut struct {
 }
 
-type Msg struct {
-	ServerName string            `json:&#34;server_name&#34;` // 服务名
-	Level      int               `json:&#34;level&#34;`       // 日志等级
-	Fields     map[string]string `json:&#34;log_msg&#34;`     // 日志信息
-	Time       int64             `json:&#34;time&#34;`        // 时间
-	Callers    []string          `json:&#34;callers&#34;`     // 路径
-}
-
 func init() {
 	app.ServiceAppMode = app.Ast
 
-	var err error
+	bService, err := BegoniaCli.Service("LogService")
+	if err != nil {
+		panic(err)
+	}
+
+	_CenterLogServiceServiceSave, err = bService.FuncSync("Save")
 
 	_CenterLogServiceServiceSaveInCoder, err = coding.NewAvro(_CenterLogServiceServiceSaveInSchema)
 	if err != nil {

@@ -3,11 +3,11 @@ package log
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
 	"runtime"
+	"strings"
 	"sync"
 	"time"
 
@@ -29,7 +29,8 @@ import (
 
 type Level uint8
 
-type Fields map[string]interface{}
+// 因为传递时，是只能string
+type Fields map[string]string
 
 const (
 	LevelDebug Level = iota
@@ -40,45 +41,30 @@ const (
 	LevelPanic
 )
 
-func (l Level) String() string {
-	switch l {
-	case LevelDebug:
-		return "Debug"
-	case LevelInfo:
-		return "Info"
-	case LevelWarn:
-		return "Warn"
-	case LevelError:
-		return "Error"
-	case LevelFatal:
-		return "Fatal"
-	case LevelPanic:
-		return "Panic"
-	default:
-		return ""
-	}
-}
-
 // 外部可调用Logger
 var Logger Log
+var colors = []color.Color{color.Green, color.Red}
+var levelString = []string{"Debug", "Info", "Warn", "Error", "Fatal", "Panic"}
+
+func (l Level) String() string {
+	return levelString[l]
+}
 
 type Log struct {
-	Writer   io.Writer // 输出
-	TimeNow  time.Time // 时间
-	Message  string    // 信息
-	Data     Fields
-	FilePath string // 文件输出路径
-	Skip     int    // caller的深度
+	Writer  io.Writer // 输出
+	TimeNow time.Time // 时间
+	Skip    int       // caller的深度
+	Data    Fields    //  字段
 
 	initialized   bool // 该日志对象是否初始化
 	isShowCaller  bool // 是否查找路径
 	isOutToCenter bool //
-	onlyStdOut    bool // 只在终端输出
-	color         color.Color
-	level         Level
-	cxt           context.Context
-	mu            sync.Mutex
-	content       string
+	//onlyStdOut    bool // 只在终端输出
+	color   color.Color
+	level   Level
+	cxt     context.Context
+	mu      sync.Mutex
+	content string
 }
 
 // 构造函数
@@ -87,7 +73,7 @@ func DefaultNewLogger() *Log {
 		Writer:       os.Stdout, // 默认终端输出
 		Skip:         4,
 		mu:           sync.Mutex{},
-		isShowCaller: true,
+		isShowCaller: false,
 	}
 }
 
@@ -100,82 +86,21 @@ func InitLogger() {
 		Writer:       os.Stdout, // 默认终端输出
 		Skip:         4,
 		mu:           sync.Mutex{},
-		isShowCaller: true,
+		initialized:  true,
+		isShowCaller: false,
 	}
-	dir, err := os.Getwd()
-	if err != nil {
-		panic(err)
-	}
-	// 默认为当前下的路径
-	Logger.FilePath = dir + "/begonia.log"
-	Logger.onlyStdOut = false
-}
-
-// 格式化logger
-func (l *Log) Formatter() {
-	var title string
-	switch l.level {
-	case LevelDebug:
-		l.color = color.Green
-		title = l.color.Sprintf("%s", "Debug")
-	case LevelInfo:
-		l.color = color.Green
-		title = l.color.Sprintf("%s", "Info")
-	case LevelWarn:
-		l.color = color.Magenta
-		title = l.color.Sprintf("%s", "Warn")
-	case LevelError:
-		l.color = color.Red
-		title = l.color.Sprintf("%s", "Error")
-	case LevelFatal:
-		l.color = color.Red
-		title = l.color.Sprintf("%s", "Fatal")
-	case LevelPanic:
-		l.color = color.Red
-		title = l.color.Sprintf("%s", "Panic")
-	}
-	// [Error] [2006-01-02 - 15:04:05] test
-	buf := bytes.NewBufferString(fmt.Sprintf("[%s] [%s] %s",
-		title, time.Now().Format("2006-01-02 - 15:04:05"), l.Message))
-
-	// 如果有字段
-	if l.Data != nil {
-		buf.WriteString(" | ")
-		format, _ := json.Marshal(l.Data)
-		buf.Write(format)
-	}
-	// 如果要求显示路径
-	if l.isShowCaller || l.level > LevelInfo {
-		for _, v := range l.GetCaller() {
-			buf.WriteByte('\n')
-			buf.WriteString(v)
-		}
-	}
-	l.mu.Lock()
-	l.content = fmt.Sprintln(buf.String())
-	l.Message = ""
-	l.mu.Unlock()
-	return
-}
-
-// 添加level
-func (l *Log) SetLevel(lev Level) {
-	l.mu.Lock()
-	defer l.mu.Unlock()
-	l.level = lev
-	return
 }
 
 // 添加上下文（虽然目前没有什么用）
-func (l *Log) SetContext(ctx context.Context) {
+func (l *Log) SetContext(ctx context.Context) *Log {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	l.cxt = ctx
-	return
+	return l
 }
 
 // 添加字段
-func (l *Log) SetFields(fields Fields) {
+func (l *Log) SetFields(fields Fields) *Log {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	if l.Data == nil {
@@ -184,69 +109,44 @@ func (l *Log) SetFields(fields Fields) {
 	for k, v := range fields {
 		l.Data[k] = v
 	}
-	return
+	return l
 }
 
 // 输出
-func (l *Log) SetWriter(w io.Writer) {
+func (l *Log) SetWriter(w io.Writer) *Log {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	l.Writer = w
-	return
-}
-
-// 添加信息
-func (l *Log) SetMsg(msg ...interface{}) {
-	l.mu.Lock()
-	defer l.mu.Unlock()
-	l.Message = fmt.Sprint(l.Message, msg)
-	return
+	return l
 }
 
 // 获取当前时间
-func (l *Log) SetNowTime() {
+func (l *Log) SetNowTime() *Log {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	l.TimeNow = time.Now()
-	return
+	return l
 }
-func (l *Log) SetOnlyStdOut() {
-	l.mu.Lock()
-	defer l.mu.Unlock()
-	if l.onlyStdOut{
-		return
-	}
-	l.onlyStdOut = true
-	return
-}
-func (l *Log) SetCaller() {
+
+func (l *Log) SetCaller() *Log {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	if l.isShowCaller {
-		return
+		return l
 	}
 	l.isShowCaller = true
-	return
+	return l
 
 }
-func (l *Log) OutCaller() {
+func (l *Log) OutCaller() *Log {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	if !l.isShowCaller {
-		return
+		return l
 	}
 	l.isShowCaller = false
-	return
+	return l
 
-}
-func (l *Log) OutOnlyStdOut() {
-	l.mu.Lock()
-	defer l.mu.Unlock()
-	if !l.onlyStdOut{
-		return
-	}
-	l.onlyStdOut = false
-	return
 }
 
 // 调用栈 skip > 1
@@ -260,7 +160,6 @@ func (l *Log) GetCaller() []string {
 	pc, file, line, ok := runtime.Caller(l.Skip)
 	if ok {
 		fun := runtime.FuncForPC(pc)
-
 		callers = []string{fmt.Sprintf("%s:  %d %s", file, line, fun.Name())}
 	}
 	return callers
@@ -288,13 +187,19 @@ func (l *Log) GetCallerFrames() []string {
 	return callers
 }
 
+func (l *Log) GetLevel() Level {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	return l.level
+}
+
 // Json序列化
-func (l *Log) JsonFormat() map[string]interface{} {
+func (l *Log) JsonFormat(msg ...interface{}) map[string]string {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	data := make(Fields, len(l.Data)+3)
-	data["msg"] = l.Message
-	data["time"] = l.TimeNow
+	data["msg"] = fmt.Sprintf("%s", msg...)
+	data["time"] = l.TimeNow.String()
 	if len(l.Data) > 0 {
 		for k, v := range l.Data {
 			if _, ok := data[k]; !ok {
@@ -305,73 +210,123 @@ func (l *Log) JsonFormat() map[string]interface{} {
 	return data
 }
 
-func (l *Log) Output(msg string) (int, error) {
-	l.SetMsg(msg)
-	l.Formatter()
+func (l *Log) Output(level Level, msg string) error {
+	l.setLevel(level)
+	if len(msg) != 0 {
+		l.SetFields(Fields{"msg": msg})
+	}
+	l.formatter()
 	// 打印到控制台
-	l.Writer.Write(qconv.Qs2b(l.content))
-	if len(l.FilePath) == 0 {
-		return 0, nil
-	}
-	// 获取到要输出的文件路径
-	file := l.GetFile()
-	defer file.Close()
-	n, _ := file.Seek(0, os.SEEK_END)
-	// 写入文件
-	return file.WriteAt(qconv.Qs2b(l.content), n)
-
-}
-
-// 默认为当前位置的begonia.log里
-func (l *Log) GetFile() *os.File {
-	if len(l.FilePath) == 0 {
-		return nil
-	}
-	//fmt.Println(path)
-	if _, err := os.Stat(l.FilePath); err != nil {
-		// 文件不存在,创建
-		f, err := os.Create(l.FilePath)
-		//defer f.Close()  // 记得关闭
-		if err != nil {
-			panic(err)
-		}
-		return f
-	}
-	// 打开该文件，追加模式
-	f, err := os.OpenFile(l.FilePath, os.O_WRONLY, os.ModeAppend)
-
+	_, err := l.Writer.Write(qconv.Qs2b(l.content))
 	if err != nil {
-		panic(err)
+		return err
 	}
+	// 不止是终端输出
+	return nil
+	//if len(l.FilePath) == 0 {
+	//	return "", nil
+	//}
+	// 获取到要输出的文件路径
+	//file := l.GetFile()
+	//defer file.Close()
+	//n, _ := file.Seek(0, os.SEEK_END)
+	//// 写入文件
+	//return file.WriteAt(qconv.Qs2b(l.content), n)
 
-	return f
 }
-func (l *Log) Print(v ...interface{}) {
-	l.SetLevel(LevelInfo)
-	l.Output(fmt.Sprint(v...))
+func (l *Log) OutPutAndContent() string {
+	l.Output(l.level, "")
+	return l.content
+}
+
+//
+//// 默认为当前位置的begonia.log里
+//func (l *Log) GetFile() *os.File {
+//	if len(l.FilePath) == 0 {
+//		return nil
+//	}
+//	//fmt.Println(path)
+//	if _, err := os.Stat(l.FilePath); err != nil {
+//		// 文件不存在,创建
+//		f, err := os.Create(l.FilePath)
+//		//defer f.Close()  // 记得关闭
+//		if err != nil {
+//			panic(err)
+//		}
+//		return f
+//	}
+//	// 打开该文件，追加模式
+//	f, err := os.OpenFile(l.FilePath, os.O_WRONLY, os.ModeAppend)
+//
+//	if err != nil {
+//		panic(err)
+//	}
+//
+//	return f
+//}
+func (l *Log) Print(level Level, v ...interface{}) {
+	l.Output(level, fmt.Sprint(v...))
 }
 
 func (l *Log) Debug(v ...interface{}) {
-	l.SetLevel(LevelDebug)
-	l.Output(fmt.Sprint(v...))
+	l.Output(LevelDebug, fmt.Sprint(v...))
 }
 func (l *Log) Info(v ...interface{}) {
-	l.SetLevel(LevelInfo)
-	l.Output(fmt.Sprint(v...))
+	l.Output(LevelInfo, fmt.Sprint(v...))
 }
 func (l *Log) Warn(v ...interface{}) {
-	l.SetLevel(LevelWarn)
-	l.Output(fmt.Sprint(v...))
+	l.Output(LevelWarn, fmt.Sprint(v...))
 }
 func (l *Log) Error(v ...interface{}) {
-	l.SetLevel(LevelError)
-	l.Output(fmt.Sprint(v...))
+	l.Output(LevelError, fmt.Sprint(v...))
 }
 func (l *Log) Fatal(v ...interface{}) {
-	l.SetLevel(LevelFatal)
-	l.Output(fmt.Sprint(v...))
+	l.Output(LevelFatal, fmt.Sprint(v...))
 }
 func (l *Log) Panic(v ...interface{}) {
-	l.SetLevel(LevelPanic)
-	l.Output(fmt.Sprint(v...))
+	l.Output(LevelPanic, fmt.Sprint(v...))
+}
+
+// 添加level
+func (l *Log) setLevel(lev Level) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	l.level = lev
+	return
+}
+
+// 解析fields
+func (l *Log) parsedFields() string {
+	buf := strings.Builder{}
+	for k, v := range l.Data {
+		field := fmt.Sprintf(" [%s=%s]", k, v)
+		buf.WriteString(field)
+	}
+	return buf.String()
+}
+
+// 格式化logger
+func (l *Log) formatter() *Log {
+	var title string
+	if l.level > LevelInfo {
+		title = colors[1].Sprintf("%s", l.level.String())
+	} else {
+		title = colors[0].Sprintf("%s", l.level.String())
+	}
+
+	// [Error] [2006-01-02 - 15:04:05] test
+	buf := bytes.NewBufferString(fmt.Sprintf("[%s] [%s] %s",
+		l.SetNowTime().TimeNow.Format("2006-01-02 - 15:04:05"), title, l.parsedFields()))
+
+	// 如果要求显示路径
+	if l.isShowCaller || l.level > LevelInfo {
+		for _, v := range l.GetCaller() {
+			buf.WriteByte('\n')
+			buf.WriteString(v)
+		}
+	}
+	l.mu.Lock()
+	l.content = fmt.Sprintln(buf.String())
+	l.mu.Unlock()
+	return l
 }

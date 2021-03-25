@@ -14,6 +14,7 @@ type envConfig struct {
 	Dispatch DispatchConfig
 	Conn     ConnConfig
 	Logic    LogicConfig
+	Log      LogConfig
 }
 
 // DispatchConfig dispatch的配置
@@ -35,6 +36,16 @@ type LogicConfig struct {
 // ConnConfig 连接的config
 type ConnConfig struct {
 	ReadTimeout int // 读一个数据包时的超时时间，用在一个数据包未读完时
+}
+
+// LogConfig 日志的配置
+type LogConfig struct {
+	Es EsConfig
+}
+
+// EsConfig es的配置
+type EsConfig struct {
+	Addr string
 }
 
 func init() {
@@ -66,5 +77,11 @@ func defaultConfig() envConfig {
 		},
 		Logic: LogicConfig{
 			RequestTimeOut: 10,
-		}}
+		},
+		Log: LogConfig{
+			Es: EsConfig{
+				Addr: "http://localhost:9200/",
+			},
+		},
+	}
 }

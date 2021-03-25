@@ -14,7 +14,7 @@ import (
 	"log"
 )
 
-// log_service.go something
+// web.go something
 
 // BootStart 根据manager cluster模式启动
 func BootStart(optionMap map[string]interface{}) (s Server) {
@@ -37,6 +37,10 @@ func BootStart(optionMap map[string]interface{}) (s Server) {
 	if dpTyp, ok := optionMap["dpTyp"]; ok && dpTyp == "p2p" {
 		isP2P = true
 	}
+
+	// 是否注册进日志中心
+	var isLog bool
+	_, isLog = optionMap["log"]
 
 	// 创建 dispatch
 	var dp dispatch.Dispatcher
@@ -77,17 +81,19 @@ func BootStart(optionMap map[string]interface{}) (s Server) {
 	// 修改配置之前的一系列调用全部都是按默认配置来的
 
 	coreRegister := cRegister.NewCoreRegister()
-	logService:=centerlog.NewCenterLogService()
+	logService := centerlog.NewCenterLogService()
 
 	var rg register.Register
 	var ls logger.LoggerService
 	if isP2P {
 		rg = register.NewLocalRegister(coreRegister)
 		// 创建一个日志服务
-		ls = logger.NewLocalLoggerService(logService)
+		//ls = logger.NewRemoteLoggerService(logService)
 	} else {
 		rg = register.NewRemoteRegister(lg.Client)
-		ls=logger.NewRemoteLoggerService(lg.Client)
+		if isLog{
+			ls = logger.NewRemoteLoggerService(lg.Client)
+		}
 	}
 
 	// 创建实例
@@ -126,9 +132,10 @@ func BootStart(optionMap map[string]interface{}) (s Server) {
 	if isP2P {
 		s.Register("REGISTER", coreRegister, "Register", "ServiceInfo")
 		optionMap["REGISTER"] = coreRegister
-		s.Register("LogService", logService,"RegisterLogService","Write")
+		s.Register("LogService", logService, "Save")
 		optionMap["LogService"] = logService
 	}
+
 
 	return s
 }

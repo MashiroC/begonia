@@ -10,6 +10,7 @@ import (
 	"github.com/MashiroC/begonia/internal/logger"
 	"github.com/MashiroC/begonia/internal/register"
 	"github.com/MashiroC/begonia/logic"
+	"github.com/MashiroC/begonia/tool/log"
 	"github.com/MashiroC/begonia/tool/qconv"
 	"github.com/MashiroC/begonia/tool/reflects"
 	"reflect"
@@ -26,7 +27,6 @@ type rServer struct {
 
 	register register.Register
 
-	isLog      bool                 // 是否注册中心服务
 	logService logger.LoggerService // 日志服务
 }
 
@@ -63,23 +63,19 @@ func (r *rServer) Register(name string, service interface{}, registerFunc ...str
 	}
 
 	err := r.register.Register(name, registerFs)
+	//r.lg.Hook("close")
 	if err != nil {
 		panic(err)
 	}
-	if r.isLog {
-		// 注册进日志服务
-		r.logService.RegisterLogService(name)
-		r.logService.Write(name,[]byte(name + "注册成功"))
+	if r.logService != nil {
+		l:=log.DefaultNewLogger()
+		l.Info(name+" join in")
+		r.logService.Save(name, log.DefaultNewLogger().SetFields(log.Fields{"server": name}))
 	}
 }
 
 func (r *rServer) Wait() {
 	<-r.ctx.Done()
-}
-
-// 是否注册日志服务
-func (r *rServer) SetLoggerService() {
-	r.isLog = true
 }
 
 func (r *rServer) handleMsg(msg *logic.Call, wf logic.ResultFunc) {
@@ -109,6 +105,7 @@ func (r *rServer) handleMsg(msg *logic.Call, wf logic.ResultFunc) {
 
 	m, re := callWithRecover(fun.method, inVal)
 	if re != "" {
+
 		wf.Result(&logic.CallResult{Err: fmt.Errorf("rpc call recover: %s", re)})
 		return
 	}
