@@ -31,22 +31,17 @@ func NewSetByDefaultCluster() Dispatcher {
 	d.Hook("start", func(connID string) {
 		closeFunc := func() {
 			d.connLock.Lock()
-			c, ok := d.connSet[connID]
+			c := d.connSet[connID]
 			d.connLock.Unlock()
 
 			if c != nil {
 				c.Close()
-			}
-			if ok {
-				delete(d.connSet, connID)
 			}
 		}
 		sendFunc := func(connID string, f frame.Frame) error {
 			return d.SendTo(connID, f)
 		}
 
-
-		// TODO 将cancel方法添加到map中
 		d.cancelLock.Lock()
 		d.cancelSet[connID] = h.Register("ping", connID, closeFunc, sendFunc)
 		d.cancelLock.Unlock()
@@ -61,8 +56,11 @@ func NewSetByDefaultCluster() Dispatcher {
 			return
 		}
 
-		// TODO 删除map中的cancel方法
 		cancel()
+
+		d.cancelLock.Lock()
+		delete(d.cancelSet, connID)
+		d.cancelLock.Unlock()
 	})
 
 	d.Handle("ctrl", heartbeat.Handler(h))
@@ -129,7 +127,6 @@ out:
 			log.Println("dispatch listen error:", err.Error())
 		}
 	}
-
 }
 
 // work 获得一个新的连接之后持续监听连接，然后把消息发送到msgCh里
