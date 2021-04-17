@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-// 对pong方法的一些封装
+// Pong 对pong方法的一些封装
 type Pong struct {
 	RecvPingTime time.Duration // 收到ping帧的最长时间间隔
 	timer        *time.Timer
@@ -22,9 +22,8 @@ type Pong struct {
 	Send   func(connID string, f frame.Frame) error // 发送帧
 }
 
-// 一定时间内没收到pong就断开连接
+// Start 一定时间内没收到pong就断开连接
 func (p *Pong) Start(c context.Context) {
-	ctx, cancel := context.WithCancel(c)
 
 	go func(ctx context.Context) {
 		for {
@@ -36,20 +35,22 @@ func (p *Pong) Start(c context.Context) {
 				return
 			}
 		}
-	}(ctx)
+	}(c)
 
+	// 超时主动关闭,调用Close方法
+	// 如果是context通知关闭，说明是Hook了close,直接退出goroutine即可
 	p.timer.Reset(p.RecvPingTime)
 	select {
 	case <-p.timer.C:
+		p.Close()
 		break
 	case <-c.Done():
 		break
 	}
-	cancel()
-	p.Close()
+	close(p.ch)
 }
 
-// 根据ping帧，返回pong帧
+// Handle 根据ping帧，返回pong帧
 func (p *Pong) Handle(f frame.Frame) {
 	if pingFrame, ok := f.(*frame.Ping); ok {
 		p.ch <- struct{}{}

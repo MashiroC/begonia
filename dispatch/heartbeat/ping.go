@@ -20,10 +20,9 @@ type Ping struct {
 	Send  func(connID string, f frame.Frame) error // 发送帧
 }
 
-// 开始持续对一条连接发ping
+// Start 开始持续对一条连接发ping
 func (p *Ping) Start(c context.Context) {
 	ticker := time.NewTicker(p.SendPingTime)
-	ctx, cancel := context.WithCancel(c)
 
 	go func(ctx context.Context) {
 		for {
@@ -38,20 +37,21 @@ func (p *Ping) Start(c context.Context) {
 				return
 			}
 		}
-	}(ctx)
+	}(c)
 
 	// 判断是否超时,或者断连
+	// 超时主动关闭,调用Close方法
+	// 如果是context通知关闭，说明是Hook了close,直接退出goroutine即可
 	select {
 	case <-p.timer.C:
+		p.Close()
 		break
 	case <-c.Done():
 		break
 	}
-	cancel()
-	p.Close()
 }
 
-// 获取pong的内容（机器信息），转化为映射
+// Handle 获取pong的内容（机器信息），转化为映射
 // 在这里暂停计时器，代表已经收到pong，发送ping的时候会reset
 func (p *Ping) Handle(f frame.Frame) {
 	if pongFrame, ok := f.(*frame.Pong); ok {

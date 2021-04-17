@@ -19,6 +19,7 @@ func NewSetByDefaultCluster() Dispatcher {
 	d := &setDispatch{}
 
 	d.connSet = make(map[string]conn.Conn)
+	d.cancelSet = make(map[string]func())
 
 	// 默认连接被关闭时只打印log
 	d.Hook("close", func(connID string, err error) {
@@ -30,18 +31,25 @@ func NewSetByDefaultCluster() Dispatcher {
 	d.Hook("start", func(connID string) {
 		closeFunc := func() {
 			d.connLock.Lock()
-			c := d.connSet[connID]
+			c, ok := d.connSet[connID]
 			d.connLock.Unlock()
 
 			if c != nil {
 				c.Close()
+			}
+			if ok {
+				delete(d.connSet, connID)
 			}
 		}
 		sendFunc := func(connID string, f frame.Frame) error {
 			return d.SendTo(connID, f)
 		}
 
-		h.Register("ping", connID, closeFunc, sendFunc)
+
+		// TODO 将cancel方法添加到map中
+		d.cancelLock.Lock()
+		d.cancelSet[connID] = h.Register("ping", connID, closeFunc, sendFunc)
+		d.cancelLock.Unlock()
 	})
 
 	d.Hook("close", func(connID string, err error) {
@@ -53,6 +61,7 @@ func NewSetByDefaultCluster() Dispatcher {
 			return
 		}
 
+		// TODO 删除map中的cancel方法
 		cancel()
 	})
 
