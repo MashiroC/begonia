@@ -9,15 +9,17 @@ import (
 	"sync"
 )
 
-// 对于单个dispatch的ping或pong
+// TODO 超时时更加优雅地关闭连接
+
+// Beat 对于单个dispatch的ping或pong
 type Beat interface {
-	// 开起计时器，发送ping帧或收到pong帧超时
+	// Start 开起计时器，发送ping帧或收到pong帧超时
 	Start(ctx context.Context)
 
-	// 处理收到的心跳帧，和dispatch的handle不一样
+	// Handle 处理收到的心跳帧，和dispatch的handle不一样
 	Handle(f frame.Frame)
 
-	// 标识是ping还是pong
+	// RecvType 标识是ping还是pong
 	RecvType() int
 }
 
@@ -30,7 +32,7 @@ var (
 type closeFunc func()
 type sendFunc func(connID string, f frame.Frame) error
 
-// 连接多个对象时，用于注册多个beat对象
+// Heart 连接多个对象时，用于注册多个beat对象
 // 以及方便sarter调用
 // 默认一条连接，其中一方只发ping，另一方只发pong
 type Heart struct {
@@ -38,7 +40,7 @@ type Heart struct {
 	sync.Mutex
 }
 
-// 注册一个新的连接(dispatch)，并返回一个用于关闭goroutine的函数
+// Register 注册一个新的连接(dispatch)，并返回一个用于关闭goroutine的函数
 // 在连接建立时hook
 func (h *Heart) Register(typ string, connID string, close closeFunc, send sendFunc) func() {
 	var beat Beat
@@ -64,7 +66,7 @@ func (h *Heart) Register(typ string, connID string, close closeFunc, send sendFu
 	return cancelFunc
 }
 
-// 处理某个连接的心跳帧
+// Handle 处理某个连接的心跳帧
 // 收到帧时handle
 func (h *Heart) Handle(connID string, typ int, data []byte) {
 	h.Lock()
@@ -87,7 +89,8 @@ func (h *Heart) Handle(connID string, typ int, data []byte) {
 		return
 	}
 
-	beat.Handle(f)
+	log.Println(f)
+	//beat.Handle(f)
 }
 
 func NewHeart() *Heart {
@@ -97,7 +100,7 @@ func NewHeart() *Heart {
 	}
 }
 
-// 在dispatch启动时住处handle
+// Handler 在dispatch启动时住处handle
 func Handler(h *Heart) (f func() (code int, fun router.CtrlHandleFunc)) {
 	return func() (code int, fun router.CtrlHandleFunc) {
 		return frame.PingPongCtrlCode, func(connID string, typ int, data []byte) {
