@@ -89,8 +89,7 @@ func (h *Heart) Handle(connID string, typ int, data []byte) {
 		return
 	}
 
-	log.Println(f)
-	//beat.Handle(f)
+	beat.Handle(f)
 }
 
 func NewHeart() *Heart {
