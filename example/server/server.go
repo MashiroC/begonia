@@ -90,7 +90,7 @@ func (EchoService) Hello() {
 }
 
 type TestStruct struct {
-	I1 int
+	I1 int `json:"i_1"`
 	I2 int8
 	I3 int16
 	I4 int32
