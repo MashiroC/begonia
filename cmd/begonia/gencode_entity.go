@@ -1,9 +1,9 @@
 package main
 
 import (
-	"html/template"
 	"os"
 	"strings"
+	"text/template"
 )
 
 func genEntity(objs map[string][]string) {
