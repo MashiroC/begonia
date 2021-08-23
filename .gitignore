@@ -17,4 +17,4 @@
 .idea
 
 # begonia generate code
-#*.begonia.go
+*.begonia.go

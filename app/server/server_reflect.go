@@ -4,6 +4,7 @@ package server
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/MashiroC/begonia/app/coding"
 	cRegister "github.com/MashiroC/begonia/core/register"
@@ -93,9 +94,9 @@ func (r *rServer) handleMsg(msg *logic.Call, wf logic.ResultFunc) {
 
 	inVal = append(inVal, reflects.ToValue(data.(map[string]interface{}), fun.reSharp)...)
 
-	m, re := callWithRecover(fun.method, inVal)
-	if re != "" {
-		wf.Result(&logic.CallResult{Err: fmt.Errorf("rpc call recover: %s", re)})
+	m, hasError := callWithRecover(fun.method, inVal)
+	if hasError {
+		wf.Result(&logic.CallResult{Err: m["err"].(error)})
 		return
 	}
 
@@ -108,10 +109,11 @@ func (r *rServer) handleMsg(msg *logic.Call, wf logic.ResultFunc) {
 	wf.Result(&logic.CallResult{Result: b})
 }
 
-func callWithRecover(fun reflect.Method, inVal []reflect.Value) (m map[string]interface{}, reStr string) {
+func callWithRecover(fun reflect.Method, inVal []reflect.Value) (m map[string]interface{}, hasError bool) {
 	defer func() {
 		if re := recover(); re != nil {
-			reStr = fmt.Sprint(re)
+			hasError=true
+			m["err"] = errors.New(fmt.Sprintf("server func call recover: %s", re))
 		}
 	}()
 	outVal := fun.Func.Call(inVal)
@@ -120,10 +122,8 @@ func callWithRecover(fun reflect.Method, inVal []reflect.Value) (m map[string]in
 	lastKey := "F" + qconv.I2S(len(outVal))
 	v := m[lastKey]
 	if vErr, ok := v.(error); ok {
-		delete(m, lastKey)
-		m["err"] = vErr.Error()
-	} else {
-		m["err"] = nil
+		m["err"] = vErr
+		hasError=true
 	}
 
 	return
