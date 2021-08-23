@@ -113,7 +113,7 @@ func (r *rServer) handleMsg(msg *logic.Call, wf logic.ResultFunc) {
 func callWithRecover(fun reflect.Method, inVal []reflect.Value) (m map[string]interface{}, hasError bool) {
 	defer func() {
 		if re := recover(); re != nil {
-			hasError=true
+			hasError = true
 			log.Printf("[RECOVER] panic in remote func call: %s\n",re)
 			m["err"] = errors.New(fmt.Sprintf("server func call recover: %s", re))
 		}
@@ -125,7 +125,7 @@ func callWithRecover(fun reflect.Method, inVal []reflect.Value) (m map[string]in
 	v := m[lastKey]
 	if vErr, ok := v.(error); ok {
 		m["err"] = vErr
-		hasError=true
+		hasError = true
 	}
 
 	return
