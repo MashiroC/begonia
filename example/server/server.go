@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/MashiroC/begonia"
 	"github.com/MashiroC/begonia/app/option"
@@ -59,8 +60,8 @@ func main() {
 type EchoService struct {
 }
 
-func (*EchoService) SayHello(name string) string {
-	return "Hello " + name
+func (*EchoService) SayHello(name string) (string, error) {
+	return "Hello " + name, errors.New("an error")
 }
 
 func (*EchoService) SayHelloWithContext(ctx context.Context, name string) string {

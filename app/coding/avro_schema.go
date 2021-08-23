@@ -36,7 +36,17 @@ func inReflectSchema(m reflect.Method) (schema string, hasContext bool) {
 
 	typ := make([]reflect.Type, 0, num-start)
 	for i := start; i < num; i++ {
-		typ = append(typ, t.In(i))
+		// 不允许在schema中间出现error，除非是出参的最后一个，然后跳过
+		in := t.In(i)
+		if in.String() == "error" {
+			if i == num-1 {
+				// skip
+				continue
+			} else {
+				panic("only ALLOW error type in func last out params")
+			}
+		}
+		typ = append(typ, in)
 	}
 
 	schema = makeSchema(namespace, name, typ)
@@ -53,7 +63,19 @@ func outReflectSchema(m reflect.Method) string {
 
 	typ := make([]reflect.Type, 0, num)
 	for i := 0; i < num; i++ {
-		typ = append(typ, t.Out(i))
+		out := t.Out(i)
+
+		// 不允许在schema中间出现error，除非是出参的最后一个，然后跳过
+		if out.String() == "error" {
+			if i == num-1 {
+				// skip
+				continue
+			} else {
+				panic("only ALLOW error type in func last out params")
+			}
+		}
+
+		typ = append(typ, out)
 	}
 
 	return makeSchema(namespace, name, typ)
@@ -99,16 +121,13 @@ func makeSchema(namespace, name string, typ []reflect.Type) string {
 // - 结构体支持嵌套、内嵌
 // - 不支持array，请使用slice
 func fieldSchema(name string, t reflect.Type) (schema string) {
-	fType, isErr := fieldKind(modeNormal, t)
-	if isErr {
-		name = "err"
-	}
+	fType := fieldKind(modeNormal, t)
 	schema = `{"name":"` + name + `","type":` + fType + "}\n"
 
 	return
 }
 
-func fieldKind(mode parseMode, t reflect.Type) (fType string, isErr bool) {
+func fieldKind(mode parseMode, t reflect.Type) (fType string) {
 	switch t.Kind() {
 	case reflect.String:
 		fType = `"string"`
@@ -126,7 +145,7 @@ func fieldKind(mode parseMode, t reflect.Type) (fType string, isErr bool) {
 		if t.Elem().Kind() == reflect.Uint8 {
 			fType = `"bytes"`
 		} else {
-			childKind, _ := fieldKind(modeSlice, t.Elem())
+			childKind := fieldKind(modeSlice, t.Elem())
 
 			fType = `{
 				"type": "array",
@@ -138,17 +157,12 @@ func fieldKind(mode parseMode, t reflect.Type) (fType string, isErr bool) {
 		if mode == modeSlice {
 			panic("slice not supported interface")
 		}
-		if t.String() == "error" {
-			fType = `["string","null"]`
-			isErr = true
-		} else {
-			panic("avro parse not supported type " + t.String())
-		}
+		panic("avro parse not supported type " + t.String())
 	case reflect.Ptr:
 		if mode == modeSlice {
 			panic("github.com/MashiroC/begonia not supported ptr")
 		}
-		fType, isErr = fieldKind(modeNormal, t.Elem())
+		fType = fieldKind(modeNormal, t.Elem())
 	case reflect.Struct:
 		//if mode == modeSlice {
 		//	fmt.Println(fieldKind(modeNormal,t.Elem()))
@@ -173,7 +187,7 @@ func fieldKind(mode parseMode, t reflect.Type) (fType string, isErr bool) {
 			panic("slice not supported map")
 		}
 
-		child, _ := fieldKind(modeNormal, t.Elem())
+		child := fieldKind(modeNormal, t.Elem())
 		fType = `{"type":"map","values":` + child + `}`
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32:
 		panic("avro not supported uint")

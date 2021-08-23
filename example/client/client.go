@@ -12,12 +12,13 @@ func main() {
 	s, _ := c.Service("Echo")
 
 	SayHello, _ := s.FuncSync("SayHello")
-	res, _ := SayHello("kieran")
-	fmt.Println(res.(string))
+	res, err := SayHello("kieran")
+	fmt.Println(res)
+	fmt.Println(err)
 
-	SayHelloAsync, _ := s.FuncAsync("SayHello")
-	SayHelloAsync(func(res interface{}, err error) {
-		fmt.Println(res, err)
-	}, "kieran")
+	//SayHelloAsync, _ := s.FuncAsync("SayHello")
+	//SayHelloAsync(func(res interface{}, err error) {
+	//	fmt.Println(res, err)
+	//}, "kieran")
 
 }
