@@ -12,6 +12,7 @@ import (
 	"github.com/MashiroC/begonia/logic"
 	"github.com/MashiroC/begonia/tool/qconv"
 	"github.com/MashiroC/begonia/tool/reflects"
+	"log"
 	"reflect"
 )
 
@@ -113,6 +114,7 @@ func callWithRecover(fun reflect.Method, inVal []reflect.Value) (m map[string]in
 	defer func() {
 		if re := recover(); re != nil {
 			hasError = true
+			log.Printf("[RECOVER] panic in remote func call: %s\n",re)
 			m["err"] = errors.New(fmt.Sprintf("server func call recover: %s", re))
 		}
 	}()
