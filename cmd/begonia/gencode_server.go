@@ -41,7 +41,7 @@ func getServiceTmpl() *template.Template {
 		"makeRes": func(s []string) (res string) {
 			for i := 0; i < len(s); i++ {
 				if s[i] == "error" && i == len(s)-1 {
-					res += "err"
+					res += "inErr"
 				} else {
 					res += "res" + qconv.I2S(i+1)
 				}
@@ -51,6 +51,9 @@ func getServiceTmpl() *template.Template {
 				res = res[:len(res)-2]
 			}
 			return
+		},
+		"isLastError": func(s []string) bool {
+			return s[len(s)-1] == "error"
 		},
 		"hasRes": func(s []string) bool {
 			return s != nil && len(s) != 0

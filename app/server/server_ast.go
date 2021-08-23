@@ -68,7 +68,7 @@ func (r *astServer) handleMsg(msg *logic.Call, wf logic.ResultFunc) {
 	data, err := do(ctx, msg.Fun, msg.Param)
 	if err != nil {
 		wf.Result(&logic.CallResult{
-			Err: fmt.Errorf("app.Server handle error: %w", err),
+			Err: err,
 		})
 		return
 	}
