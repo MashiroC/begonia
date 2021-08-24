@@ -19,7 +19,8 @@ func BootStart(optionMap map[string]interface{}) (s Server) {
 
 	fmt.Println("  ____                              _        \n |  _ \\                            (_)       \n | |_) |  ___   __ _   ___   _ __   _   __ _ \n |  _ <  / _ \\ / _` | / _ \\ | '_ \\ | | / _` |\n | |_) ||  __/| (_| || (_) || | | || || (_| |\n |____/  \\___| \\__, | \\___/ |_| |_||_| \\__,_|\n                __/ |                        \n               |___/                         ")
 
-	log.Printf("begonia Server start with [%s] mode\n", app.ServiceAppMode.String())
+	mode := app.ParseMode(optionMap)
+	log.Printf("begonia Server start with [%s] mode\n", mode.String())
 
 	ctx, cancel := context.WithCancel(context.Background())
 	var isLocal bool
@@ -84,7 +85,7 @@ func BootStart(optionMap map[string]interface{}) (s Server) {
 	}
 
 	// 创建实例
-	if app.ServiceAppMode == app.Ast {
+	if mode == app.Ast {
 		ast := &astServer{}
 		ast.ctx = ctx
 		ast.cancel = cancel
