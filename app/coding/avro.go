@@ -5,8 +5,17 @@ import (
 	"github.com/hamba/avro"
 )
 
+const (
+	EmptyAvroSchema = "EMPTY_AVRO_SCHEMA"
+)
+
 // NewAvro 使用avro模式创建一个新的coder
 func NewAvro(rawSchema string) (c Coder, err error) {
+	if rawSchema == EmptyAvroSchema {
+		c = empty
+		return
+	}
+
 	schema, err := avro.Parse(rawSchema)
 	if err != nil {
 		return

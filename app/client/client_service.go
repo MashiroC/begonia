@@ -44,8 +44,8 @@ func (r *rService) FuncSync(name string) (rf RemoteFunSync, err error) {
 
 		b, err := f.InCoder.Encode(coding.ToAvroObj(params))
 		if err != nil {
-			//TODO: 当传入参数和要求类型不符时的错误返回
-			panic(err)
+			err = fmt.Errorf("input type error: %w",err)
+			return
 		}
 
 		r.c.lg.CallAsync(&logic.Call{
