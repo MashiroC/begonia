@@ -3,7 +3,6 @@ package center
 
 import (
 	"context"
-	"github.com/MashiroC/begonia/app"
 	"github.com/MashiroC/begonia/app/option"
 	"github.com/MashiroC/begonia/app/server"
 	cRegister "github.com/MashiroC/begonia/core/register"
@@ -15,8 +14,6 @@ import (
 
 // bootstart 根据center cluster模式启动
 func bootstart(optionMap map[string]interface{}) server.Server {
-
-	app.ServiceAppMode = app.Ast
 
 	s := server.BootStart(optionMap)
 

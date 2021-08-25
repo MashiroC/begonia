@@ -25,6 +25,11 @@ func inReflectSchema(m reflect.Method) (schema string, hasContext bool) {
 
 	num := t.NumIn()
 
+	if num==1{
+		schema = EmptyAvroSchema
+		return
+	}
+
 	start := 1
 	if num > 2 {
 		in := t.In(1)
@@ -60,6 +65,9 @@ func outReflectSchema(m reflect.Method) string {
 
 	t := m.Type
 	num := t.NumOut()
+	if num==0{
+		return EmptyAvroSchema
+	}
 
 	typ := make([]reflect.Type, 0, num)
 	for i := 0; i < num; i++ {

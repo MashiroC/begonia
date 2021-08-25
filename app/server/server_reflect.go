@@ -60,6 +60,7 @@ func (r *rServer) Register(name string, service interface{}, registerFunc ...str
 		})
 	}
 
+	//fmt.Println(registerFs)
 	err := r.register.Register(name, registerFs)
 	if err != nil {
 		panic(err)
@@ -94,7 +95,6 @@ func (r *rServer) handleMsg(msg *logic.Call, wf logic.ResultFunc) {
 	}
 
 	inVal = append(inVal, reflects.ToValue(data.(map[string]interface{}), fun.reSharp)...)
-
 	m, hasError := callWithRecover(fun.method, inVal)
 	if hasError {
 		wf.Result(&logic.CallResult{Err: m["err"].(error)})

@@ -17,7 +17,8 @@ func BootStartByCenter(optionMap map[string]interface{}) *rClient {
 
 	fmt.Println("  ____                              _        \n |  _ \\                            (_)       \n | |_) |  ___   __ _   ___   _ __   _   __ _ \n |  _ <  / _ \\ / _` | / _ \\ | '_ \\ | | / _` |\n | |_) ||  __/| (_| || (_) || | | || || (_| |\n |____/  \\___| \\__, | \\___/ |_| |_||_| \\__,_|\n                __/ |                        \n               |___/                         ")
 
-	log.Printf("begonia client start with [%s] mode\n", app.ServiceAppMode.String())
+	mode := app.ParseMode(optionMap)
+	log.Printf("begonia Client start with [%s] mode\n", mode.String())
 
 	ctx, cancel := context.WithCancel(context.Background())
 	c := &rClient{

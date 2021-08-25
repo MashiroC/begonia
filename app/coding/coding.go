@@ -9,3 +9,5 @@ type Coder interface {
 	Decode([]byte) (data interface{}, err error)
 	DecodeIn([]byte, interface{}) error
 }
+
+

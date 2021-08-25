@@ -22,3 +22,13 @@ func (s ServiceAppModeTyp) String() string {
 	}
 	return ""
 }
+
+func ParseMode(optionMap map[string]interface{}) (mode ServiceAppModeTyp) {
+	modeTmp, ok := optionMap["mode"]
+	if ok {
+		mode = modeTmp.(ServiceAppModeTyp)
+	} else {
+		mode = ServiceAppMode
+	}
+	return
+}
