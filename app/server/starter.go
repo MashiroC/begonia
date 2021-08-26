@@ -42,14 +42,14 @@ func BootStart(optionMap map[string]interface{}) (s Server) {
 	if isP2P {
 		log.Printf("begonia Server will listen on [%s]", addr)
 		dp = dispatch.NewSetByDefaultCluster()
-		go dp.Listen(addr)
 		isLocal = true
 	} else {
 		log.Printf("begonia Server will link to [%s]", addr)
 		dp = dispatch.NewLinkedByDefaultCluster()
-		if err := dp.Link(addr); err != nil {
-			panic(err)
-		}
+	}
+
+	if err := dp.Start(addr); err != nil {
+		panic(err)
 	}
 
 	var waitChans *logic.CallbackStore

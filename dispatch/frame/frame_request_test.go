@@ -5,6 +5,7 @@
 package frame
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -19,6 +20,10 @@ func TestRequest1(t *testing.T) {
 	d = append(d, breakByte)
 	d = append(d, []byte("test_-data")...)
 	res, err := unMarshalRequest(d)
+	fmt.Println(res.ReqID)
+	fmt.Println(res.Fun)
+	fmt.Println(res.Service)
+	fmt.Println(string(res.Params))
 	if err != nil || res == nil {
 		t.Fail()
 	}

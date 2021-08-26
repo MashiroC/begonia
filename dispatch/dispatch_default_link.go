@@ -25,7 +25,7 @@ func NewLinkedByDefaultCluster() Dispatcher {
 	d.Handle("ctrl", heartbeat.Handler(h))
 
 	// 在启动时hook，接收一条连接的ping包
-	d.Hook("start", func(connID string) {
+	d.Hook("link", func(connID string) {
 		closeFunc := func() {
 			d.linkedConn.Close()
 		}
@@ -54,7 +54,7 @@ func NewLinkedByDefaultCluster() Dispatcher {
 					for !ok {
 						log.Println("cannot link to server,retry...")
 						time.Sleep(time.Duration(config.C.Dispatch.ReConnectionIntervalSecond) * time.Second)
-						ok = d.ReLink()
+						ok = d.link(d.linkAddr) == nil
 					}
 
 				} else {
@@ -62,7 +62,7 @@ func NewLinkedByDefaultCluster() Dispatcher {
 					for i := 0; i < config.C.Dispatch.ReConnectionRetryCount && !ok; i++ {
 						log.Println("cannot link to server,retry", i, "limit", config.C.Dispatch.ReConnectionRetryCount)
 						time.Sleep(time.Duration(config.C.Dispatch.ReConnectionIntervalSecond) * time.Second)
-						ok = d.ReLink()
+						ok = d.link(d.linkAddr) == nil
 					}
 
 					if !ok {
@@ -96,8 +96,19 @@ type linkDispatch struct {
 	cancel func() // 关闭心跳包的一些goroutine
 }
 
-// Link 建立连接，bgacenter cluster模式下，会开一条和center的tcp连接
-func (d *linkDispatch) Link(addr string) (err error) {
+func (d *linkDispatch) Start(addr string) (err error) {
+	err = d.link(addr)
+	if err != nil {
+		return
+	}
+	return
+}
+
+// link 连接到某个服务或中心
+// bgacenter cluster模式下，会开一条和center的tcp连接
+// 会直接连接到指定的地址，[error]是用来返回连接时候的错误值的。
+// 连接断开不会在这里返回错误，而是提供一个hook，通过hook "close" 来捕获断开连接
+func (d *linkDispatch) link(addr string) (err error) {
 
 	d.linkAddr = addr
 
@@ -111,11 +122,6 @@ func (d *linkDispatch) Link(addr string) (err error) {
 	go d.work(c)
 
 	return
-}
-
-func (d *linkDispatch) ReLink() bool {
-	err := d.Link(d.linkAddr)
-	return err == nil
 }
 
 // Send 发送一个包，在center cluster模式下直接发送到中心，中心进行调度
@@ -133,10 +139,6 @@ func (d *linkDispatch) SendTo(connID string, f frame.Frame) (err error) {
 
 	err = d.linkedConn.Write(byte(f.Opcode()), f.Marshal())
 	return
-}
-
-func (d *linkDispatch) Listen(addr string) {
-	panic("link mode can't use Listen()")
 }
 
 func (d *linkDispatch) Upgrade(connID string, addr string) (err error) {
@@ -159,7 +161,7 @@ func (d *linkDispatch) work(c conn.Conn) {
 	d.linkID = id
 	log.Printf("link addr [%s] success, connID [%s]\n", c.Addr(), id)
 
-	d.DoStartHook(id) // 变量初始化完成，这里去hook一些东西
+	d.DoLinkHook(d.linkID) // 变量初始化完成，这里去hook一些东西
 
 	for {
 

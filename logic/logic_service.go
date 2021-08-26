@@ -1,6 +1,7 @@
 package logic
 
 import (
+	"context"
 	"github.com/MashiroC/begonia/dispatch"
 	"github.com/MashiroC/begonia/dispatch/frame"
 )
@@ -26,7 +27,7 @@ type Service struct {
 	*Client
 
 	// handle Func
-	HandleRequest func(msg *Call, wf ResultFunc)
+	HandleRequest func(ctx context.Context, msg *Call, wf ResultFunc)
 }
 
 func (s *Service) DpHandler(connID string, f frame.Frame) {
@@ -39,16 +40,14 @@ func (s *Service) DpHandler(connID string, f frame.Frame) {
 			Param:   msg.Params,
 		}
 
-		wf := ResultFunc{
-			Result: func(result Calls) {
-				resp := result.Frame(msg.ReqID)
-				s.Dp.SendTo(connID, resp)
-			},
-			ConnID: connID,
-			ReqID:  msg.ReqID,
+		wf := func(result Calls) {
+			resp := result.Frame(msg.ReqID)
+			s.Dp.SendTo(connID, resp)
 		}
 
-		s.HandleRequest(call, wf)
+		ctx := context.WithValue(context.Background(), "info", map[string]string{"reqID": msg.ReqID, "connID": connID})
+
+		s.HandleRequest(ctx, call, wf)
 
 	case *frame.Response:
 		s.Client.HandleResponse(msg)

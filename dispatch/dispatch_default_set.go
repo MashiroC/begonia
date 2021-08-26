@@ -28,7 +28,7 @@ func NewSetByDefaultCluster() Dispatcher {
 
 	h := heartbeat.NewHeart()
 
-	d.Hook("start", func(connID string) {
+	d.Hook("link", func(connID string) {
 		closeFunc := func() {
 			d.connLock.Lock()
 			c := d.connSet[connID]
@@ -79,13 +79,9 @@ type setDispatch struct {
 	cancelLock sync.Mutex        // 保证并发安全
 }
 
-// Link 建立连接，bgacenter cluster模式下，会开一条和center的tcp连接
-func (d *setDispatch) Link(addr string) (err error) {
-	panic("in set mode, you can't use Link()")
-}
-
-func (d *setDispatch) ReLink() bool {
-	panic("in set mode, you can't use ReLink()")
+func (d *setDispatch) Start(addr string) (err error){
+	go d.listen(addr)
+	return
 }
 
 // Send 发送一个包，在center cluster模式下直接发送到中心，中心进行调度
@@ -107,7 +103,7 @@ func (d *setDispatch) SendTo(connID string, f frame.Frame) (err error) {
 	return
 }
 
-func (d *setDispatch) Listen(addr string) {
+func (d *setDispatch) listen(addr string) {
 
 	acCh, errCh := conn.Listen(addr)
 
@@ -141,7 +137,7 @@ func (d *setDispatch) work(c conn.Conn) {
 	d.connSet[id] = c
 	d.connLock.Unlock()
 
-	d.DoStartHook(id) // 变量初始化完成，这里去hook一些东西
+	d.DoLinkHook(id) // 变量初始化完成，这里去hook一些东西
 
 	for {
 

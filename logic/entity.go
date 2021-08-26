@@ -35,14 +35,4 @@ func (c *CallResult) Frame(reqID string) frame.Frame {
 
 // ResultFunc 回传结果的结构体
 // 用于app层接收消息后，需要返回结果时调用其中的Result函数
-type ResultFunc struct {
-
-	// Result 返回结果的函数
-	Result func(result Calls)
-
-	// ConnID 请求的连接id
-	ConnID string
-
-	// ReqID 请求id
-	ReqID string
-}
+type ResultFunc func(result Calls)

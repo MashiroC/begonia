@@ -28,6 +28,7 @@ type Fun struct {
 
 // rClient 客户端的github.com/MashiroC/begonia实现
 type rClient struct {
+	mode app.ServiceAppModeTyp
 	lg     *logic.Client
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -62,7 +63,7 @@ func (r *rClient) Service(serviceName string) (s Service, err error) {
 		})
 	}
 
-	if app.ServiceAppMode == app.Ast {
+	if r.mode == app.Ast {
 		s = r.newAstService(serviceName, r)
 	} else {
 		s = r.newService(serviceName, funs)

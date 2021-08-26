@@ -35,7 +35,7 @@ func init() {
 // defaultConn 默认的conn实现，单条tcp连接
 type defaultConn struct {
 	nc  net.Conn
-	buf *bufio.ReadWriter
+	buf *bufio.Reader
 	l   sync.Mutex
 }
 
@@ -44,8 +44,6 @@ func (d *defaultConn) Addr() string {
 }
 
 func (d *defaultConn) Write(opcode byte, data []byte) (err error) {
-	d.l.Lock()
-	defer d.l.Unlock()
 
 	// 计算 payload length 与 extend payload length
 	var size []byte
@@ -69,14 +67,12 @@ func (d *defaultConn) Write(opcode byte, data []byte) (err error) {
 	tmp = append(tmp, size...)
 	tmp = append(tmp, data...)
 
-	// 写数据
-	if _, err = d.buf.Write(tmp); err != nil {
+	d.l.Lock()
+	defer d.l.Unlock()
+
+	if _, err = d.nc.Write(tmp); err != nil {
 		err = fmt.Errorf("conn write error: %w", err)
 		return
-	}
-
-	if err = d.buf.Flush(); err != nil {
-		err = fmt.Errorf("conn write error: %w", err)
 	}
 
 	return

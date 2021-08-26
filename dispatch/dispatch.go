@@ -18,14 +18,9 @@ import (
 // Dispatcher 通讯层的对外暴露的接口
 type Dispatcher interface {
 
-	// Link 连接到某个服务或中心
-	// 会直接连接到指定的地址，[error]是用来返回连接时候的错误值的。
-	// 连接断开不会在这里返回错误，而是提供一个hook，通过hook "close" 来捕获断开连接
-	Link(addr string) error
-
-	// ReLink 重新连接
-	// 需要先调用 Link 之后才能调用ReLink，相当于是重新调用了一次Link，返回这次重连是否成功
-	ReLink() bool
+	// Start 启动
+	// 会根据不同的dispatch调用不同的初始化，例如link会调Link，set会调Listen
+	Start(addr string) error
 
 	// Send 发送一个帧
 	// 发送一个帧出去，在不同的集群模式下有不同的表现
@@ -37,9 +32,6 @@ type Dispatcher interface {
 
 	// SendTo 发送帧到指定连接
 	SendTo(connID string, f frame.Frame) error
-
-	// Listen 对一个地址开始监听
-	Listen(addr string)
 
 	// Close 释放资源
 	Close()
@@ -67,7 +59,7 @@ type baseDispatch struct {
 	// hook func
 	CloseHookFuncList []func(connID string, err error) // 关闭连接的hook
 
-	StartHookFuncList []func(connID string) // 启动连接的hook
+	LinkHookFuncList []func(connID string) // 启动连接的hook
 
 	rt *router.Router
 }
@@ -104,9 +96,9 @@ func (d *baseDispatch) Hook(name string, hookFunc interface{}) {
 			return
 		}
 		panic("close func must func(connID string, err error) but " + reflect.TypeOf(hookFunc).String())
-	case "start":
+	case "link":
 		if f, ok := hookFunc.(func(connID string)); ok {
-			d.StartHookFuncList = append(d.StartHookFuncList, f)
+			d.LinkHookFuncList = append(d.LinkHookFuncList, f)
 			return
 		}
 		panic("start func must func(connID string) but " + reflect.TypeOf(hookFunc).String())
@@ -123,9 +115,9 @@ func (d *baseDispatch) DoCloseHook(connID string, err error) {
 	}
 }
 
-func (d *baseDispatch) DoStartHook(connID string) {
-	if d.StartHookFuncList != nil {
-		for _, f := range d.StartHookFuncList {
+func (d *baseDispatch) DoLinkHook(connID string) {
+	if d.LinkHookFuncList != nil {
+		for _, f := range d.LinkHookFuncList {
 			f(connID)
 		}
 	}

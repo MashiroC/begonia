@@ -1,6 +1,12 @@
 // Package frame 用于在通讯层使用的frame
 package frame
 
+import (
+	"errors"
+	"fmt"
+	"github.com/MashiroC/begonia/tool/qconv"
+)
+
 const (
 	// frame中payload部分，string字段的分隔符
 	breakByte = 0x00
@@ -83,3 +89,27 @@ func UnMarshalPingPong(typCode int, data []byte) (f Frame, err error) {
 	}
 	return
 }
+
+func findPosInBytes(data []byte,start int) (pos int){
+	for i:=start;i<len(data);i++{
+		if data[i]==breakByte{
+			return i
+		}
+	}
+
+	return -1
+}
+
+func findInBytes(data []byte, pos int) (res string, endPos int,err error){
+	tmpPos := findPosInBytes(data, pos+1)
+
+	if tmpPos == -1 {
+		err = errors.New(fmt.Sprint("frame unmarshal error: ",data))
+		return
+	}
+
+	res = qconv.Qb2s(data[pos+1:tmpPos])
+	endPos=tmpPos
+	return
+}
+
