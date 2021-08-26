@@ -2,13 +2,15 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/MashiroC/begonia"
 	"github.com/MashiroC/begonia/app/option"
+	"net/http"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	_ "net/http/pprof"
 )
 
 const (
@@ -20,6 +22,13 @@ var (
 	flag  bool
 	l     sync.Mutex
 )
+
+func PprofWeb() {
+	err := http.ListenAndServe(":9909", nil)
+	if err != nil {
+		panic(err)
+	}
+}
 
 func QPS() {
 	if !flag {
@@ -43,10 +52,12 @@ func QPS() {
 
 //go:generate begonia -c -s -r .
 func main() {
+	go PprofWeb()
+
 	count = 0
 	flag = false
 
-	s := begonia.NewServer(option.Addr(":12306"))
+	s := begonia.NewServer(option.Addr(":12306"), option.P2P())
 
 	echoService := &EchoService{}
 	testService := TestService(0)
@@ -61,7 +72,8 @@ type EchoService struct {
 }
 
 func (*EchoService) SayHello(name string) (string, error) {
-	return "Hello " + name, errors.New("an error")
+	//QPS()
+	return "Hello " + name, nil
 }
 
 func (*EchoService) SayHelloWithContext(ctx context.Context, name string) string {

@@ -40,7 +40,7 @@ func BootStartByCenter(optionMap map[string]interface{}) *rClient {
 	var dp dispatch.Dispatcher
 	dp = dispatch.NewLinkedByDefaultCluster()
 
-	if err := dp.Link(addr); err != nil {
+	if err := dp.Start(addr); err != nil {
 		panic(err)
 	}
 
