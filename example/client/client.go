@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/MashiroC/begonia"
+	"github.com/MashiroC/begonia/app"
 	"github.com/MashiroC/begonia/app/client"
 	"github.com/MashiroC/begonia/app/option"
 	"github.com/MashiroC/begonia/example/server/call"
@@ -9,7 +10,7 @@ import (
 )
 
 func main() {
-	c := begonia.NewClient(option.Addr(":12306"))
+	c := begonia.NewClient(option.Addr(":12306"),option.Mode(app.Reflect))
 
 	s, _ := c.Service("Echo")
 
@@ -29,23 +30,37 @@ func main() {
 func QPS(f client.RemoteFunSync,params ...interface{}){
 	wg:=sync.WaitGroup{}
 
-	work:=40
+	work:=30
 
 	nums:=100*1000
 
 
 	for i:=0;i<work;i++{
 		wg.Add(1)
-		go func() {
-			for i:=0;i<nums;i++{
-				//_,err:=f(params...)
-				_,err := call.SayHello("kieran")
-				if err != nil {
-					panic(err)
+		if i%2==0{
+			go func() {
+				for i:=0;i<nums;i++{
+					//_,err:=f(params...)
+					_,err := call.SayHello("kieran")
+					if err != nil {
+						panic(err)
+					}
 				}
-			}
-			wg.Done()
-		}()
+				wg.Done()
+			}()
+		}else{
+			go func() {
+				for i:=0;i<nums;i++{
+					_,err:=f(params...)
+					//_,err := call.SayHello("kieran")
+					if err != nil {
+						panic(err)
+					}
+				}
+				wg.Done()
+			}()
+		}
+
 
 	}
 

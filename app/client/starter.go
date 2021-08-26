@@ -22,6 +22,7 @@ func BootStartByCenter(optionMap map[string]interface{}) *rClient {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	c := &rClient{
+		mode:   mode,
 		ctx:    ctx,
 		cancel: cancel,
 	}

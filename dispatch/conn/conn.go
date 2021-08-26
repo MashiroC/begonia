@@ -83,12 +83,10 @@ func Listen(addr string) (acceptCh chan Conn, errCh chan error) {
 func warp(nc net.Conn) (c Conn) {
 
 	r := bufio.NewReader(nc)
-	w := bufio.NewWriter(nc)
-	rw := bufio.NewReadWriter(r, w)
 
 	c = &defaultConn{
 		nc:  nc,
-		buf: rw,
+		buf: r,
 	}
 
 	return

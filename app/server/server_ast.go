@@ -53,25 +53,23 @@ func (r *astServer) Wait() {
 	<-r.ctx.Done()
 }
 
-func (r *astServer) handleMsg(msg *logic.Call, wf logic.ResultFunc) {
+func (r *astServer) handleMsg(ctx context.Context,msg *logic.Call, wf logic.ResultFunc) {
 
 	do, err := r.store.get(msg.Service)
 	if err != nil {
-		wf.Result(&logic.CallResult{
+		wf(&logic.CallResult{
 			Err: fmt.Errorf("app.Server store get error: %w", err),
 		})
 		return
 	}
 
-	ctx := context.WithValue(r.ctx, "info", map[string]string{"reqID": wf.ReqID, "connID": wf.ConnID})
-
 	data, err := do(ctx, msg.Fun, msg.Param)
 	if err != nil {
-		wf.Result(&logic.CallResult{
+		wf(&logic.CallResult{
 			Err: err,
 		})
 		return
 	}
 
-	wf.Result(&logic.CallResult{Result: data})
+	wf(&logic.CallResult{Result: data})
 }

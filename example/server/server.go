@@ -72,7 +72,7 @@ type EchoService struct {
 }
 
 func (*EchoService) SayHello(name string) (string, error) {
-	//QPS()
+	QPS()
 	return "Hello " + name, nil
 }
 

@@ -71,17 +71,17 @@ func (r *rServer) Wait() {
 	<-r.ctx.Done()
 }
 
-func (r *rServer) handleMsg(msg *logic.Call, wf logic.ResultFunc) {
+func (r *rServer) handleMsg(ctx context.Context,msg *logic.Call, wf logic.ResultFunc) {
 	fun, err := r.store.get(msg.Service, msg.Fun)
 	if err != nil {
-		wf.Result(&logic.CallResult{
+		wf(&logic.CallResult{
 			Err: fmt.Errorf("app.Server get func error: %w", err),
 		})
 		return
 	}
 	data, err := fun.in.Decode(msg.Param)
 	if err != nil {
-		wf.Result(&logic.CallResult{
+		wf(&logic.CallResult{
 			Err: fmt.Errorf("app.Server handle error: %w", err),
 		})
 		return
@@ -90,14 +90,13 @@ func (r *rServer) handleMsg(msg *logic.Call, wf logic.ResultFunc) {
 	//TODO:这个反射调用后面再想办法改改
 	inVal := []reflect.Value{reflect.ValueOf(fun.obj)}
 	if fun.hasContext {
-		ctx := context.WithValue(r.ctx, "info", map[string]string{"reqID": wf.ReqID, "connID": wf.ConnID})
 		inVal = append(inVal, reflect.ValueOf(ctx))
 	}
 
 	inVal = append(inVal, reflects.ToValue(data.(map[string]interface{}), fun.reSharp)...)
 	m, hasError := callWithRecover(fun.method, inVal)
 	if hasError {
-		wf.Result(&logic.CallResult{Err: m["err"].(error)})
+		wf(&logic.CallResult{Err: m["err"].(error)})
 		return
 	}
 
@@ -107,7 +106,7 @@ func (r *rServer) handleMsg(msg *logic.Call, wf logic.ResultFunc) {
 		panic(err)
 	}
 
-	wf.Result(&logic.CallResult{Result: b})
+	wf(&logic.CallResult{Result: b})
 }
 
 func callWithRecover(fun reflect.Method, inVal []reflect.Value) (m map[string]interface{}, hasError bool) {
