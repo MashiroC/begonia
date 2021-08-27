@@ -161,7 +161,7 @@ func (d *linkDispatch) work(c conn.Conn) {
 	d.linkID = id
 	log.Printf("link addr [%s] success, connID [%s]\n", c.Addr(), id)
 
-	d.DoLinkHook(d.linkID) // 变量初始化完成，这里去hook一些东西
+	go d.DoLinkHook(d.linkID) // 变量初始化完成，这里去hook一些东西
 
 	for {
 

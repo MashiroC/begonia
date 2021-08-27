@@ -65,13 +65,27 @@ func (r *rServer) Register(name string, service interface{}, registerFunc ...str
 	if err != nil {
 		panic(err)
 	}
+
+	var flag bool
+	if !r.register.IsLocal() {
+		r.lg.Hook("dispatch.link", func(connID string) {
+			if !flag {
+				return
+			}
+			if err := r.register.Register(name, registerFs); err != nil {
+				log.Println("register func in restart error:", err)
+			}
+		})
+	}
+	flag = true
+
 }
 
 func (r *rServer) Wait() {
 	<-r.ctx.Done()
 }
 
-func (r *rServer) handleMsg(ctx context.Context,msg *logic.Call, wf logic.ResultFunc) {
+func (r *rServer) handleMsg(ctx context.Context, msg *logic.Call, wf logic.ResultFunc) {
 	fun, err := r.store.get(msg.Service, msg.Fun)
 	if err != nil {
 		wf(&logic.CallResult{
@@ -113,7 +127,7 @@ func callWithRecover(fun reflect.Method, inVal []reflect.Value) (m map[string]in
 	defer func() {
 		if re := recover(); re != nil {
 			hasError = true
-			log.Printf("[RECOVER] panic in remote func call: %s\n",re)
+			log.Printf("[RECOVER] panic in remote func call: %s\n", re)
 			m["err"] = errors.New(fmt.Sprintf("server func call recover: %s", re))
 		}
 	}()

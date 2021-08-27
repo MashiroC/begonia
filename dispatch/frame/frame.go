@@ -90,9 +90,9 @@ func UnMarshalPingPong(typCode int, data []byte) (f Frame, err error) {
 	return
 }
 
-func findPosInBytes(data []byte,start int) (pos int){
-	for i:=start;i<len(data);i++{
-		if data[i]==breakByte{
+func findPosInBytes(data []byte, start int) (pos int) {
+	for i := start; i < len(data); i++ {
+		if data[i] == breakByte {
 			return i
 		}
 	}
@@ -100,16 +100,15 @@ func findPosInBytes(data []byte,start int) (pos int){
 	return -1
 }
 
-func findInBytes(data []byte, pos int) (res string, endPos int,err error){
+func findInBytes(data []byte, pos int) (res string, endPos int, err error) {
 	tmpPos := findPosInBytes(data, pos+1)
 
 	if tmpPos == -1 {
-		err = errors.New(fmt.Sprint("frame unmarshal error: ",data))
+		err = errors.New(fmt.Sprint("frame unmarshal error: ", data))
 		return
 	}
 
-	res = qconv.Qb2s(data[pos+1:tmpPos])
-	endPos=tmpPos
+	res = qconv.Qb2s(data[pos+1 : tmpPos])
+	endPos = tmpPos
 	return
 }
-

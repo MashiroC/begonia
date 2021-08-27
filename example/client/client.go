@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/MashiroC/begonia"
 	"github.com/MashiroC/begonia/app"
 	"github.com/MashiroC/begonia/app/client"
@@ -15,11 +16,11 @@ func main() {
 	s, _ := c.Service("Echo")
 
 	SayHello, _ := s.FuncSync("SayHello")
-	//res, err := SayHello("kieran")
-	//fmt.Println(res)
-	//fmt.Println(err)
+	res, err := SayHello("kieran")
+	fmt.Println(res)
+	fmt.Println(err)
 	//time.Sleep(100*time.Minute)
-	QPS(SayHello,"kieran")
+	//QPS(SayHello,"kieran")
 	//SayHelloAsync, _ := s.FuncAsync("SayHello")
 	//SayHelloAsync(func(res interface{}, err error) {
 	//	fmt.Println(res, err)

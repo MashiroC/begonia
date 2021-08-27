@@ -57,7 +57,7 @@ func main() {
 	count = 0
 	flag = false
 
-	s := begonia.NewServer(option.Addr(":12306"), option.P2P())
+	s := begonia.NewServer(option.Addr(":12306"))
 
 	echoService := &EchoService{}
 	testService := TestService(0)

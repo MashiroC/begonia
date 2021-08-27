@@ -13,6 +13,8 @@ type Register interface {
 
 	// Get 获得一个已经注册的函数，如果没有查找到，会返回一个error
 	Get(name string) (fs []cRegister.FunInfo, err error)
+
+	IsLocal() bool
 }
 
 func NewLocalRegister(c *cRegister.CoreRegister) Register {
@@ -42,6 +44,10 @@ func (r *localRegister) Get(name string) (fs []cRegister.FunInfo, err error) {
 	}
 	fs = si.Funs
 	return
+}
+
+func (r *localRegister) IsLocal() bool {
+	return true
 }
 
 func NewRemoteRegister(lg *logic.Client) Register {
@@ -104,4 +110,8 @@ func (r *remoteRegister) Get(name string) (fs []cRegister.FunInfo, err error) {
 
 	fs = out.F1.Funs
 	return
+}
+
+func (r *remoteRegister) IsLocal() bool {
+	return false
 }

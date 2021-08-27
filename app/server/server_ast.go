@@ -8,6 +8,7 @@ import (
 	coreRegister "github.com/MashiroC/begonia/core/register"
 	"github.com/MashiroC/begonia/internal/register"
 	"github.com/MashiroC/begonia/logic"
+	"log"
 )
 
 type astDo = func(ctx context.Context, fun string, param []byte) (result []byte, err error)
@@ -46,14 +47,30 @@ func (r *astServer) Register(name string, service interface{}, registerFunc ...s
 
 	fs := cgs.FuncList()
 
-	r.register.Register(name, fs)
+
+	if err := r.register.Register(name, fs); err != nil {
+		log.Println("register func in start error:", err)
+	}
+
+	var flag bool
+	if !r.register.IsLocal() {
+		r.lg.Hook("dispatch.link", func(connID string) {
+			if !flag {
+				return
+			}
+			if err := r.register.Register(name, fs); err != nil {
+				log.Println("register func in restart error:", err)
+			}
+		})
+	}
+	flag = true
 }
 
 func (r *astServer) Wait() {
 	<-r.ctx.Done()
 }
 
-func (r *astServer) handleMsg(ctx context.Context,msg *logic.Call, wf logic.ResultFunc) {
+func (r *astServer) handleMsg(ctx context.Context, msg *logic.Call, wf logic.ResultFunc) {
 
 	do, err := r.store.get(msg.Service)
 	if err != nil {

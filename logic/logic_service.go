@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/MashiroC/begonia/dispatch"
 	"github.com/MashiroC/begonia/dispatch/frame"
+	"log"
 )
 
 // logic_service.go service节点的logic层
@@ -42,7 +43,9 @@ func (s *Service) DpHandler(connID string, f frame.Frame) {
 
 		wf := func(result Calls) {
 			resp := result.Frame(msg.ReqID)
-			s.Dp.SendTo(connID, resp)
+			if err := s.Dp.SendTo(connID, resp); err != nil {
+				log.Println("err: in send to,", connID, err)
+			}
 		}
 
 		ctx := context.WithValue(context.Background(), "info", map[string]string{"reqID": msg.ReqID, "connID": connID})

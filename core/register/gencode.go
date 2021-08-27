@@ -44,16 +44,10 @@ var (
 
 			]
 		}`
-	_CoreRegisterRegisterOutSchema = `
-{
-			"namespace":"begonia.func.Register",
-			"type":"record",
-			"name":"Out",
-			"fields":[
-				
-			]
-		}`
-	_CoreRegisterRegisterInCoder  coding.Coder
+
+	_CoreRegisterRegisterOutSchema = `EMPTY_AVRO_SCHEMA`
+	_CoreRegisterRegisterInCoder   coding.Coder
+
 	_CoreRegisterRegisterOutCoder coding.Coder
 
 	_CoreRegisterServiceInfoInSchema = `
