@@ -33,18 +33,27 @@ type rService struct {
 }
 
 func (r *rService) FuncSync(name string) (rf RemoteFunSync, err error) {
-	f, exist := r.funs[name]
-	if !exist {
-		err = fmt.Errorf("app.client funcSync error: remote func [%s] not exist", name)
-		return
-	}
+	fun, exist := r.funs[name]
 
 	rf = func(params ...interface{}) (result interface{}, err error) {
+		if r.funs == nil {
+			err = fmt.Errorf("nil service, please check if get service [%s] success", r.name)
+			return
+		}
+
+		if !exist {
+			fun, exist = r.funs[name]
+			if !exist {
+				err = fmt.Errorf("nil func, fun [%s] not found", name)
+				return
+			}
+		}
+
 		ch := make(chan *logic.CallResult)
 
-		b, err := f.InCoder.Encode(coding.ToAvroObj(params))
+		b, err := fun.InCoder.Encode(coding.ToAvroObj(params))
 		if err != nil {
-			err = fmt.Errorf("input type error: %w",err)
+			err = fmt.Errorf("input type error: %w", err)
 			return
 		}
 
@@ -63,7 +72,7 @@ func (r *rService) FuncSync(name string) (rf RemoteFunSync, err error) {
 		}
 
 		// 对出参解码
-		out, err := f.OutCoder.Decode(tmp.Result)
+		out, err := fun.OutCoder.Decode(tmp.Result)
 
 		result = reflects.ToInterfaces(out.(map[string]interface{}))
 		return

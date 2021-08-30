@@ -5,8 +5,11 @@ import (
 	"context"
 	"github.com/MashiroC/begonia/app"
 	"github.com/MashiroC/begonia/app/coding"
+	"github.com/MashiroC/begonia/config"
+	cRegister "github.com/MashiroC/begonia/core/register"
 	"github.com/MashiroC/begonia/internal/register"
 	"github.com/MashiroC/begonia/logic"
+	"github.com/MashiroC/begonia/tool/retry"
 	"log"
 	"reflect"
 )
@@ -28,7 +31,7 @@ type Fun struct {
 
 // rClient 客户端的github.com/MashiroC/begonia实现
 type rClient struct {
-	mode app.ServiceAppModeTyp
+	mode   app.ServiceAppModeTyp
 	lg     *logic.Client
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -39,22 +42,62 @@ type rClient struct {
 // Service 获取一个服务
 func (r *rClient) Service(serviceName string) (s Service, err error) {
 
-	fs, err := r.register.Get(serviceName)
+	if r.mode == app.Ast {
+		s = r.newAstService(serviceName)
+	} else {
+		s = r.newService(serviceName)
+	}
+
+	return
+}
+
+func (r *rClient) newService(name string) Service {
+
+	s := &rService{
+		name: name,
+		c:    r,
+	}
+
+	f, err := r.parseServiceInfo(name)
 	if err != nil {
+		go retry.Always("getService", func() bool {
+			f, err = r.parseServiceInfo(name)
+			if err != nil {
+				return false
+			}
+
+			s.funs = f
+			return true
+		}, config.C.App.GetServiceRetrySeconds)
+	} else {
+		s.funs = f
+	}
+
+	return s
+}
+
+func (r *rClient) parseServiceInfo(name string) (fMap map[string]Fun, err error) {
+	var fs []cRegister.FunInfo
+
+	fs, err = r.register.Get(name)
+	if err != nil {
+		log.Println("error in get services:", err)
 		return
 	}
 
 	funs := make([]Fun, 0, len(fs))
 
 	for _, f := range fs {
-		inCoder, err := coding.NewAvro(f.InSchema)
+		var inCoder, outCoder coding.Coder
+
+		inCoder, err = coding.NewAvro(f.InSchema)
 		if err != nil {
-			return nil, err
+			return
 		}
 
-		outCoder, err := coding.NewAvro(f.OutSchema)
+		outCoder, err = coding.NewAvro(f.OutSchema)
 		if err != nil {
-			return nil, err
+			return
 		}
 		funs = append(funs, Fun{
 			Name:     f.Name,
@@ -63,30 +106,15 @@ func (r *rClient) Service(serviceName string) (s Service, err error) {
 		})
 	}
 
-	if r.mode == app.Ast {
-		s = r.newAstService(serviceName, r)
-	} else {
-		s = r.newService(serviceName, funs)
-	}
-
-	return
-}
-
-func (r *rClient) newService(name string, funs []Fun) Service {
-
-	f := make(map[string]Fun, len(funs))
+	fMap = make(map[string]Fun, len(funs))
 
 	for i := 0; i < len(funs); i++ {
-		f[funs[i].Name] = funs[i]
+		fMap[funs[i].Name] = funs[i]
 	}
 
-	log.Printf("client get service [%s] success, func list: %s", name, reflect.ValueOf(f).MapKeys())
+	log.Printf("client get service [%s] success, func list: %s\n", name, reflect.ValueOf(fMap).MapKeys())
 
-	return &rService{
-		name: name,
-		funs: f,
-		c:    r,
-	}
+	return
 }
 
 func (r *rClient) FunSync(serviceName, funName string) (rf RemoteFunSync, err error) {

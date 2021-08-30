@@ -37,7 +37,8 @@ func bootstart(optionMap map[string]interface{}) server.Server {
 		if req.Service != "REGISTER" {
 			redirectConnID, ok = coreRegister.GetToID(req.Service)
 			if !ok {
-				panic("unknown bu ok error")
+				log.Printf("can't found service conn id for [%s]\n",req.Service)
+				return
 			}
 		}
 		return

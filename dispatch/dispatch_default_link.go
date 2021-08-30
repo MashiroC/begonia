@@ -7,8 +7,8 @@ import (
 	"github.com/MashiroC/begonia/dispatch/frame"
 	"github.com/MashiroC/begonia/dispatch/heartbeat"
 	"github.com/MashiroC/begonia/tool/ids"
+	"github.com/MashiroC/begonia/tool/retry"
 	"log"
-	"time"
 )
 
 // dispatch_default.go something
@@ -47,28 +47,14 @@ func NewLinkedByDefaultCluster() Dispatcher {
 		d.Hook("close", func(connID string, err error) {
 			// 用一个协程跑 避免阻塞
 			go func() {
-				ok := false
-
-				if config.C.Dispatch.ReConnectionRetryCount <= 0 {
-
-					for !ok {
-						log.Println("cannot link to server,retry...")
-						time.Sleep(time.Duration(config.C.Dispatch.ReConnectionIntervalSecond) * time.Second)
-						ok = d.link(d.linkAddr) == nil
-					}
-
-				} else {
-
-					for i := 0; i < config.C.Dispatch.ReConnectionRetryCount && !ok; i++ {
-						log.Println("cannot link to server,retry", i, "limit", config.C.Dispatch.ReConnectionRetryCount)
-						time.Sleep(time.Duration(config.C.Dispatch.ReConnectionIntervalSecond) * time.Second)
-						ok = d.link(d.linkAddr) == nil
-					}
-
-					if !ok {
-						panic("connect closed")
-					}
-
+				err = retry.Do("relink", func() (ok bool) {
+					ok = d.link(d.linkAddr) == nil
+					return
+				},
+					config.C.Dispatch.ConnectionRetryCount,
+					config.C.Dispatch.ConnectionIntervalSecond)
+				if err != nil {
+					panic(err)
 				}
 			}()
 		})
