@@ -4,9 +4,11 @@ import (
 	"context"
 	"fmt"
 	"github.com/MashiroC/begonia/app"
+	"github.com/MashiroC/begonia/config"
 	"github.com/MashiroC/begonia/dispatch"
 	"github.com/MashiroC/begonia/internal/register"
 	"github.com/MashiroC/begonia/logic"
+	"github.com/MashiroC/begonia/tool/retry"
 	"log"
 )
 
@@ -36,12 +38,21 @@ func BootStartByCenter(optionMap map[string]interface{}) *rClient {
 		panic("addr must exist")
 	}
 
-	log.Printf("begonia client will link to [%s]", addr)
+	log.Printf("begonia client will link to [%s]\n", addr)
 
 	var dp dispatch.Dispatcher
 	dp = dispatch.NewLinkedByDefaultCluster()
 
-	if err := dp.Start(addr); err != nil {
+	err := retry.Do("start", func() (ok bool) {
+		err := dp.Start(addr)
+		if err!=nil{
+			log.Println("dp start error: ", err)
+		}
+		return err == nil
+	},
+		config.C.Dispatch.ConnectionRetryCount,
+		config.C.Dispatch.ConnectionIntervalSecond)
+	if err != nil {
 		panic(err)
 	}
 

@@ -21,11 +21,6 @@ func NewSetByDefaultCluster() Dispatcher {
 	d.connSet = make(map[string]conn.Conn)
 	d.cancelSet = make(map[string]func())
 
-	// 默认连接被关闭时只打印log
-	d.Hook("close", func(connID string, err error) {
-		log.Printf("connID [%s] has some error: [%s]\n", connID, err)
-	})
-
 	h := heartbeat.NewHeart()
 
 	d.Hook("link", func(connID string) {
@@ -79,7 +74,7 @@ type setDispatch struct {
 	cancelLock sync.Mutex        // 保证并发安全
 }
 
-func (d *setDispatch) Start(addr string) (err error){
+func (d *setDispatch) Start(addr string) (err error) {
 	go d.listen(addr)
 	return
 }

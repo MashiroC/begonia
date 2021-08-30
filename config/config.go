@@ -14,13 +14,18 @@ type envConfig struct {
 	Dispatch DispatchConfig
 	Conn     ConnConfig
 	Logic    LogicConfig
+	App AppConfig
+}
+
+type AppConfig struct {
+	GetServiceRetrySeconds int
 }
 
 // DispatchConfig dispatch的配置
 type DispatchConfig struct {
-	AutoReConnection           bool // 断开连接时是否自动重新连接
-	ReConnectionIntervalSecond int  // 断连时重新连接的间隔时间
-	ReConnectionRetryCount     int  // 重试次数
+	AutoReConnection         bool // 断开连接时是否自动重新连接
+	ConnectionIntervalSecond int  // 断连时重新连接的间隔时间
+	ConnectionRetryCount     int  // 重试次数
 
 	GetPingTime  time.Duration
 	GetPongTime  time.Duration
@@ -53,16 +58,19 @@ func setupConfig() envConfig {
 
 func defaultConfig() envConfig {
 	return envConfig{
+		App: AppConfig{
+			GetServiceRetrySeconds: 1,
+		},
 		Conn: ConnConfig{
 			ReadTimeout: 10,
 		},
 		Dispatch: DispatchConfig{
-			AutoReConnection:           true,
-			ReConnectionIntervalSecond: 2,
-			ReConnectionRetryCount:     5,
-			GetPingTime:                20 * time.Second,
-			GetPongTime:                10 * time.Second,
-			SendPingTime:               10 * time.Second,
+			AutoReConnection:         true,
+			ConnectionIntervalSecond: 2,
+			ConnectionRetryCount:     1000,
+			GetPingTime:              20 * time.Second,
+			GetPongTime:              10 * time.Second,
+			SendPingTime:             10 * time.Second,
 		},
 		Logic: LogicConfig{
 			RequestTimeOut: 10,

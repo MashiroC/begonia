@@ -3,7 +3,6 @@ package coding
 import (
 	"errors"
 	"fmt"
-	"reflect"
 )
 
 var (
@@ -16,10 +15,7 @@ type emptyCoder struct{}
 func (e *emptyCoder) Encode(data interface{}) (b []byte, err error) {
 	if data != nil {
 		m, ok := data.(map[string]interface{})
-		if !ok {
-			err = fmt.Errorf("input encode need map[string]interface{} but %s", reflect.TypeOf(data))
-		}
-		if len(m) != 0 {
+		if ok && len(m) != 0 {
 			err = fmt.Errorf("input length need 0 but %d", len(m))
 		}
 	}

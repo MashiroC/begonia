@@ -36,8 +36,8 @@ func TestRequest2(t *testing.T) {
 	d = append(d, []byte("test_-server")...)
 	d = append(d, []byte("test_-fun")...)
 	d = append(d, []byte("test_-data")...)
-	res, err := unMarshalRequest(d)
-	if res != nil || err == nil {
+	_, err := unMarshalRequest(d)
+	if err == nil {
 		t.Fail()
 	}
 }
@@ -50,8 +50,8 @@ func TestRequest3(t *testing.T) {
 	d = append(d, breakByte)
 	d = append(d, breakByte)
 	d = append(d, []byte("test_-data")...)
-	res, err := unMarshalRequest(d)
-	if res != nil || err == nil {
+	_, err := unMarshalRequest(d)
+	if  err == nil {
 		t.Fail()
 	}
 }

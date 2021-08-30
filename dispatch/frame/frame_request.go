@@ -1,6 +1,7 @@
 package frame
 
 import (
+	"errors"
 	"github.com/MashiroC/begonia/tool/qconv"
 )
 
@@ -45,19 +46,34 @@ func unMarshalRequest(data []byte) (req *Request, err error) {
 	req = &Request{}
 
 	var pos int
-	pos=-1
+	pos = -1
 
-	req.ReqID,pos,err= findInBytes(data,pos)
-	if err!=nil{
+	req.ReqID, pos, err = findInBytes(data, pos)
+	if err != nil || len(req.ReqID)==0 {
+		return
+	}
+	if len(req.ReqID) == 0 {
+		err = errors.New("frame unmarshal error: reqID len can not be zero")
 		return
 	}
 
-	req.Service,pos,err=findInBytes(data,pos)
-	if err!=nil{
+	req.Service, pos, err = findInBytes(data, pos)
+	if err != nil {
+		return
+	}
+	if len(req.Service) == 0 {
+		err = errors.New("frame unmarshal error: service len can not be zero")
 		return
 	}
 
-	req.Fun,pos,err=findInBytes(data,pos)
+	req.Fun, pos, err = findInBytes(data, pos)
+	if err!=nil {
+		return
+	}
+	if len(req.Fun) == 0 {
+		err = errors.New("frame unmarshal error: fun len can not be zero")
+		return
+	}
 
 	req.Params = data[pos+1:]
 

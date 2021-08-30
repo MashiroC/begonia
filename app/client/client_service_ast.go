@@ -9,10 +9,10 @@ type astService struct {
 	c    *rClient
 }
 
-func (r *rClient) newAstService(name string, c *rClient) *astService {
+func (r *rClient) newAstService(name string) *astService {
 	return &astService{
 		name: name,
-		c:    c,
+		c:    r,
 	}
 }
 

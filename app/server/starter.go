@@ -4,11 +4,13 @@ import (
 	"context"
 	"fmt"
 	"github.com/MashiroC/begonia/app"
+	"github.com/MashiroC/begonia/config"
 	cRegister "github.com/MashiroC/begonia/core/register"
 	"github.com/MashiroC/begonia/dispatch"
 	"github.com/MashiroC/begonia/dispatch/router/conn"
 	"github.com/MashiroC/begonia/internal/register"
 	"github.com/MashiroC/begonia/logic"
+	"github.com/MashiroC/begonia/tool/retry"
 	"log"
 )
 
@@ -40,15 +42,25 @@ func BootStart(optionMap map[string]interface{}) (s Server) {
 	// 创建 dispatch
 	var dp dispatch.Dispatcher
 	if isP2P {
-		log.Printf("begonia Server will listen on [%s]", addr)
+		log.Printf("begonia Server will listen on [%s]\n", addr)
 		dp = dispatch.NewSetByDefaultCluster()
 		isLocal = true
 	} else {
-		log.Printf("begonia Server will link to [%s]", addr)
+		log.Printf("begonia Server will link to [%s]\n", addr)
 		dp = dispatch.NewLinkedByDefaultCluster()
 	}
 
-	if err := dp.Start(addr); err != nil {
+	err := retry.Do("start", func() (ok bool) {
+		err := dp.Start(addr)
+		if err!=nil{
+			log.Println("dp start error: ", err)
+		}
+		return err == nil
+
+	},
+		config.C.Dispatch.ConnectionRetryCount,
+		config.C.Dispatch.ConnectionIntervalSecond)
+	if err != nil {
 		panic(err)
 	}
 
