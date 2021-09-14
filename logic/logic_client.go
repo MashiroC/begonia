@@ -5,9 +5,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/MashiroC/begonia/config"
 	"github.com/MashiroC/begonia/dispatch"
 	"github.com/MashiroC/begonia/dispatch/frame"
 	"github.com/MashiroC/begonia/tool/ids"
+	"github.com/MashiroC/begonia/tracing"
+	"github.com/opentracing/opentracing-go"
 	"log"
 	"reflect"
 	"strings"
@@ -20,6 +23,8 @@ type Callback = func(result *CallResult)
 type Client struct {
 	Dp        dispatch.Dispatcher // dispatch层的接口，供logic层向下继续调用
 	Callbacks *CallbackStore      // 回调仓库，可以在这里注册回调，调用回调
+
+	Tracer opentracing.Tracer
 }
 
 // NewClient 创建一个新的 logic层 客户端
@@ -28,6 +33,8 @@ func NewClient(dp dispatch.Dispatcher) *Client {
 	c := &Client{
 		Dp:        dp,
 		Callbacks: NewWaitChans(),
+
+		Tracer: tracing.NewTracer(),
 	}
 
 	dp.Handle("frame", c.DpHandler)
@@ -63,23 +70,40 @@ func (c *Client) HandleResponse(resp *frame.Response) {
 	}
 }
 
-func (c *Client) CallSync(call *Call) *CallResult {
+func (c *Client) CallSync(ctx context.Context, call *Call) *CallResult {
 
 	ch := make(chan *CallResult)
 	defer close(ch)
 
-	c.CallAsync(call, func(result *CallResult) {
+	c.CallAsync(ctx, call, func(result *CallResult) {
 		ch <- result
 	})
 
 	return <-ch
 }
 
-func (c *Client) CallAsync(call *Call, callback Callback) {
+func (c *Client) CallAsync(ctx context.Context, call *Call, callback Callback) {
 
 	reqID := ids.New()
 	var f frame.Frame
 	f = frame.NewRequest(reqID, call.Service, call.Fun, call.Param)
+
+	if config.C.Logic.Tracing.Enable {
+
+		if !config.C.Logic.Tracing.Sugar {
+			span, ok := ctx.Value(tracing.Begonia).(opentracing.Span)
+			if ok {
+				spanCtx := span.Context()
+
+				err := c.Tracer.Inject(spanCtx, tracing.Begonia, f)
+				if err != nil {
+					panic(err)
+				}
+
+			}
+		}
+
+	}
 
 	c.Callbacks.AddCallback(context.TODO(), reqID, callback)
 

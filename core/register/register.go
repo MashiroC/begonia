@@ -39,7 +39,7 @@ func (r *CoreRegister) Register(ctx context.Context, si Service) (err error) {
 func (r *CoreRegister) ServiceInfo(serviceName string) (si Service, err error) {
 	service, ok := r.services.Get(serviceName)
 	if !ok {
-		err = fmt.Errorf("server [%s] not found", serviceName)
+		err = fmt.Errorf("server1 [%s] not found", serviceName)
 		return
 	}
 

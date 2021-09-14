@@ -9,6 +9,9 @@ import (
 // Client 客户端的接口
 type Client = client.Client
 
+type RemoteFunc = client.RemoteFunSync
+type RemoteFuncAsync = client.RemoteFunAsync
+
 // NewClient 初始化，获得一个service对象，传入一个mode参数，以及一个option的不定参数
 func NewClient(optionFunc ...option.WriteFunc) (cli Client) {
 	optionMap := defaultClientConfig()

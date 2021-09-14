@@ -13,6 +13,6 @@ func (r *CoreRegister) GetToID(serviceName string) (connID string, ok bool) {
 }
 
 func (r *CoreRegister) HandleConnClose(connID string, err error) {
-	log.Printf("conn [%s] closed, unlink server\n", connID)
+	log.Printf("conn [%s] closed, unlink server1\n", connID)
 	r.services.Unlink(connID)
 }

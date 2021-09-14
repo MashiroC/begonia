@@ -2,7 +2,7 @@
 // versions:
 // 	Begonia v1.0.2
 // source: register.go
-// begonia server file
+// begonia server1 file
 
 package register
 

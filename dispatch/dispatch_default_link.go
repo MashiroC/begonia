@@ -112,12 +112,14 @@ func (d *linkDispatch) link(addr string) (err error) {
 
 // Send 发送一个包，在center cluster模式下直接发送到中心，中心进行调度
 func (d *linkDispatch) Send(f frame.Frame) (err error) {
+	defer f.Release()
 	// TODO:请求实现幂等 断连时排序等待连接重连 这里暂时先直接传过去
 	err = d.linkedConn.Write(byte(f.Opcode()), f.Marshal())
 	return
 }
 
 func (d *linkDispatch) SendTo(connID string, f frame.Frame) (err error) {
+	defer f.Release()
 	if connID != d.linkID {
 		err = fmt.Errorf("dispatch send error: in linked mode, you can't use SendTo() to another conn, please use Send() or passing manager bgacenter connID")
 		return

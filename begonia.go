@@ -10,7 +10,7 @@ package begonia
                 __/ |
                |___/
 
- begonia is a easy,tiny,fast rpc framework
+ begonia is an easy,tiny,fast rpc framework
  by kieran
 
 */

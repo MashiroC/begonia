@@ -145,8 +145,8 @@ begonia服务端的代码生成并不会改变注册的服务的写法，也不�
 
 ```bash
 $ begonia -s -r ./
-generate server example\server\server.go_EchoService ...
-server code ok!
+generate server1 example\server\server.go_EchoService ...
+server1 code ok!
 complete, total: 1.3614423s
 ```
 
@@ -278,8 +278,8 @@ type AsyncCallback = func(interface{}, error)
 
 ```bash
 $ begonia -s -c -r ./
-generate server example\server\server.go_EchoService ...
-server code ok!
+generate server1 example\server\server.go_EchoService ...
+server1 code ok!
 client call ok!
 complete, total: 1.6967934s
 
@@ -288,7 +288,7 @@ $ tree ./
 	├─cli.begonia.go
 	├─entity.begonia.go
 	└─EchoService.begonia.go
-├─server.go
+├─server1.go
 └─EchoService.begonia.go
 ```
 

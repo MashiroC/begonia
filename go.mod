@@ -11,6 +11,7 @@ require (
 	github.com/magiconair/properties v1.8.4 // indirect
 	github.com/mitchellh/mapstructure v1.4.1
 	github.com/modern-go/reflect2 v1.0.1
+	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pelletier/go-toml v1.8.1 // indirect
 	github.com/satori/go.uuid v1.2.0
 	github.com/shirou/gopsutil v3.21.2+incompatible

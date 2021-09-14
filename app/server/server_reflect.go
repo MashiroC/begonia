@@ -128,7 +128,7 @@ func callWithRecover(fun reflect.Method, inVal []reflect.Value) (m map[string]in
 		if re := recover(); re != nil {
 			hasError = true
 			log.Printf("[RECOVER] panic in remote func call: %s\n", re)
-			m["err"] = errors.New(fmt.Sprintf("server func call recover: %s", re))
+			m["err"] = errors.New(fmt.Sprintf("server1 func call recover: %s", re))
 		}
 	}()
 	outVal := fun.Func.Call(inVal)

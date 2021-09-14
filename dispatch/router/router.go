@@ -40,7 +40,6 @@ func (r *Router) Do(connID string, opcode byte, payload []byte) {
 	typ, ctrl := frame.ParseOpcode(int(opcode))
 
 	if ctrl == frame.CtrlDefaultCode {
-
 		f, err := frame.Unmarshal(typ, payload)
 		if err != nil {
 			panic(err)

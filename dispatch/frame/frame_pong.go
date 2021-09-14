@@ -96,3 +96,5 @@ func (r *Pong) Opcode() int {
 
 	return r.opcode
 }
+
+func (pong *Pong) Release() {}

@@ -47,15 +47,14 @@ func unMarshalResponse(data []byte) (resp *Response, err error) {
 
 	var pos int
 
-	resp.ReqID,pos,err = findInBytes(data,-1)
+	resp.ReqID, pos, err = findInBytesString(data, -1)
 
-	resp.Err,pos,err = findInBytes(data,pos)
+	resp.Err, pos, err = findInBytesString(data, pos)
 
-	resp.Result=data[pos+1:]
+	resp.Result = data[pos+1:]
 
 	resp.v = data
 	resp.opcode = -1
-
 	return
 }
 
@@ -85,4 +84,8 @@ func (r *Response) Opcode() int {
 	}
 
 	return r.opcode
+}
+
+func (r *Response) Release() {
+
 }
