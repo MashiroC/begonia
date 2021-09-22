@@ -128,6 +128,9 @@ func callWithRecover(fun reflect.Method, inVal []reflect.Value) (m map[string]in
 		if re := recover(); re != nil {
 			hasError = true
 			log.Printf("[RECOVER] panic in remote func call: %s\n", re)
+			if m == nil {
+				m = make(map[string]interface{})
+			}
 			m["err"] = errors.New(fmt.Sprintf("server func call recover: %s", re))
 		}
 	}()
