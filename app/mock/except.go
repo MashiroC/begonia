@@ -81,7 +81,7 @@ func newExcept(fun interface{}, params []interface{}, out []interface{}, ignoreR
 			}
 		}
 
-		ec.matches = append(ec.matches, fam)
+		ec.matches = []Matcher{fam}
 	} else {
 		if len(params) != ec.fun.NumIn()-ig {
 			return except{}, errors.New("the length is inconsistent with the number of input arguments to the function")
