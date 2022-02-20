@@ -3,6 +3,7 @@ package begonia
 import (
 	"github.com/MashiroC/begonia/app"
 	"github.com/MashiroC/begonia/app/client"
+	"github.com/MashiroC/begonia/app/mock"
 	"github.com/MashiroC/begonia/app/option"
 )
 
@@ -26,6 +27,18 @@ func NewClientWithAst(optionFunc ...option.WriteFunc) (cli Client) {
 	app.ServiceAppMode = app.Ast
 
 	return NewClient(optionFunc...)
+}
+
+func NewClientWithMock(optionFunc ...option.WriteFunc) (mC mock.MockClient) {
+	optionMap := defaultClientConfig()
+
+	for _, f := range optionFunc {
+		f(optionMap)
+	}
+
+	cli := client.BootStartByCenter(optionMap)
+
+	return mock.NewMockClient(cli)
 }
 
 func defaultClientConfig() map[string]interface{} {
