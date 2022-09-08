@@ -2,6 +2,7 @@ package mock
 
 import (
 	"errors"
+	"fmt"
 	"github.com/MashiroC/begonia/tool/qarr"
 	"reflect"
 )
@@ -10,10 +11,16 @@ var (
 	ErrRepeatRegister = errors.New("repeatedly register mockFunc")
 )
 
+// Mocker 定义了mocker仓库的行为
+// 一个mock函数应当在mocker仓库中先注册，为其添加规则，再调用以获取返回值
 type Mocker interface {
+	// Register 注册mock函数
 	Register(obj interface{}, optionString ...string)
+	// IsExist 判断函数名为funcName的mock函数是否已注册
 	IsExist(funcName string) bool
+	// Except 为函数名为funcName的mock函数添加规则
 	Except(funcName string, params []interface{}, out []interface{}) error
+	// Call 调用函数名为funcName的mock函数
 	Call(funcName string, params ...interface{}) (res interface{}, err error)
 }
 
@@ -73,7 +80,7 @@ func (m *mockStore) Register(obj interface{}, optionString ...string) {
 
 	case reflect.Func:
 		if len(optionString) != 1 {
-			panic("when register mock with func, there is one and only one funcName")
+			panic("function is registerSuccess with zero or more function names")
 		}
 
 		m.registerByFunc(optionString[0], obj)
@@ -89,7 +96,7 @@ func (m *mockStore) registerByStruct(service interface{}, registerFunc ...string
 	for i := 0; i < t.NumMethod(); i++ {
 		method := t.Method(i)
 
-		if registerFunc != nil && len(registerFunc) != 0 && !qarr.StringsIn(registerFunc, method.Name) {
+		if len(registerFunc) != 0 && !qarr.StringsIn(registerFunc, method.Name) {
 			continue
 		}
 
@@ -115,6 +122,19 @@ func (m *mockStore) register(funcName string, funcType interface{}, obj ...inter
 		o = obj[0]
 	}
 
+	// 检查是否有不支持的出入参类型
+	t := reflect.TypeOf(funcType)
+	for i := 0 + len(obj); i < t.NumIn(); i++ {
+		if !validKind(t.In(i).Kind()) {
+			panic(fmt.Errorf("unsupported remote func input %d param [%v]", i, t.In(i).Kind().String()))
+		}
+	}
+	for i := 0; i < t.NumOut(); i++ {
+		if !validKind(t.Out(i).Kind()) {
+			panic(fmt.Errorf("unsupported remote func output %d param [%v]", i, t.In(i).Kind().String()))
+		}
+	}
+
 	m.mockFuncs[funcName] = &mockFunc{
 		obj: o,
 		fun: reflect.ValueOf(funcType),
@@ -122,12 +142,23 @@ func (m *mockStore) register(funcName string, funcType interface{}, obj ...inter
 	}
 }
 
+// validKind 检查是否是mock支持参数
+func validKind(kind reflect.Kind) bool {
+	switch kind {
+	case reflect.Invalid, reflect.Chan, reflect.Func, reflect.Interface, reflect.UnsafePointer:
+		return false
+
+	default:
+		return true
+	}
+}
+
 // Except 为函数名为funcName的匿名函数添加规则
 // eg:
 // 1. mocker.Except("GetUid", []interface{}{"aaa", 23}, []interface{}{"2333", true})
-// 2. mocker.Except("GetUid", []interface{}{"aaa", mock.Any()}, []interface{}{"2333", true})
+// 2. mocker.Except("GetUid", []interface{}{"aaa", mock.NewAnyMatch()}, []interface{}{"2333", true})
 // 3. mocker.Except("GetUid", []interface{}{
-//		mock.FuncAll(func(s string, i int) bool {
+//		mock.NewCustomMatch(func(s string, i int) bool {
 //			// logic
 //		}),
 //	}, []interface{}{"2333", true})
@@ -138,12 +169,12 @@ func (m *mockStore) register(funcName string, funcType interface{}, obj ...inter
 func (m *mockStore) Except(funcName string, params []interface{}, out []interface{}) error {
 	mf := m.mockFuncs[funcName]
 
-	ec, err := newExcept(mf.fun.Interface(), params, out, mf.obj != nil)
+	ec, err := NewExcept(mf.fun.Interface(), params, out, mf.obj != nil)
 	if err != nil {
 		return err
 	}
 
-	mf.ec = append(mf.ec, &ec)
+	mf.ec = append(mf.ec, ec)
 	return nil
 }
 
@@ -153,6 +184,6 @@ type mockFunc struct {
 	ec  excepts
 }
 
-func (m mockFunc) FindMatch(params ...interface{}) (*except, error) {
+func (m mockFunc) FindMatch(params ...interface{}) (*Except, error) {
 	return m.ec.FindMatch(params...)
 }

@@ -29,16 +29,16 @@ func NewClientWithAst(optionFunc ...option.WriteFunc) (cli Client) {
 	return NewClient(optionFunc...)
 }
 
-func NewClientWithMock(optionFunc ...option.WriteFunc) (mC mock.MockClient) {
-	optionMap := defaultClientConfig()
-
-	for _, f := range optionFunc {
-		f(optionMap)
-	}
-
-	cli := client.BootStartByCenter(optionMap)
+// NewClientWithMock 获取一个 mock.MockClient，并且该MockClient基于一个可用的 client.Client
+func NewClientWithMock(optionFunc ...option.WriteFunc) mock.MockClient {
+	cli := NewClient(optionFunc...)
 
 	return mock.NewMockClient(cli)
+}
+
+// NewMockClient 获取一个 mock.MockClient，但该MockClient不会基于一个可用的 client.Client
+func NewMockClient() mock.MockClient {
+	return mock.NewMockClient()
 }
 
 func defaultClientConfig() map[string]interface{} {
