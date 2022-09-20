@@ -8,25 +8,22 @@ type Matcher interface {
 	Match(i interface{}) bool
 }
 
-type funcMatch struct {
+type FuncMatch func(interface{}) bool
+
+func (f FuncMatch) Match(x interface{}) bool {
+	return f(x)
+}
+
+// NewFuncMatch 返回一个匹配器，匹配规则自定义
+func NewFuncMatch(fun func(interface{}) bool) FuncMatch {
+	return fun
+}
+
+type CustomMatch struct {
 	f reflect.Value
 }
 
-func (f funcMatch) Match(x interface{}) bool {
-	calls := f.f.Call([]reflect.Value{reflect.ValueOf(x)})
-	return calls[0].Bool()
-}
-
-type funcAllMatch struct {
-	f reflect.Value
-}
-
-// Func 返回一个匹配器，匹配规则自定义
-func Func(fun func(interface{}) bool) Matcher {
-	return funcMatch{f: reflect.ValueOf(fun)}
-}
-
-func (m funcAllMatch) Match(x interface{}) bool {
+func (m *CustomMatch) Match(x interface{}) bool {
 	params := x.([]interface{})
 
 	numIn := m.f.Type().NumIn()
@@ -35,57 +32,44 @@ func (m funcAllMatch) Match(x interface{}) bool {
 		if len(params) != numIn {
 			return false
 		}
-
-		for i := range params {
-			inVals = append(inVals, reflect.ValueOf(params[i]))
-		}
 	} else {
 		if len(params) < numIn-1 {
 			return false
 		}
+	}
 
-		for i := range params {
-			if i < numIn-1 {
-				inVals = append(inVals, reflect.ValueOf(params[i]))
-			}
-		}
-
-		variaLen := len(params) - (numIn - 1)
-		variadic := reflect.MakeSlice(m.f.Type().In(numIn-1), 0, variaLen)
-		for _, param := range params[numIn-1:] {
-			reflect.Append(variadic, reflect.ValueOf(param))
-		}
-		inVals = append(inVals, variadic)
+	for i := range params {
+		inVals = append(inVals, reflect.ValueOf(params[i]))
 	}
 
 	calls := m.f.Call(inVals)
 	return calls[0].Bool()
 }
 
-// FuncAll 返回一个匹配器，采用传入的所有参数进行自定义匹配
-func FuncAll(fun interface{}) Matcher {
+// NewCustomMatch 返回一个匹配器，采用传入的所有参数进行自定义匹配
+func NewCustomMatch(fun interface{}) *CustomMatch {
 	vf := reflect.ValueOf(fun)
 	if vf.Type().NumOut() != 1 || vf.Type().Out(0).Kind() != reflect.Bool {
 		panic("illegal fun param, the fun out params must and only be `bool`")
 	}
 
-	return funcAllMatch{f: vf}
+	return &CustomMatch{f: vf}
 }
 
-type anyMatch struct{}
+type AnyMatch struct{}
 
-func (a anyMatch) Match(i interface{}) bool {
+func (a *AnyMatch) Match(i interface{}) bool {
 	return true
 }
 
-// Any 返回一个始终匹配的匹配器
-func Any() Matcher {
-	return anyMatch{}
+// NewAnyMatch 返回一个始终匹配的匹配器
+func NewAnyMatch() *AnyMatch {
+	return &AnyMatch{}
 }
 
-type nilMatch struct{}
+type NilMatch struct{}
 
-func (n nilMatch) Match(i interface{}) bool {
+func (n *NilMatch) Match(i interface{}) bool {
 	if i == nil {
 		return true
 	}
@@ -99,36 +83,73 @@ func (n nilMatch) Match(i interface{}) bool {
 	return false
 }
 
-// Nil 返回一个匹配器，如果接收到的值为 nil，则返回true
-func Nil() Matcher {
-	return nilMatch{}
+// NewNilMatch 返回一个匹配器，如果接收到的值为 nil，则返回true
+func NewNilMatch() *NilMatch {
+	return &NilMatch{}
 }
 
-type equalMatch struct {
-	x interface{}
+type EqualMatch struct {
+	Value interface{}
 }
 
-func (e equalMatch) Match(i interface{}) bool {
-	return reflect.DeepEqual(e.x, i)
+func (e *EqualMatch) Match(i interface{}) bool {
+	return reflect.DeepEqual(e.Value, i)
 }
 
-// Equal 返回一个匹配器，如果返回值反射深度相等，则返回true
-func Equal(i interface{}) Matcher {
-	return equalMatch{x: i}
+// NewEqualMatch 返回一个匹配器，如果返回值反射深度相等，则返回true
+func NewEqualMatch(i interface{}) *EqualMatch {
+	return &EqualMatch{Value: i}
 }
 
-type notMatcher struct {
-	m Matcher
+type NotMatcher struct {
+	M Matcher
 }
 
-func (n notMatcher) Match(x interface{}) bool {
-	return !n.m.Match(x)
+func (n *NotMatcher) Match(x interface{}) bool {
+	return !n.M.Match(x)
 }
 
-// Not 反转其给定子匹配器的结果
-func Not(i interface{}) Matcher {
-	if m, ok := i.(Matcher); ok {
-		return notMatcher{m}
+// NewNotMatch 反转其给定子匹配器的结果
+func NewNotMatch(m Matcher) *NotMatcher {
+	return &NotMatcher{M: m}
+}
+
+type AndMatcher struct {
+	Matchers []Matcher
+}
+
+func (a *AndMatcher) Match(x interface{}) bool {
+	for _, matcher := range a.Matchers {
+		if !matcher.Match(x) {
+			return false
+		}
 	}
-	return notMatcher{Equal(i)}
+
+	return true
+}
+
+// NewAndMatch 所有子匹配器都符合时，才认为匹配
+// 若子匹配器为空，也认为匹配
+func NewAndMatch(matchers ...Matcher) *AndMatcher {
+	return &AndMatcher{Matchers: matchers}
+}
+
+type OrMatcher struct {
+	Matchers []Matcher
+}
+
+func (o *OrMatcher) Match(x interface{}) bool {
+	for _, matcher := range o.Matchers {
+		if matcher.Match(x) {
+			return true
+		}
+	}
+
+	return false
+}
+
+// NewOrMatch 所有子匹配器有一个符合时，就认为匹配
+// 若子匹配器为空，认为不匹配
+func NewOrMatch(matchers ...Matcher) *OrMatcher {
+	return &OrMatcher{Matchers: matchers}
 }
