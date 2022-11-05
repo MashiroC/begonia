@@ -9,6 +9,7 @@ import (
 	"github.com/MashiroC/begonia/internal/register"
 	"github.com/MashiroC/begonia/logic"
 	"github.com/MashiroC/begonia/tool/retry"
+	"go.opentelemetry.io/otel/trace"
 	"log"
 )
 
@@ -20,7 +21,7 @@ func BootStartByCenter(optionMap map[string]interface{}) *rClient {
 	fmt.Println("  ____                              _        \n |  _ \\                            (_)       \n | |_) |  ___   __ _   ___   _ __   _   __ _ \n |  _ <  / _ \\ / _` | / _ \\ | '_ \\ | | / _` |\n | |_) ||  __/| (_| || (_) || | | || || (_| |\n |____/  \\___| \\__, | \\___/ |_| |_||_| \\__,_|\n                __/ |                        \n               |___/                         ")
 
 	mode := app.ParseMode(optionMap)
-	log.Printf("begonia Client start with [%s] mode\n", mode.String())
+	log.Printf("begonia client start with [%s] mode\n", mode.String())
 
 	ctx, cancel := context.WithCancel(context.Background())
 	c := &rClient{
@@ -45,7 +46,7 @@ func BootStartByCenter(optionMap map[string]interface{}) *rClient {
 
 	err := retry.Do("start", func() (ok bool) {
 		err := dp.Start(addr)
-		if err!=nil{
+		if err != nil {
 			log.Println("dp start error: ", err)
 		}
 		return err == nil
@@ -56,7 +57,12 @@ func BootStartByCenter(optionMap map[string]interface{}) *rClient {
 		panic(err)
 	}
 
-	c.lg = logic.NewClient(dp)
+	var tracer trace.Tracer
+	if in, ok := optionMap["tracing"]; ok {
+		tracer = in.(trace.Tracer)
+	}
+
+	c.lg = logic.NewClient(dp, tracer)
 
 	c.register = register.NewRemoteRegister(c.lg)
 

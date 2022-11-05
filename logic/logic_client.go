@@ -5,12 +5,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/MashiroC/begonia/config"
 	"github.com/MashiroC/begonia/dispatch"
 	"github.com/MashiroC/begonia/dispatch/frame"
 	"github.com/MashiroC/begonia/tool/ids"
-	"github.com/MashiroC/begonia/tracing"
-	"github.com/opentracing/opentracing-go"
+	"go.opentelemetry.io/otel/propagation"
+	"go.opentelemetry.io/otel/trace"
 	"log"
 	"reflect"
 	"strings"
@@ -24,19 +23,24 @@ type Client struct {
 	Dp        dispatch.Dispatcher // dispatch层的接口，供logic层向下继续调用
 	Callbacks *CallbackStore      // 回调仓库，可以在这里注册回调，调用回调
 
-	Tracer opentracing.Tracer
+	Tracer      trace.Tracer                  //Tracer 追踪器
+	PropagateBy propagation.TextMapPropagator //PropagateBy 通过这个传播spanCtx
+	HasTracer   bool                          //HasTracer 是否有追踪器
 }
 
 // NewClient 创建一个新的 logic层 客户端
-func NewClient(dp dispatch.Dispatcher) *Client {
+func NewClient(dp dispatch.Dispatcher, tracer trace.Tracer) *Client {
 
 	c := &Client{
 		Dp:        dp,
 		Callbacks: NewWaitChans(),
-
-		Tracer: tracing.NewTracer(),
 	}
 
+	if tracer != nil {
+		c.HasTracer = true
+		c.Tracer = tracer
+		c.PropagateBy = propagation.TraceContext{}
+	}
 	dp.Handle("frame", c.DpHandler)
 
 	return c
@@ -88,24 +92,16 @@ func (c *Client) CallAsync(ctx context.Context, call *Call, callback Callback) {
 	var f frame.Frame
 	f = frame.NewRequest(reqID, call.Service, call.Fun, call.Param)
 
-	if config.C.Logic.Tracing.Enable {
-
-		if !config.C.Logic.Tracing.Sugar {
-			span, ok := ctx.Value(tracing.Begonia).(opentracing.Span)
-			if ok {
-				spanCtx := span.Context()
-
-				err := c.Tracer.Inject(spanCtx, tracing.Begonia, f)
-				if err != nil {
-					panic(err)
-				}
-
-			}
-		}
-
+	if c.HasTracer {
+		var req = f.(*frame.Request)
+		req.Header = map[string]string{}
+		var m propagation.MapCarrier
+		m = req.Header
+		//将链路信息丢到frame
+		c.PropagateBy.Inject(ctx, m)
 	}
 
-	c.Callbacks.AddCallback(context.TODO(), reqID, callback)
+	c.Callbacks.AddCallback(ctx, reqID, callback)
 
 	if err := c.Dp.Send(f); err != nil {
 		err = c.Callbacks.Callback(reqID, &CallResult{

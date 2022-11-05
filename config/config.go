@@ -14,7 +14,7 @@ type envConfig struct {
 	Dispatch DispatchConfig
 	Conn     ConnConfig
 	Logic    LogicConfig
-	App AppConfig
+	App      AppConfig
 }
 
 type AppConfig struct {
@@ -35,12 +35,6 @@ type DispatchConfig struct {
 // LogicConfig logic层的配置
 type LogicConfig struct {
 	RequestTimeOut int // 逻辑层中一个请求发来，等待响应时的超时时间
-	Tracing TracingConfig
-}
-
-type TracingConfig struct {
-	Enable bool
-	Sugar bool
 }
 
 // ConnConfig 连接的config
@@ -65,26 +59,26 @@ func remoteConfig() envConfig {
 	// 3. 拉取服务配置 serviceName => value   func FetchConfigByServiceName()
 
 	/*
-	"envConfig":{},
-	"dbConfig":{},
-	"businessConfig":{},
-	"redisConfig":{},
+		"envConfig":{},
+		"dbConfig":{},
+		"businessConfig":{},
+		"redisConfig":{},
 
-	1. 拉取
-	2. 同步到绑定的结构体
-	3. 如果有新的结构体被绑定，将数据同步上去
+		1. 拉取
+		2. 同步到绑定的结构体
+		3. 如果有新的结构体被绑定，将数据同步上去
 
-	1. 添加服务端对客户端主动推送的功能 / 服务中心对节点推送的功能
-	2. 与框架整合
-	config.Watch("redisConfig",func())
+		1. 添加服务端对客户端主动推送的功能 / 服务中心对节点推送的功能
+		2. 与框架整合
+		config.Watch("redisConfig",func())
 
 
-	1. Framework 初始化阶段
-	config.Bind("envConfig",&C)
+		1. Framework 初始化阶段
+		config.Bind("envConfig",&C)
 
-	2. 业务
-	config.Bind("redisConfig",&redis.Config)
-	 */
+		2. 业务
+		config.Bind("redisConfig",&redis.Config)
+	*/
 	return envConfig{}
 }
 
@@ -111,9 +105,5 @@ func defaultConfig() envConfig {
 		},
 		Logic: LogicConfig{
 			RequestTimeOut: 10,
-			Tracing: TracingConfig{
-				Enable: true,
-				Sugar:  false,
-			},
 		}}
 }

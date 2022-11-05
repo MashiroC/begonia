@@ -1,7 +1,10 @@
 // Package option starter需要传入的配置相关
 package option
 
-import "github.com/MashiroC/begonia/app"
+import (
+	"github.com/MashiroC/begonia/app"
+	"go.opentelemetry.io/otel/trace"
+)
 
 // WriteFunc 拿到的传入参数的map
 type WriteFunc func(optionMap map[string]interface{})
@@ -22,6 +25,13 @@ func P2P() WriteFunc {
 // Mode 强制服务以什么方式运行，用于单测等情况下启动服务中心或其他奇怪的情况
 func Mode(typ app.ServiceAppModeTyp) WriteFunc {
 	return func(optionMap map[string]interface{}) {
-		optionMap["mode"]=typ
+		optionMap["mode"] = typ
+	}
+}
+
+//Tracing set trace.Tracer
+func Tracing(tr trace.Tracer) WriteFunc {
+	return func(optionMap map[string]interface{}) {
+		optionMap["tracing"] = tr
 	}
 }
