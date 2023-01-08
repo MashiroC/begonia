@@ -5,15 +5,14 @@ import (
 	"fmt"
 	"github.com/MashiroC/begonia/dispatch"
 	"github.com/MashiroC/begonia/dispatch/frame"
-	"go.opentelemetry.io/otel/propagation"
-	"go.opentelemetry.io/otel/trace"
+	"github.com/MashiroC/begonia/tracing"
 	"log"
 )
 
 // logic_service.go service节点的logic层
 
 // NewService 创建一个实例
-func NewService(dp dispatch.Dispatcher, waitChans *CallbackStore, tracer trace.Tracer) *Service {
+func NewService(dp dispatch.Dispatcher, waitChans *CallbackStore, tracer tracing.Tracer) *Service {
 
 	c := &Service{
 		Client: &Client{
@@ -25,7 +24,6 @@ func NewService(dp dispatch.Dispatcher, waitChans *CallbackStore, tracer trace.T
 	if tracer != nil {
 		c.HasTracer = true
 		c.Tracer = tracer
-		c.PropagateBy = propagation.TraceContext{}
 	}
 
 	dp.Handle("frame", c.DpHandler)
@@ -52,7 +50,7 @@ func (s *Service) DpHandler(connID string, f frame.Frame) {
 			Param:   msg.Params,
 		}
 
-		var span trace.Span
+		var span tracing.Span
 
 		wf := func(result Calls) {
 			if span != nil {
@@ -65,11 +63,12 @@ func (s *Service) DpHandler(connID string, f frame.Frame) {
 		}
 
 		if s.HasTracer {
-
-			var m propagation.MapCarrier
-			m = msg.Header
-			ctx = s.PropagateBy.Extract(ctx, m)
-			ctx, span = s.Tracer.Start(ctx, fmt.Sprintf("%s.%s", msg.Service, msg.Fun))
+			spanCtx, err := s.Tracer.Extract(*msg)
+			if err != nil {
+				log.Println(err)
+			} else {
+				ctx, span = s.Tracer.Start(s.Tracer.ContextWithSpanContext(ctx, spanCtx), fmt.Sprintf("%s.%s", msg.Service, msg.Fun))
+			}
 		}
 
 		ctx = context.WithValue(ctx, "info", map[string]string{"reqID": msg.ReqID, "connID": connID})

@@ -11,7 +11,7 @@ import (
 	"github.com/MashiroC/begonia/internal/register"
 	"github.com/MashiroC/begonia/logic"
 	"github.com/MashiroC/begonia/tool/retry"
-	"go.opentelemetry.io/otel/trace"
+	"github.com/MashiroC/begonia/tracing"
 	"log"
 )
 
@@ -71,9 +71,9 @@ func BootStart(optionMap map[string]interface{}) (s Server) {
 	// 创建 logic
 	var lg *logic.Service
 
-	var tracer trace.Tracer
+	var tracer tracing.Tracer
 	if in, ok := optionMap["tracing"]; ok {
-		tracer = in.(trace.Tracer)
+		tracer = in.(tracing.Tracer)
 	}
 	lg = logic.NewService(dp, waitChans, tracer)
 

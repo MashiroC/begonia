@@ -8,8 +8,8 @@ import (
 	"github.com/MashiroC/begonia/dispatch"
 	"github.com/MashiroC/begonia/dispatch/frame"
 	"github.com/MashiroC/begonia/tool/ids"
-	"go.opentelemetry.io/otel/propagation"
-	"go.opentelemetry.io/otel/trace"
+	"github.com/MashiroC/begonia/tracing"
+
 	"log"
 	"reflect"
 	"strings"
@@ -23,13 +23,12 @@ type Client struct {
 	Dp        dispatch.Dispatcher // dispatch层的接口，供logic层向下继续调用
 	Callbacks *CallbackStore      // 回调仓库，可以在这里注册回调，调用回调
 
-	Tracer      trace.Tracer                  //Tracer 追踪器
-	PropagateBy propagation.TextMapPropagator //PropagateBy 通过这个传播spanCtx
-	HasTracer   bool                          //HasTracer 是否有追踪器
+	Tracer    tracing.Tracer //Tracer 追踪器
+	HasTracer bool           //HasTracer 是否有追踪器
 }
 
 // NewClient 创建一个新的 logic层 客户端
-func NewClient(dp dispatch.Dispatcher, tracer trace.Tracer) *Client {
+func NewClient(dp dispatch.Dispatcher, tracer tracing.Tracer) *Client {
 
 	c := &Client{
 		Dp:        dp,
@@ -39,7 +38,6 @@ func NewClient(dp dispatch.Dispatcher, tracer trace.Tracer) *Client {
 	if tracer != nil {
 		c.HasTracer = true
 		c.Tracer = tracer
-		c.PropagateBy = propagation.TraceContext{}
 	}
 	dp.Handle("frame", c.DpHandler)
 
@@ -95,10 +93,11 @@ func (c *Client) CallAsync(ctx context.Context, call *Call, callback Callback) {
 	if c.HasTracer {
 		var req = f.(*frame.Request)
 		req.Header = map[string]string{}
-		var m propagation.MapCarrier
-		m = req.Header
 		//将链路信息丢到frame
-		c.PropagateBy.Inject(ctx, m)
+		err := c.Tracer.Inject(c.Tracer.SpanContextFromContext(ctx), *req)
+		if err != nil {
+			log.Println(err)
+		}
 	}
 
 	c.Callbacks.AddCallback(ctx, reqID, callback)

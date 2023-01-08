@@ -9,7 +9,7 @@ import (
 	"github.com/MashiroC/begonia/internal/register"
 	"github.com/MashiroC/begonia/logic"
 	"github.com/MashiroC/begonia/tool/retry"
-	"go.opentelemetry.io/otel/trace"
+	"github.com/MashiroC/begonia/tracing"
 	"log"
 )
 
@@ -57,9 +57,9 @@ func BootStartByCenter(optionMap map[string]interface{}) *rClient {
 		panic(err)
 	}
 
-	var tracer trace.Tracer
+	var tracer tracing.Tracer
 	if in, ok := optionMap["tracing"]; ok {
-		tracer = in.(trace.Tracer)
+		tracer = in.(tracing.Tracer)
 	}
 
 	c.lg = logic.NewClient(dp, tracer)

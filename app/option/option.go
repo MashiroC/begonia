@@ -3,6 +3,9 @@ package option
 
 import (
 	"github.com/MashiroC/begonia/app"
+	"github.com/MashiroC/begonia/tracing"
+	"github.com/MashiroC/begonia/tracing/conv"
+	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -29,8 +32,18 @@ func Mode(typ app.ServiceAppModeTyp) WriteFunc {
 	}
 }
 
-//Tracing set trace.Tracer
-func Tracing(tr trace.Tracer) WriteFunc {
+//TracingWithOtel set trace.Tracer
+func TracingWithOtel(tr trace.Tracer) WriteFunc {
+	return func(optionMap map[string]interface{}) {
+		optionMap["tracing"] = &conv.OtelTracer{
+			Tr:          tr,
+			PropagateBy: propagation.TraceContext{},
+		}
+	}
+}
+
+//Tracing 满足接口tracing/Tracer
+func Tracing(tr tracing.Tracer) WriteFunc {
 	return func(optionMap map[string]interface{}) {
 		optionMap["tracing"] = tr
 	}

@@ -2,13 +2,12 @@
 * @Author: DengJie
 * @Date:   2022/10/31 17:59
  */
-package tracing_tset
+package tracing_test_otel
 
 import (
 	"context"
 	"github.com/MashiroC/begonia"
 	"github.com/MashiroC/begonia/app/option"
-	"github.com/MashiroC/begonia/tracing"
 	"go.opentelemetry.io/otel"
 	"log"
 	"testing"
@@ -25,7 +24,7 @@ func (receiver Hello) SayName(ctx context.Context, name string) string {
 }
 
 func Test_s1(t *testing.T) {
-	tp, err := tracing.TracerProvider("http://localhost:14268/api/traces",
+	tp, err := TracerProvider("http://localhost:14268/api/traces",
 		"test-s1", "service", 666)
 	if err != nil {
 		log.Fatal(err)
@@ -33,7 +32,7 @@ func Test_s1(t *testing.T) {
 
 	otel.SetTracerProvider(tp)
 	cli := begonia.NewServer(option.Addr("127.0.0.1:12306"),
-		option.Tracing(tp.Tracer("service")))
+		option.TracingWithOtel(tp.Tracer("service")))
 	cli.Register("Hello", Hello{})
 
 	cli.Wait()

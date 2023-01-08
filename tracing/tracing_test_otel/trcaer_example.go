@@ -2,7 +2,7 @@
 * @Author: DengJie
 * @Date:   2022/10/31 16:39
  */
-package tracing
+package tracing_test_otel
 
 import (
 	"go.opentelemetry.io/otel/attribute"

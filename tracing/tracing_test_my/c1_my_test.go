@@ -1,0 +1,33 @@
+/*
+* @Author: DengJie
+* @Date:   2023/1/8 17:57
+ */
+package tracing
+
+import (
+	"context"
+	"fmt"
+	"github.com/MashiroC/begonia"
+	"github.com/MashiroC/begonia/app/option"
+	"testing"
+)
+
+func Test_c1(t *testing.T) {
+
+	c := begonia.NewClient(option.Addr("127.0.0.1:12306"), option.Tracing(&MyTracer{}))
+
+	s, err := c.Service("Hello")
+	if err != nil {
+		panic(err)
+	}
+	fun, err := s.FuncSync("SayName")
+	if err != nil {
+		panic(err)
+	}
+
+	i, err := fun(context.Background(), "DJ")
+	fmt.Println(i)
+	i, err = fun(context.Background(), "DJ")
+	fmt.Println(i)
+	c.Wait()
+}
