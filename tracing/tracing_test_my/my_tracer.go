@@ -22,7 +22,7 @@ func (m *MyTracer) Start(ctx context.Context, operationName string, opts ...inte
 	fatherID := spanContext.content["SpanID"]
 	span := MySpan{content: map[string]string{
 		"name":   operationName,
-		"father": "my father is " + fatherID,
+		"father": fatherID,
 		"SpanID": strconv.Itoa(rand.Int()),
 	}}
 	return m.ContextWithSpanContext(ctx, span.Context()), span
@@ -59,6 +59,7 @@ func (m *MyTracer) ContextWithSpanContext(ctx context.Context, sc tracing.SpanCo
 
 type MySpan struct {
 	content map[string]string
+	hasEnd  bool
 }
 
 func (m MySpan) Context() tracing.SpanContext {
@@ -68,7 +69,18 @@ func (m MySpan) Context() tracing.SpanContext {
 }
 
 func (m MySpan) End() {
+	if m.hasEnd {
+		log.Println("can not end a span twice")
+	}
+	m.hasEnd = true
 	log.Println(m)
+}
+func (m MySpan) Log(k, v string) {
+	m.content[k] = v
+}
+
+func (m MySpan) LogError(err error) {
+	m.content["err"] = err.Error()
 }
 
 type MySpanContext struct {

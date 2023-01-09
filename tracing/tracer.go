@@ -21,6 +21,8 @@ type Tracer interface {
 type Span interface {
 	Context() SpanContext
 	End()
+	Log(k, v string)
+	LogError(err error)
 }
 
 type SpanContext interface {

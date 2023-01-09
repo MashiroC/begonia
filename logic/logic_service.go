@@ -54,6 +54,11 @@ func (s *Service) DpHandler(connID string, f frame.Frame) {
 
 		wf := func(result Calls) {
 			if span != nil {
+				cr, ok := result.(*CallResult)
+				if ok && cr.Err != nil {
+					span.LogError(cr.Err)
+				}
+				//span.Log("end at", time.Now().String())
 				span.End()
 			}
 			resp := result.Frame(msg.ReqID)
@@ -68,6 +73,9 @@ func (s *Service) DpHandler(connID string, f frame.Frame) {
 				log.Println(err)
 			} else {
 				ctx, span = s.Tracer.Start(s.Tracer.ContextWithSpanContext(ctx, spanCtx), fmt.Sprintf("%s.%s", msg.Service, msg.Fun))
+				ctx = context.WithValue(ctx, "span", span)
+				span.Log("kind", "rpc")
+				//span.Log("start at", time.Now().String())
 			}
 		}
 

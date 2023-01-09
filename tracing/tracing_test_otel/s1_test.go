@@ -6,8 +6,10 @@ package tracing_test_otel
 
 import (
 	"context"
+	"errors"
 	"github.com/MashiroC/begonia"
 	"github.com/MashiroC/begonia/app/option"
+	"github.com/MashiroC/begonia/tracing"
 	"go.opentelemetry.io/otel"
 	"log"
 	"testing"
@@ -17,10 +19,18 @@ type Hello struct {
 }
 
 func (receiver Hello) SayName(ctx context.Context, name string) string {
-	_, span := otel.Tracer("service").Start(ctx, "in func")
+	//开启一个子span
+	_, span1 := otel.Tracer("service").Start(ctx, "in func")
 	//do something
-	defer span.End()
+	defer span1.End()
+	//通过ctx拿到span
+	span := ctx.Value("span").(tracing.Span)
+	span.Log("get span by ctx", "successfully")
 	return "hello," + name
+}
+
+func (receiver Hello) SayNameWithError(ctx context.Context, name string) (string, error) {
+	return "", errors.New("test span record the call rpc err")
 }
 
 func Test_s1(t *testing.T) {

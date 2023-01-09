@@ -25,9 +25,14 @@ func Test_c1(t *testing.T) {
 		panic(err)
 	}
 
+	funWithErr, err := s.FuncSync("SayNameWithError")
+	if err != nil {
+		panic(err)
+	}
+
 	i, err := fun(context.Background(), "DJ")
-	fmt.Println(i)
-	i, err = fun(context.Background(), "DJ")
-	fmt.Println(i)
+	fmt.Println(i, err)
+	i, err = funWithErr(context.Background(), "DJ")
+	fmt.Println(i, err)
 	c.Wait()
 }

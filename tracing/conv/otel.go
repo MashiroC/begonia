@@ -8,6 +8,7 @@ import (
 	"context"
 	"github.com/MashiroC/begonia/dispatch/frame"
 	"github.com/MashiroC/begonia/tracing"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
 	"log"
@@ -28,7 +29,7 @@ func (m *OtelTracer) ContextWithSpanContext(parent context.Context, spanContext 
 }
 
 func (m *OtelTracer) Start(ctx context.Context, operationName string, opts ...interface{}) (newCtx context.Context, span tracing.Span) {
-	var ms = mySpan{span: nil}
+	var ms = otelSpan{span: nil}
 	if opts != nil {
 		defer func() {
 			e := recover()
@@ -64,14 +65,22 @@ func (m *OtelTracer) Extract(carrier frame.Request) (tracing.SpanContext, error)
 	return m.SpanContextFromContext(ctx), nil
 }
 
-type mySpan struct {
+type otelSpan struct {
 	span trace.Span
 }
 
-func (ms mySpan) Context() tracing.SpanContext {
+func (ms otelSpan) Context() tracing.SpanContext {
 	return ms.span.SpanContext()
 }
 
-func (ms mySpan) End() {
+func (ms otelSpan) End() {
 	ms.span.End()
+}
+
+func (ms otelSpan) Log(k, v string) {
+	ms.span.SetAttributes(attribute.String(k, v))
+}
+
+func (ms otelSpan) LogError(err error) {
+	ms.span.RecordError(err)
 }
