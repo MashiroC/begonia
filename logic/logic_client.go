@@ -9,7 +9,6 @@ import (
 	"github.com/MashiroC/begonia/dispatch/frame"
 	"github.com/MashiroC/begonia/tool/ids"
 	"github.com/MashiroC/begonia/tracing"
-
 	"log"
 	"reflect"
 	"strings"
@@ -23,22 +22,16 @@ type Client struct {
 	Dp        dispatch.Dispatcher // dispatch层的接口，供logic层向下继续调用
 	Callbacks *CallbackStore      // 回调仓库，可以在这里注册回调，调用回调
 
-	Tracer    tracing.Tracer //Tracer 追踪器
-	HasTracer bool           //HasTracer 是否有追踪器
 }
 
 // NewClient 创建一个新的 logic层 客户端
-func NewClient(dp dispatch.Dispatcher, tracer tracing.Tracer) *Client {
+func NewClient(dp dispatch.Dispatcher) *Client {
 
 	c := &Client{
 		Dp:        dp,
 		Callbacks: NewWaitChans(),
 	}
 
-	if tracer != nil {
-		c.HasTracer = true
-		c.Tracer = tracer
-	}
 	dp.Handle("frame", c.DpHandler)
 
 	return c
@@ -90,11 +83,12 @@ func (c *Client) CallAsync(ctx context.Context, call *Call, callback Callback) {
 	var f frame.Frame
 	f = frame.NewRequest(reqID, call.Service, call.Fun, call.Param)
 
-	if c.HasTracer {
+	//这里也可以不判断使用NoopTracer这个空实现
+	if tracing.IsGlobalTracerRegistered() {
 		var req = f.(*frame.Request)
 		req.Header = map[string]string{}
 		//将链路信息丢到frame
-		err := c.Tracer.Inject(c.Tracer.SpanContextFromContext(ctx), *req)
+		err := tracing.GlobalTracer().Inject(tracing.GlobalTracer().SpanContextFromContext(ctx), *req)
 		if err != nil {
 			log.Println(err)
 		}

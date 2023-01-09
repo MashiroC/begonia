@@ -18,7 +18,7 @@ type Hello struct {
 
 func (receiver Hello) SayName(ctx context.Context, name string) string {
 	//开启一个子span
-	_, span := (&MyTracer{}).Start(ctx, "in func")
+	_, span := tracing.GlobalTracer().Start(ctx, "in func")
 	//do something
 	defer span.End()
 	//通过ctx拿到span

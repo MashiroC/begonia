@@ -57,12 +57,11 @@ func BootStartByCenter(optionMap map[string]interface{}) *rClient {
 		panic(err)
 	}
 
-	var tracer tracing.Tracer
 	if in, ok := optionMap["tracing"]; ok {
-		tracer = in.(tracing.Tracer)
+		tracing.SetGlobalTracer(in.(tracing.Tracer))
 	}
 
-	c.lg = logic.NewClient(dp, tracer)
+	c.lg = logic.NewClient(dp)
 
 	c.register = register.NewRemoteRegister(c.lg)
 

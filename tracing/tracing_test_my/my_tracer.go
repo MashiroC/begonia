@@ -18,8 +18,13 @@ type MyTracer struct {
 
 func (m *MyTracer) Start(ctx context.Context, operationName string, opts ...interface{}) (context.Context, tracing.Span) {
 	//先拿ctx里面的
-	spanContext := ctx.Value("MySpanContext").(MySpanContext)
-	fatherID := spanContext.content["SpanID"]
+	spanContext, ok := ctx.Value("MySpanContext").(MySpanContext)
+	var fatherID string
+	if ok {
+		fatherID = spanContext.content["SpanID"]
+	} else {
+		fatherID = "-1"
+	}
 	span := MySpan{content: map[string]string{
 		"name":   operationName,
 		"father": fatherID,

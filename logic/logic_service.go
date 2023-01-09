@@ -12,18 +12,13 @@ import (
 // logic_service.go service节点的logic层
 
 // NewService 创建一个实例
-func NewService(dp dispatch.Dispatcher, waitChans *CallbackStore, tracer tracing.Tracer) *Service {
+func NewService(dp dispatch.Dispatcher, waitChans *CallbackStore) *Service {
 
 	c := &Service{
 		Client: &Client{
 			Dp:        dp,
 			Callbacks: waitChans,
 		},
-	}
-
-	if tracer != nil {
-		c.HasTracer = true
-		c.Tracer = tracer
 	}
 
 	dp.Handle("frame", c.DpHandler)
@@ -67,12 +62,13 @@ func (s *Service) DpHandler(connID string, f frame.Frame) {
 			}
 		}
 
-		if s.HasTracer {
-			spanCtx, err := s.Tracer.Extract(*msg)
+		//这里也可以不判断使用NoopTracer这个空实现
+		if tracing.IsGlobalTracerRegistered() {
+			spanCtx, err := tracing.GlobalTracer().Extract(*msg)
 			if err != nil {
 				log.Println(err)
 			} else {
-				ctx, span = s.Tracer.Start(s.Tracer.ContextWithSpanContext(ctx, spanCtx), fmt.Sprintf("%s.%s", msg.Service, msg.Fun))
+				ctx, span = tracing.GlobalTracer().Start(tracing.GlobalTracer().ContextWithSpanContext(ctx, spanCtx), fmt.Sprintf("%s.%s", msg.Service, msg.Fun))
 				ctx = context.WithValue(ctx, "span", span)
 				span.Log("kind", "rpc")
 				//span.Log("start at", time.Now().String())

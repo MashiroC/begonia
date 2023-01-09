@@ -13,8 +13,8 @@ import (
 )
 
 func Test_c1(t *testing.T) {
-
-	c := begonia.NewClient(option.Addr("127.0.0.1:12306"), option.Tracing(&MyTracer{}))
+	tracer := MyTracer{}
+	c := begonia.NewClient(option.Addr("127.0.0.1:12306"), option.Tracing(&tracer))
 
 	s, err := c.Service("Hello")
 	if err != nil {
@@ -30,7 +30,9 @@ func Test_c1(t *testing.T) {
 		panic(err)
 	}
 
-	i, err := fun(context.Background(), "DJ")
+	ctx, span := tracer.Start(context.Background(), "step 1")
+	i, err := fun(ctx, "DJ")
+	span.End()
 	fmt.Println(i, err)
 	i, err = funWithErr(context.Background(), "DJ")
 	fmt.Println(i, err)

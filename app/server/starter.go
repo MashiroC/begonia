@@ -71,11 +71,10 @@ func BootStart(optionMap map[string]interface{}) (s Server) {
 	// 创建 logic
 	var lg *logic.Service
 
-	var tracer tracing.Tracer
 	if in, ok := optionMap["tracing"]; ok {
-		tracer = in.(tracing.Tracer)
+		tracing.SetGlobalTracer(in.(tracing.Tracer))
 	}
-	lg = logic.NewService(dp, waitChans, tracer)
+	lg = logic.NewService(dp, waitChans)
 
 	lg.Dp.Handle("ctrl", conn.Pool(lg.Dp))
 

@@ -20,7 +20,7 @@ type Hello struct {
 
 func (receiver Hello) SayName(ctx context.Context, name string) string {
 	//开启一个子span
-	_, span1 := otel.Tracer("service").Start(ctx, "in func")
+	_, span1 := tracing.GlobalTracer().Start(ctx, "in func")
 	//do something
 	defer span1.End()
 	//通过ctx拿到span
@@ -33,6 +33,12 @@ func (receiver Hello) SayNameWithError(ctx context.Context, name string) (string
 	return "", errors.New("test span record the call rpc err")
 }
 
+type HelloWithoutTracer struct{}
+
+func (h HelloWithoutTracer) SayName(ctx context.Context, name string) string {
+	return name
+}
+
 func Test_s1(t *testing.T) {
 	tp, err := TracerProvider("http://localhost:14268/api/traces",
 		"test-s1", "service", 666)
@@ -41,9 +47,16 @@ func Test_s1(t *testing.T) {
 	}
 
 	otel.SetTracerProvider(tp)
-	cli := begonia.NewServer(option.Addr("127.0.0.1:12306"),
+	server := begonia.NewServer(option.Addr("127.0.0.1:12306"),
 		option.TracingWithOtel(tp.Tracer("service")))
-	cli.Register("Hello", Hello{})
+	server.Register("Hello", Hello{})
 
-	cli.Wait()
+	go server.Wait()
+
+	//一个没有tracer的server
+	server1 := begonia.NewServer(option.Addr("127.0.0.1:12306"),
+		option.TracingWithOtel(tp.Tracer("service")))
+	server1.Register("HelloWithoutTracer", HelloWithoutTracer{})
+
+	server1.Wait()
 }

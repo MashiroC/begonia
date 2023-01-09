@@ -41,10 +41,52 @@ func Test_c1(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-
+	//foo->hello->in func
 	i, err := fun(ctx, "DJ")
 	fmt.Println(i, err)
-	i, err = funWithErr(ctx, "DJ")
+	//helloErr
+	i, err = funWithErr(context.Background(), "DJ")
 	fmt.Println(i, err)
+
+	s, err = c.Service("HelloWithoutTracer")
+	if err != nil {
+		panic(err)
+	}
+	fun, err = s.FuncSync("SayName")
+	//应该是没有的
+	i, err = fun(ctx, "DJ")
+	fmt.Println(i, err)
+
+	//一个没注册tracer的client
+	c = begonia.NewClient(option.Addr("127.0.0.1:12306"))
+	s, err = c.Service("Hello")
+	if err != nil {
+		panic(err)
+	}
+	fun, err = s.FuncSync("SayName")
+	if err != nil {
+		panic(err)
+	}
+	funWithErr, err = s.FuncSync("SayNameWithError")
+	if err != nil {
+		panic(err)
+	}
+	//hello->in func
+	i, err = fun(context.Background(), "DJ")
+	fmt.Println(i, err)
+	//helloErr
+	i, err = funWithErr(context.Background(), "DJ")
+	fmt.Println(i, err)
+
+	s, err = c.Service("HelloWithoutTracer")
+	if err != nil {
+		panic(err)
+	}
+	fun, err = s.FuncSync("SayName")
+	//应该是没有的
+	i, err = fun(ctx, "DJ")
+	fmt.Println(i, err)
+
+	//阻塞，不然foo这个span发送不出来
 	c.Wait()
 }
