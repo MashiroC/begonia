@@ -1,7 +1,3 @@
-/*
-* @Author: DengJie
-* @Date:   2023/1/8 17:29
- */
 package tracing
 
 import (
@@ -18,16 +14,16 @@ type MyTracer struct {
 
 func (m *MyTracer) Start(ctx context.Context, operationName string, opts ...interface{}) (context.Context, tracing.Span) {
 	//先拿ctx里面的
-	spanContext, ok := ctx.Value("MySpanContext").(MySpanContext)
-	var fatherID string
+	spanContext, ok := m.SpanContextFromContext(ctx).(MySpanContext)
+	var parentID string
 	if ok {
-		fatherID = spanContext.content["SpanID"]
+		parentID = spanContext.content["SpanID"]
 	} else {
-		fatherID = "-1"
+		parentID = "-1"
 	}
 	span := MySpan{content: map[string]string{
 		"name":   operationName,
-		"father": fatherID,
+		"parent": parentID,
 		"SpanID": strconv.Itoa(rand.Int()),
 	}}
 	return m.ContextWithSpanContext(ctx, span.Context()), span

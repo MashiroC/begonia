@@ -1,7 +1,3 @@
-/*
-* @Author: DengJie
-* @Date:   2023/1/9 22:49
- */
 package tracing
 
 import "context"

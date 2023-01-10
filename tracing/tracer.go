@@ -1,7 +1,3 @@
-/*
-* @Author: DengJie
-* @Date:   2023/1/8 14:06
- */
 package tracing
 
 import (

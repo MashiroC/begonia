@@ -1,7 +1,3 @@
-/*
-* @Author: DengJie
-* @Date:   2022/10/31 17:59
- */
 package tracing_test_otel
 
 import (
