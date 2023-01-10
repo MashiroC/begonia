@@ -180,14 +180,14 @@ func unMarshalHeader(data []byte) (res map[string]string, err error) {
 
 func marshalHeader(header map[string]string) (data []byte) {
 	data = make([]byte, 0, 128)
-	if header != nil {
+	if header != nil && len(header) != 0 {
 		for k, v := range header {
 			data = append(data, qconv.Qs2b(k)...)
 			data = append(data, headerBreakByte)
 			data = append(data, qconv.Qs2b(v)...)
-			data=append(data,headerBreakByte)
+			data = append(data, headerBreakByte)
 		}
-		data=data[:len(data)-1]
+		data = data[:len(data)-1]
 	}
 
 	return data

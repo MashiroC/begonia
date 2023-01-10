@@ -13,7 +13,7 @@ import (
 
 // dispatch_default.go something
 
-// NewByDefaultCluster 在default cluster模式下创建一个dispatch
+//NewLinkedByDefaultCluster 在default cluster模式下创建一个dispatch
 func NewLinkedByDefaultCluster() Dispatcher {
 
 	d := &linkDispatch{}
