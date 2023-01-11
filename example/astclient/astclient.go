@@ -2,7 +2,7 @@ package main
 
 //import (
 //	"fmt"
-//	"github.com/MashiroC/begonia/example/server/call"
+//	"github.com/MashiroC/begonia/example/server1/call"
 //)
 //
 //func main() {

@@ -11,6 +11,8 @@ const (
 	// frame中payload部分，string字段的分隔符
 	breakByte = 0x00
 
+	headerBreakByte = 0x11
+
 	// CtrlDefaultCode 默认的ctrl code
 	CtrlDefaultCode = 0
 
@@ -32,6 +34,9 @@ type Frame interface {
 
 	// Opcode 组装opcode
 	Opcode() int
+
+	// Release 释放资源
+	Release()
 }
 
 // ParseOpcode 将opcode解析为typCode和ctrlCode
@@ -100,7 +105,7 @@ func findPosInBytes(data []byte, start int) (pos int) {
 	return -1
 }
 
-func findInBytes(data []byte, pos int) (res string, endPos int, err error) {
+func findInBytes(data []byte, pos int) (res []byte, endPos int, err error) {
 	tmpPos := findPosInBytes(data, pos+1)
 
 	if tmpPos == -1 {
@@ -108,7 +113,16 @@ func findInBytes(data []byte, pos int) (res string, endPos int, err error) {
 		return
 	}
 
-	res = qconv.Qb2s(data[pos+1 : tmpPos])
 	endPos = tmpPos
+	res = data[pos+1 : tmpPos]
 	return
 }
+
+func findInBytesString(data []byte, pos int) (res string, endPos int, err error) {
+	var tmp []byte
+	tmp, endPos, err = findInBytes(data, pos)
+	res = qconv.Qb2s(tmp)
+	return
+}
+
+

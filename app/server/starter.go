@@ -11,6 +11,7 @@ import (
 	"github.com/MashiroC/begonia/internal/register"
 	"github.com/MashiroC/begonia/logic"
 	"github.com/MashiroC/begonia/tool/retry"
+	"github.com/MashiroC/begonia/tracing"
 	"log"
 )
 
@@ -52,7 +53,7 @@ func BootStart(optionMap map[string]interface{}) (s Server) {
 
 	err := retry.Do("start", func() (ok bool) {
 		err := dp.Start(addr)
-		if err!=nil{
+		if err != nil {
 			log.Println("dp start error: ", err)
 		}
 		return err == nil
@@ -69,7 +70,12 @@ func BootStart(optionMap map[string]interface{}) (s Server) {
 
 	// 创建 logic
 	var lg *logic.Service
+
+	if in, ok := optionMap["tracing"]; ok {
+		tracing.SetGlobalTracer(in.(tracing.Tracer))
+	}
 	lg = logic.NewService(dp, waitChans)
+
 	lg.Dp.Handle("ctrl", conn.Pool(lg.Dp))
 
 	//TODO: 发一个包，拉取配置

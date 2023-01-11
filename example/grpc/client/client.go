@@ -16,7 +16,7 @@ const (
 )
 
 func main() {
-	// Set up a connection to the server.
+	// Set up a connection to the server1.
 	conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)

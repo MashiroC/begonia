@@ -6,11 +6,11 @@ import (
 	"github.com/MashiroC/begonia"
 	"github.com/MashiroC/begonia/app/option"
 	"net/http"
+	_ "net/http/pprof"
+	"os"
 	"sync"
 	"sync/atomic"
 	"time"
-
-	_ "net/http/pprof"
 )
 
 const (
@@ -18,7 +18,7 @@ const (
 )
 
 var (
-	count int32
+	count int64
 	flag  bool
 	l     sync.Mutex
 )
@@ -35,18 +35,26 @@ func QPS() {
 		l.Lock()
 		if !flag {
 			flag = true
+			count=1
 			go func() {
-				time.Sleep(1 * time.Second)
-				fmt.Println(count)
-				flag = false
-				count = 0
+				step:=1
+				for i:=0;i<6;i++{
+					time.Sleep(10*time.Second)
+					fmt.Printf("%d seconds QPS: %d\n",step*10,count/int64(step*10))
+					step++
+				}
+				os.Exit(0)
+				//time.Sleep(1*time.Second)
+				//fmt.Println(count)
+				//count=0
+				//flag=false
 			}()
 		} else {
-			atomic.AddInt32(&count, 1)
+			atomic.AddInt64(&count, 1)
 		}
 		l.Unlock()
 	} else {
-		atomic.AddInt32(&count, 1)
+		atomic.AddInt64(&count, 1)
 	}
 }
 
@@ -57,7 +65,7 @@ func main() {
 	count = 0
 	flag = false
 
-	s := begonia.NewServer(option.Addr(":12306"))
+	s := begonia.NewServer(option.Addr(":12306"),option.P2P())
 
 	echoService := &EchoService{}
 	testService := TestService(0)

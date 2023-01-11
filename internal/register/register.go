@@ -76,7 +76,7 @@ func (r *remoteRegister) Register(name string, info []cRegister.FunInfo) (err er
 		panic(err)
 	}
 
-	res := r.lg.CallSync(&logic.Call{
+	res := r.lg.CallSync(context.TODO(), &logic.Call{
 		Service: "REGISTER",
 		Fun:     "Register",
 		Param:   b,
@@ -91,7 +91,7 @@ func (r *remoteRegister) Get(name string) (fs []cRegister.FunInfo, err error) {
 
 	b, err := _CoreRegisterServiceServiceInfoInCoder.Encode(in)
 
-	res := r.lg.CallSync(&logic.Call{
+	res := r.lg.CallSync(context.TODO(), &logic.Call{
 		Service: "REGISTER",
 		Fun:     "ServiceInfo",
 		Param:   b,

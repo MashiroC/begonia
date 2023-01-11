@@ -95,6 +95,7 @@ func (d *setDispatch) SendTo(connID string, f frame.Frame) (err error) {
 	}
 
 	err = c.Write(byte(f.Opcode()), f.Marshal())
+	f.Release()
 	return
 }
 

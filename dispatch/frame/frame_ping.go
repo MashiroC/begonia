@@ -69,3 +69,5 @@ func (ping *Ping) Opcode() int {
 
 	return ping.opcode
 }
+
+func (ping *Ping) Release() {}

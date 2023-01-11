@@ -34,7 +34,7 @@ func genServiceCode(f *ast.File, fullServiceName string, fi []coding.FunInfo) {
 }
 
 func getServiceTmpl() *template.Template {
-	tmpl, err := template.New("server").Funcs(template.FuncMap{
+	tmpl, err := template.New("server1").Funcs(template.FuncMap{
 		"raw":    raw,
 		"concat": concat,
 		"add":    add,

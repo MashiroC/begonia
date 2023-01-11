@@ -87,7 +87,7 @@ type WriteFunc func(optionMap map[string]interface{})
 ```go
 import (
 	"github.com/MashiroC/begonia/app/option"
-	"github.com/MashiroC/begonia/app/server"
+	"github.com/MashiroC/begonia/app/server1"
 )
 
 // Server 服务端的接口
@@ -487,7 +487,7 @@ func (r *CoreRegister) Register(ctx context.Context, si Service) (err error) {
 func (r *CoreRegister) ServiceInfo(serviceName string) (si Service, err error) {
 	service, ok := r.services.Get(serviceName)
 	if !ok {
-		err = fmt.Errorf("server [%s] not found", serviceName)
+		err = fmt.Errorf("server1 [%s] not found", serviceName)
 		return
 	}
 

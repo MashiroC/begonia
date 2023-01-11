@@ -44,7 +44,7 @@ func (s *registerServiceStore) Add(connID, serviceName string, funs []FunInfo) (
 	defer s.connLock.Unlock()
 
 	if _, ok := s.m[serviceName]; ok {
-		err = fmt.Errorf("server [%s] existed", serviceName)
+		err = fmt.Errorf("server1 [%s] existed", serviceName)
 		return
 	}
 

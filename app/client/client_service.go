@@ -1,6 +1,7 @@
 package client
 
 import (
+	"context"
 	"fmt"
 	"github.com/MashiroC/begonia/app/coding"
 	"github.com/MashiroC/begonia/logic"
@@ -32,6 +33,11 @@ type rService struct {
 	c    *rClient
 }
 
+func (r*rService) FuncSubscribe(key string) {
+	// server
+
+}
+
 func (r *rService) FuncSync(name string) (rf RemoteFunSync, err error) {
 	fun, exist := r.funs[name]
 
@@ -51,13 +57,21 @@ func (r *rService) FuncSync(name string) (rf RemoteFunSync, err error) {
 
 		ch := make(chan *logic.CallResult)
 
+		ctx := context.TODO()
+		if len(params) > 0 {
+			if v, ok := params[0].(context.Context); ok {
+				ctx = v
+				params = params[1:]
+			}
+		}
+
 		b, err := fun.InCoder.Encode(coding.ToAvroObj(params))
 		if err != nil {
 			err = fmt.Errorf("input type error: %w", err)
 			return
 		}
 
-		r.c.lg.CallAsync(&logic.Call{
+		r.c.lg.CallAsync(ctx, &logic.Call{
 			Service: r.name,
 			Fun:     name,
 			Param:   b,
@@ -82,22 +96,33 @@ func (r *rService) FuncSync(name string) (rf RemoteFunSync, err error) {
 
 func (r *rService) FuncAsync(name string) (rf RemoteFunAsync, err error) {
 
-	f, exist := r.funs[name]
-	if !exist {
-		err = fmt.Errorf("app,client funcAsync error: remote func [%s] not exist", name)
-		return
-	}
+	fun, exist := r.funs[name]
 
 	rf = func(callback AsyncCallback, params ...interface{}) {
 
+		if !exist {
+			fun, exist = r.funs[name]
+			if !exist {
+				err = fmt.Errorf("nil func, fun [%s] not found", name)
+				return
+			}
+		}
 		// 对入参编码
-		b, err := f.InCoder.Encode(coding.ToAvroObj(params))
+		b, err := fun.InCoder.Encode(coding.ToAvroObj(params))
 		if err != nil {
 			//TODO: 当传入参数和要求类型不符时的错误返回
 			panic(err)
 		}
 
-		r.c.lg.CallAsync(&logic.Call{
+		ctx := context.TODO()
+		if len(params) > 0 {
+			if v, ok := params[0].(context.Context); ok {
+				ctx = v
+				params = params[1:]
+			}
+		}
+
+		r.c.lg.CallAsync(ctx, &logic.Call{
 			Service: r.name,
 			Fun:     name,
 			Param:   b,
@@ -107,7 +132,7 @@ func (r *rService) FuncAsync(name string) (rf RemoteFunAsync, err error) {
 				return
 			}
 			// 对出参解码
-			out, err := f.OutCoder.Decode(result.Result)
+			out, err := fun.OutCoder.Decode(result.Result)
 
 			res := reflects.ToInterfaces(out.(map[string]interface{}))
 

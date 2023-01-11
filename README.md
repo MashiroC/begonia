@@ -61,7 +61,7 @@ $ bgacenter start
 #### 服务端
 
 ```go
-// server.go
+// server1.go
 package main
 
 import (
@@ -104,8 +104,8 @@ $ begonia -s -r ./
 之前下载的命令行工具会自动扫描调用了`begonia.Register`函数的结构体。并在你结构体的同级目录生成`${structName}.begonia.go`文件，并且在初始化时使用代码生成相关的API，中间任何阶段不使用反射。
 
 ```bash
-└─server
-    ├─server.go
+└─server1
+    ├─server1.go
     └─EchoService.begonia.go
 ```
 
@@ -173,12 +173,12 @@ $ begonia -s -c -r ./
 执行后在服务的目录下会生成一个`call`目录，目录包含所有服务的调用代码。其中`call.begonia.go`是begonia客户端的初始化代码，可以修改替换。`entity.begonia.go`是注册服务上的结构体的声明。
 
 ```bash
-└─server
+└─server1
 	├─call
 		├─cli.begonia.go
 		├─entity.begonia.go
 		└─EchoService.begonia.go
-    ├─server.go
+    ├─server1.go
     └─EchoService.begonia.go
 ```
 
